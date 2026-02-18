@@ -56,9 +56,9 @@ type UserProvider interface {
 type VerificationStorage interface {
 	SaveCode(ctx context.Context, email string, passHash []byte, codeHash string, attempts int, ttl time.Duration) error
 	GetCode(ctx context.Context, email string) (passHash []byte, codeHash string, attempts int, createdAt time.Time, err error)
+	VerifyCode(ctx context.Context, email string, inputCodeHash string) (passHash []byte, matched bool, err error)
 	SaveLink(ctx context.Context, email string, linkHash string, ttl time.Duration) error
 	GetLink(ctx context.Context, linkHash string) (email string, err error)
-	DecrementAttempts(ctx context.Context, email string) (int, error)
 	DeleteCode(ctx context.Context, email string) error
 }
 
@@ -210,43 +210,29 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 
 	log.Info("registering user", slog.String("email", email))
 
-	// Get verification data from Redis
-	passHash, storedCodeHash, attempts, _, err := a.verificationStorage.GetCode(ctx, email)
+	// Atomically verify the code and — on match — delete it from Redis,
+	// all in one Lua transaction to prevent brute-force via concurrent requests.
+	passHash, matched, err := a.verificationStorage.VerifyCode(ctx, email, hashString(code))
 	if err != nil {
 		if errors.Is(err, storage.ErrCodeNotFound) {
 			log.Info("no pending verification found")
 			return "", "", fmt.Errorf("%s: %w", op, ErrCodeNotFound)
 		}
-		log.Error("failed to get verification data", slog.String("error", err.Error()))
+		if errors.Is(err, storage.ErrNoAttemptsLeft) {
+			log.Info("no attempts left")
+			return "", "", fmt.Errorf("%s: %w", op, ErrNoAttemptsLeft)
+		}
+		log.Error("failed to verify code", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	// Check that there are attempts remaining
-	if attempts <= 0 {
-		log.Info("no attempts left")
-		_ = a.verificationStorage.DeleteCode(ctx, email)
-		return "", "", fmt.Errorf("%s: %w", op, ErrNoAttemptsLeft)
-	}
-
-	// Verify code hash
-	if hashString(code) != storedCodeHash {
-		remaining, err := a.verificationStorage.DecrementAttempts(ctx, email)
-		if err != nil {
-			log.Error("failed to decrement attempts", slog.String("error", err.Error()))
-			return "", "", fmt.Errorf("%s: %w", op, err)
-		}
-
-		if remaining <= 0 {
-			log.Info("no attempts left, deleting verification data")
-			_ = a.verificationStorage.DeleteCode(ctx, email)
-			return "", "", fmt.Errorf("%s: %w", op, ErrNoAttemptsLeft)
-		}
-
-		log.Info("invalid code", slog.Int("remaining_attempts", remaining))
+	if !matched {
+		log.Info("invalid code")
 		return "", "", fmt.Errorf("%s: %w", op, ErrInvalidCode)
 	}
 
-	// Code is correct — save user to the database
+	// Code is correct and already deleted from Redis by the Lua script.
+	// Save user to the database.
 	userID, err := a.userSaver.SaveUser(ctx, email, passHash)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExists) {
@@ -256,9 +242,6 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 		log.Error("failed to save user", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
-
-	// Clean up verification data
-	_ = a.verificationStorage.DeleteCode(ctx, email)
 
 	// Generate token pair
 	user := models.User{

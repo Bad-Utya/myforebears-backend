@@ -131,18 +131,70 @@ func (s *Storage) GetLink(ctx context.Context, linkHash string) (string, error) 
 	return email, nil
 }
 
-// DecrementAttempts decreases the remaining attempts by 1 and returns the new value.
-func (s *Storage) DecrementAttempts(ctx context.Context, email string) (int, error) {
-	const op = "storage.redis.DecrementAttempts"
+// verifyCodeScript atomically verifies the input code hash against the stored
+// one and acts accordingly — all in a single Lua transaction:
+//   - KEYS[1]: Redis hash key for the email
+//   - ARGV[1]: SHA-256 hex of the code entered by the user
+//
+// Returns {pass_hash, "1", "0"} on a match (key is DELeted inside the script).
+// Returns {pass_hash, "0", remaining} on a mismatch (key DELeted when exhausted).
+// Returns an error reply for missing key or exhausted attempts.
+var verifyCodeScript = redis.NewScript(`
+local key        = KEYS[1]
+local input_hash = ARGV[1]
+
+local pass_hash = redis.call('HGET', key, 'pass_hash')
+if pass_hash == false then
+  return redis.error_reply('CODE_NOT_FOUND')
+end
+
+local attempts = tonumber(redis.call('HGET', key, 'attempts'))
+if attempts <= 0 then
+  redis.call('DEL', key)
+  return redis.error_reply('NO_ATTEMPTS_LEFT')
+end
+
+local stored_hash = redis.call('HGET', key, 'code_hash')
+if stored_hash == input_hash then
+  redis.call('DEL', key)
+  return {pass_hash, "1"}
+end
+
+redis.call('HINCRBY', key, 'attempts', -1)
+return {pass_hash, "0"}
+`)
+
+// VerifyCode atomically checks inputCodeHash against the stored hash in Redis.
+// On a match the key is deleted inside the Lua script.
+// On a mismatch attempts are decremented (key deleted when exhausted).
+func (s *Storage) VerifyCode(
+	ctx context.Context,
+	email string,
+	inputCodeHash string,
+) (passHash []byte, matched bool, err error) {
+	const op = "storage.redis.VerifyCode"
 
 	key := verifyKey(email)
 
-	val, err := s.client.HIncrBy(ctx, key, "attempts", -1).Result()
+	res, err := verifyCodeScript.Run(ctx, s.client, []string{key}, inputCodeHash).Slice()
 	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
+		if err.Error() == "CODE_NOT_FOUND" {
+			return nil, false, storage.ErrCodeNotFound
+		}
+		if err.Error() == "NO_ATTEMPTS_LEFT" {
+			return nil, false, storage.ErrNoAttemptsLeft
+		}
+		return nil, false, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return int(val), nil
+	passHash, err = hex.DecodeString(res[0].(string))
+	if err != nil {
+		return nil, false, fmt.Errorf("%s: failed to decode pass_hash: %w", op, err)
+	}
+
+	matched = res[1].(string) == "1"
+
+	return passHash, matched, nil
 }
 
 // DeleteCode removes the verification entry from Redis.
