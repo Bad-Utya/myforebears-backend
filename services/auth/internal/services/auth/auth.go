@@ -95,19 +95,25 @@ func hashCode(code string) string {
 // SendCode initiates registration when a password is provided, or resends the
 // verification code (with cooldown) when the password is empty.
 func (a *Auth) SendCode(ctx context.Context, email string, password string) (string, error) {
-	if password == "" {
-		// Empty password means the client is requesting a resend.
-		return a.resendCode(ctx, email)
-	}
-
 	const op = "auth.SendCode"
 
 	log := a.log.With(slog.String("op", op))
 
 	log.Info("sending verification code", slog.String("email", email))
 
+	// Check if user already exists in DB
+	_, err := a.userProvider.User(ctx, email)
+	if err == nil {
+		log.Info("user already exists")
+		return "", fmt.Errorf("%s: %w", op, ErrUserExists)
+	}
+	if !errors.Is(err, storage.ErrUserNotFound) {
+		log.Error("failed to check user existence", slog.String("error", err.Error()))
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
 	// Enforce resend cooldown if a verification is already pending.
-	_, _, _, createdAt, err := a.verificationStorage.GetVerificationData(ctx, email)
+	passHash, _, _, createdAt, err := a.verificationStorage.GetVerificationData(ctx, email)
 	if err == nil {
 		if time.Since(createdAt) < resendCooldown {
 			log.Info("resend cooldown not expired")
@@ -118,28 +124,42 @@ func (a *Auth) SendCode(ctx context.Context, email string, password string) (str
 			log.Error("failed to delete old verification data", slog.String("error", err.Error()))
 			return "", fmt.Errorf("%s: %w", op, err)
 		}
+
+		log.Info("existing verification data found, creating new code")
+		code, err := a.createAndSaveCode(ctx, email, passHash)
+		if err != nil {
+			return "", fmt.Errorf("%s: %w", op, err)
+		}
+		log.Info("verification code resent")
+
+		return code, nil
 	} else if !errors.Is(err, storage.ErrCodeNotFound) {
 		log.Error("failed to get verification data", slog.String("error", err.Error()))
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	// Check if user already exists in DB
-	_, err = a.userProvider.User(ctx, email)
-	if err == nil {
-		log.Info("user already exists")
-		return "", fmt.Errorf("%s: %w", op, ErrUserExists)
-	}
-	if !errors.Is(err, storage.ErrUserNotFound) {
-		log.Error("failed to check user existence", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
-	}
-
 	// Hash password
-	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	passHash, err = bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Error("failed to hash password", slog.String("error", err.Error()))
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
+
+	// Generate code, save verification data to Redis, and send the code to the user.
+	code, err := a.createAndSaveCode(ctx, email, passHash)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("verification code sent")
+
+	return code, nil
+}
+
+func (a *Auth) createAndSaveCode(ctx context.Context, email string, passHash []byte) (string, error) {
+	const op = "auth.createAndSaveCode"
+
+	log := a.log.With(slog.String("op", op))
 
 	// Generate 6-digit code
 	code, err := generateCode()
@@ -156,61 +176,6 @@ func (a *Auth) SendCode(ctx context.Context, email string, password string) (str
 		log.Error("failed to save verification data", slog.String("error", err.Error()))
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
-
-	log.Info("verification code sent")
-
-	return code, nil
-}
-
-// resendCode generates a new code if the cooldown (1 min) has passed.
-// Keeps the same password hash, resets attempts and creation time.
-func (a *Auth) resendCode(ctx context.Context, email string) (string, error) {
-	const op = "auth.ResendCode"
-
-	log := a.log.With(slog.String("op", op))
-
-	log.Info("resending verification code", slog.String("email", email))
-
-	// Get existing verification data
-	passHash, _, _, createdAt, err := a.verificationStorage.GetVerificationData(ctx, email)
-	if err != nil {
-		if errors.Is(err, storage.ErrCodeNotFound) {
-			log.Info("no pending verification found")
-			return "", fmt.Errorf("%s: %w", op, ErrCodeNotFound)
-		}
-		log.Error("failed to get verification data", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
-	}
-
-	// Check cooldown (must wait at least 1 minute since last code)
-	if time.Since(createdAt) < resendCooldown {
-		log.Info("resend cooldown not expired")
-		return "", fmt.Errorf("%s: %w", op, ErrCodeCooldown)
-	}
-
-	// Delete old entry
-	if err := a.verificationStorage.DeleteVerificationData(ctx, email); err != nil {
-		log.Error("failed to delete old verification data", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
-	}
-
-	// Generate new code
-	code, err := generateCode()
-	if err != nil {
-		log.Error("failed to generate code", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
-	}
-
-	codeHash := hashCode(code)
-
-	// Save new data with the same passHash
-	err = a.verificationStorage.SaveVerificationData(ctx, email, passHash, codeHash, maxAttempts, verificationTTL)
-	if err != nil {
-		log.Error("failed to save new verification data", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
-	}
-
-	log.Info("verification code resent")
 
 	return code, nil
 }
