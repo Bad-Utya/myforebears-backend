@@ -34,13 +34,15 @@ var (
 )
 
 type Auth struct {
-	log                 *slog.Logger
-	userSaver           UserSaver
-	userProvider        UserProvider
-	verificationStorage VerificationStorage
-	jwtSecret           string
-	accessTokenTTL      time.Duration
-	refreshTokenTTL     time.Duration
+	log                  *slog.Logger
+	userSaver            UserSaver
+	userProvider         UserProvider
+	verificationStorage  VerificationStorage
+	jwtSecret            string
+	accessTokenTTL       time.Duration
+	refreshTokenTTL      time.Duration
+	linkForResetPassword string
+	linkTTL              time.Duration
 }
 
 type UserSaver interface {
@@ -52,10 +54,12 @@ type UserProvider interface {
 }
 
 type VerificationStorage interface {
-	SaveVerificationData(ctx context.Context, email string, passHash []byte, codeHash string, attempts int, ttl time.Duration) error
-	GetVerificationData(ctx context.Context, email string) (passHash []byte, codeHash string, attempts int, createdAt time.Time, err error)
+	SaveCode(ctx context.Context, email string, passHash []byte, codeHash string, attempts int, ttl time.Duration) error
+	GetCode(ctx context.Context, email string) (passHash []byte, codeHash string, attempts int, createdAt time.Time, err error)
+	SaveLink(ctx context.Context, email string, linkHash string, ttl time.Duration) error
+	GetLink(ctx context.Context, linkHash string) (email string, err error)
 	DecrementAttempts(ctx context.Context, email string) (int, error)
-	DeleteVerificationData(ctx context.Context, email string) error
+	DeleteCode(ctx context.Context, email string) error
 }
 
 func New(
@@ -66,15 +70,19 @@ func New(
 	jwtSecret string,
 	accessTokenTTL time.Duration,
 	refreshTokenTTL time.Duration,
+	linkForResetPassword string,
+	linkTTL time.Duration,
 ) *Auth {
 	return &Auth{
-		log:                 log,
-		userSaver:           userSaver,
-		userProvider:        userProvider,
-		verificationStorage: verificationStorage,
-		jwtSecret:           jwtSecret,
-		accessTokenTTL:      accessTokenTTL,
-		refreshTokenTTL:     refreshTokenTTL,
+		log:                  log,
+		userSaver:            userSaver,
+		userProvider:         userProvider,
+		verificationStorage:  verificationStorage,
+		jwtSecret:            jwtSecret,
+		accessTokenTTL:       accessTokenTTL,
+		refreshTokenTTL:      refreshTokenTTL,
+		linkForResetPassword: linkForResetPassword,
+		linkTTL:              linkTTL,
 	}
 }
 
@@ -87,8 +95,21 @@ func generateCode() (string, error) {
 	return fmt.Sprintf("%06d", n.Int64()), nil
 }
 
-func hashCode(code string) string {
-	h := sha256.Sum256([]byte(code))
+func generateLink() (string, error) {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, 32)
+	for i := range b {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			return "", err
+		}
+		b[i] = letters[n.Int64()]
+	}
+	return string(b), nil
+}
+
+func hashString(str string) string {
+	h := sha256.Sum256([]byte(str))
 	return hex.EncodeToString(h[:])
 }
 
@@ -113,14 +134,14 @@ func (a *Auth) SendCode(ctx context.Context, email string, password string) (str
 	}
 
 	// Enforce resend cooldown if a verification is already pending.
-	passHash, _, _, createdAt, err := a.verificationStorage.GetVerificationData(ctx, email)
+	passHash, _, _, createdAt, err := a.verificationStorage.GetCode(ctx, email)
 	if err == nil {
 		if time.Since(createdAt) < resendCooldown {
 			log.Info("resend cooldown not expired")
 			return "", fmt.Errorf("%s: %w", op, ErrCodeCooldown)
 		}
 		// Cooldown passed: replace old verification data.
-		if err := a.verificationStorage.DeleteVerificationData(ctx, email); err != nil {
+		if err := a.verificationStorage.DeleteCode(ctx, email); err != nil {
 			log.Error("failed to delete old verification data", slog.String("error", err.Error()))
 			return "", fmt.Errorf("%s: %w", op, err)
 		}
@@ -168,10 +189,10 @@ func (a *Auth) createAndSaveCode(ctx context.Context, email string, passHash []b
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	codeHash := hashCode(code)
+	codeHash := hashString(code)
 
 	// Save to Redis (overwrites any existing entry for this email)
-	err = a.verificationStorage.SaveVerificationData(ctx, email, passHash, codeHash, maxAttempts, verificationTTL)
+	err = a.verificationStorage.SaveCode(ctx, email, passHash, codeHash, maxAttempts, verificationTTL)
 	if err != nil {
 		log.Error("failed to save verification data", slog.String("error", err.Error()))
 		return "", fmt.Errorf("%s: %w", op, err)
@@ -190,7 +211,7 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 	log.Info("registering user", slog.String("email", email))
 
 	// Get verification data from Redis
-	passHash, storedCodeHash, attempts, _, err := a.verificationStorage.GetVerificationData(ctx, email)
+	passHash, storedCodeHash, attempts, _, err := a.verificationStorage.GetCode(ctx, email)
 	if err != nil {
 		if errors.Is(err, storage.ErrCodeNotFound) {
 			log.Info("no pending verification found")
@@ -203,12 +224,12 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 	// Check that there are attempts remaining
 	if attempts <= 0 {
 		log.Info("no attempts left")
-		_ = a.verificationStorage.DeleteVerificationData(ctx, email)
+		_ = a.verificationStorage.DeleteCode(ctx, email)
 		return "", "", fmt.Errorf("%s: %w", op, ErrNoAttemptsLeft)
 	}
 
 	// Verify code hash
-	if hashCode(code) != storedCodeHash {
+	if hashString(code) != storedCodeHash {
 		remaining, err := a.verificationStorage.DecrementAttempts(ctx, email)
 		if err != nil {
 			log.Error("failed to decrement attempts", slog.String("error", err.Error()))
@@ -217,7 +238,7 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 
 		if remaining <= 0 {
 			log.Info("no attempts left, deleting verification data")
-			_ = a.verificationStorage.DeleteVerificationData(ctx, email)
+			_ = a.verificationStorage.DeleteCode(ctx, email)
 			return "", "", fmt.Errorf("%s: %w", op, ErrNoAttemptsLeft)
 		}
 
@@ -237,7 +258,7 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 	}
 
 	// Clean up verification data
-	_ = a.verificationStorage.DeleteVerificationData(ctx, email)
+	_ = a.verificationStorage.DeleteCode(ctx, email)
 
 	// Generate token pair
 	user := models.User{
@@ -302,6 +323,60 @@ func (a *Auth) Login(ctx context.Context, email string, password string) (string
 	}
 
 	return accessToken, refreshToken, nil
+}
+
+// SendLinkForResetPassword generates a unique link for password reset, saves it in the verification storage, and returns the link.
+func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (string, error) {
+	const op = "auth.SendLinkForResetPassword"
+
+	log := a.log.With(slog.String("op", op))
+
+	log.Info("sending link for reset password", slog.String("email", email))
+
+	_, err := a.userProvider.User(ctx, email)
+	if err != nil {
+		if errors.Is(err, storage.ErrUserNotFound) {
+			log.Info("user not found")
+			return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+		}
+
+		log.Error("failed to get user", slog.String("error", err.Error()))
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	// Generate a link for password reset
+	var linkHash string
+	isUniqueLink := false
+	for !isUniqueLink {
+		secondPartLink, err := generateLink()
+		if err != nil {
+			log.Error("failed to generate reset link", slog.String("error", err.Error()))
+			return "", fmt.Errorf("%s: %w", op, err)
+		}
+		linkHash = hashString(secondPartLink)
+
+		// Ensure the generated link is unique (not already in use)
+		_, err = a.verificationStorage.GetLink(ctx, linkHash)
+		if err != nil {
+			if errors.Is(err, storage.ErrLinkNotFound) {
+				isUniqueLink = true
+				continue
+			}
+			log.Error("failed to check link uniqueness", slog.String("error", err.Error()))
+			return "", fmt.Errorf("%s: %w", op, err)
+		}
+	}
+
+	// Save the link in the verification storage
+	err = a.verificationStorage.SaveLink(ctx, email, linkHash, a.linkTTL)
+	if err != nil {
+		log.Error("failed to save reset link", slog.String("error", err.Error()))
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	link := fmt.Sprintf(a.linkForResetPassword, linkHash)
+
+	return link, nil
 }
 
 // RefreshTokens validates a refresh token and issues a new token pair.

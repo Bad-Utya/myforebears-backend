@@ -46,7 +46,7 @@ func (a *App) Run() error {
 	return nil
 }
 
-func (a *App) NustRun() {
+func (a *App) MustRun() {
 	// Panic on startup errors to fail fast in main.
 	if err := a.Run(); err != nil {
 		panic(err)

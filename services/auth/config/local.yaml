@@ -14,3 +14,5 @@ verification_storage:
 grpc:
   port: 50051
   timeout: 10h
+link_for_reset_password: "http://localhost:3000/reset-password?token=%s"
+link_ttl: 15m

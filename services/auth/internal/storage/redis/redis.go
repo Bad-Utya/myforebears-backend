@@ -36,9 +36,9 @@ func verifyKey(email string) string {
 	return "verify:" + email
 }
 
-// SaveVerificationData saves email, password hash, code hash, attempts count
+// SaveCode saves email, password hash, code hash, attempts count
 // and creation timestamp to Redis with the given TTL.
-func (s *Storage) SaveVerificationData(
+func (s *Storage) SaveCode(
 	ctx context.Context,
 	email string,
 	passHash []byte,
@@ -46,7 +46,7 @@ func (s *Storage) SaveVerificationData(
 	attempts int,
 	ttl time.Duration,
 ) error {
-	const op = "storage.redis.SaveVerificationData"
+	const op = "storage.redis.SaveCode"
 
 	key := verifyKey(email)
 
@@ -67,12 +67,12 @@ func (s *Storage) SaveVerificationData(
 	return nil
 }
 
-// GetVerificationData retrieves verification data from Redis for the given email.
-func (s *Storage) GetVerificationData(
+// GetCode retrieves verification data from Redis for the given email.
+func (s *Storage) GetCode(
 	ctx context.Context,
 	email string,
 ) (passHash []byte, codeHash string, attempts int, createdAt time.Time, err error) {
-	const op = "storage.redis.GetVerificationData"
+	const op = "storage.redis.GetCode"
 
 	key := verifyKey(email)
 
@@ -106,6 +106,31 @@ func (s *Storage) GetVerificationData(
 	return passHash, codeHash, attempts, createdAt, nil
 }
 
+func (s *Storage) SaveLink(ctx context.Context, email string, linkHash string, ttl time.Duration) error {
+	const op = "storage.redis.SaveLink"
+
+	key := "reset_link:" + linkHash
+	if err := s.client.Set(ctx, key, email, ttl).Err(); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) GetLink(ctx context.Context, linkHash string) (string, error) {
+	const op = "storage.redis.GetLink"
+
+	key := "reset_link:" + linkHash
+	email, err := s.client.Get(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return "", storage.ErrLinkNotFound
+		}
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+	return email, nil
+}
+
 // DecrementAttempts decreases the remaining attempts by 1 and returns the new value.
 func (s *Storage) DecrementAttempts(ctx context.Context, email string) (int, error) {
 	const op = "storage.redis.DecrementAttempts"
@@ -120,9 +145,9 @@ func (s *Storage) DecrementAttempts(ctx context.Context, email string) (int, err
 	return int(val), nil
 }
 
-// DeleteVerificationData removes the verification entry from Redis.
-func (s *Storage) DeleteVerificationData(ctx context.Context, email string) error {
-	const op = "storage.redis.DeleteVerificationData"
+// DeleteCode removes the verification entry from Redis.
+func (s *Storage) DeleteCode(ctx context.Context, email string) error {
+	const op = "storage.redis.DeleteCode"
 
 	if err := s.client.Del(ctx, verifyKey(email)).Err(); err != nil {
 		return fmt.Errorf("%s: %w", op, err)

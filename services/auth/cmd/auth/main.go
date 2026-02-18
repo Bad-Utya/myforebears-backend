@@ -36,10 +36,12 @@ func main() {
 		cfg.JWTSecret,
 		cfg.AccessTokenTTL,
 		cfg.RefreshTokenTTL,
+		cfg.LinkForResetPassword,
+		cfg.LinkTTL,
 	)
 
 	// Run gRPC server in background; shutdown is handled by OS signals.
-	go application.GRPCServer.NustRun()
+	go application.GRPCServer.MustRun()
 
 	// Block until a termination signal is received.
 	stop := make(chan os.Signal, 1)

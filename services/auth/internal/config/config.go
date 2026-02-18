@@ -10,13 +10,15 @@ import (
 )
 
 type Config struct {
-	Env                 string                    `yaml:"env" env-required:"true"`
-	AccessTokenTTL      time.Duration             `yaml:"access_token_ttl" env-required:"true"`
-	RefreshTokenTTL     time.Duration             `yaml:"refresh_token_ttl" env-required:"true"`
-	JWTSecret           string                    `yaml:"jwt_secret" env:"JWT_SECRET" env-required:"true"`
-	UserStorage         UserStorageConfig         `yaml:"user_storage" env-required:"true"`
-	VerificationStorage VerificationStorageConfig `yaml:"verification_storage" env-required:"true"`
-	GRPC                GRPCConfig                `yaml:"grpc" env-required:"true"`
+	Env                  string                    `yaml:"env" env-required:"true"`
+	AccessTokenTTL       time.Duration             `yaml:"access_token_ttl" env-required:"true"`
+	RefreshTokenTTL      time.Duration             `yaml:"refresh_token_ttl" env-required:"true"`
+	JWTSecret            string                    `yaml:"jwt_secret" env:"JWT_SECRET" env-required:"true"`
+	UserStorage          UserStorageConfig         `yaml:"user_storage" env-required:"true"`
+	VerificationStorage  VerificationStorageConfig `yaml:"verification_storage" env-required:"true"`
+	GRPC                 GRPCConfig                `yaml:"grpc" env-required:"true"`
+	LinkForResetPassword string                    `yaml:"link_for_reset_password" env-required:"true"`
+	LinkTTL              time.Duration             `yaml:"link_ttl" env-required:"true"`
 }
 
 type UserStorageConfig struct {
