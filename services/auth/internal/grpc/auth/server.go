@@ -17,6 +17,7 @@ type Auth interface {
 	Login(ctx context.Context, email string, password string) (string, string, error)
 	SendLinkForResetPassword(ctx context.Context, email string) (string, error)
 	ResetPasswordWithLink(ctx context.Context, link string, password string) error
+	ResetPasswordWithToken(ctx context.Context, accessToken string, password string) error
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 }
 
@@ -111,6 +112,18 @@ func (s *ServerAPI) ResetPasswordWithLink(ctx context.Context, req *authpb.Reset
 	}
 
 	return &authpb.ResetPasswordWithLinkResponse{}, nil
+}
+
+func (s *ServerAPI) ResetPasswordWithToken(ctx context.Context, req *authpb.ResetPasswordWithTokenRequest) (*authpb.ResetPasswordWithTokenResponse, error) {
+	err := s.auth.ResetPasswordWithToken(ctx, req.GetAccessToken(), req.GetPassword())
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidToken) {
+			return nil, status.Error(codes.InvalidArgument, "invalid token")
+		}
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	return &authpb.ResetPasswordWithTokenResponse{}, nil
 }
 
 func (s *ServerAPI) RefreshToken(ctx context.Context, req *authpb.RefreshTokensRequest) (*authpb.RefreshTokensResponse, error) {

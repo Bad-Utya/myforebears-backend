@@ -396,6 +396,43 @@ func (a *Auth) ResetPasswordWithLink(ctx context.Context, link string, password 
 	return nil
 }
 
+// ResetPasswordWithToken validates the access token and updates the user's password if the token is valid.
+func (a *Auth) ResetPasswordWithToken(ctx context.Context, accessToken string, password string) error {
+	const op = "auth.ResetPasswordWithToken"
+
+	log := a.log.With(slog.String("op", op))
+
+	log.Info("resetting password with token")
+
+	claims, err := jwt.ParseToken(accessToken, a.jwtSecret)
+	if err != nil {
+		log.Info("invalid access token", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, ErrInvalidToken)
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok {
+		log.Info("email not found in token")
+		return fmt.Errorf("%s: %w", op, ErrInvalidToken)
+	}
+
+	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Error("failed to hash new password", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	// Update the user's password in the user storage
+	err = a.userStorage.UpdatePassword(ctx, email, passHash)
+	if err != nil {
+		log.Info("failed to update password", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("password reset with token successful")
+	return nil
+}
+
 // RefreshTokens validates a refresh token and issues a new token pair.
 func (a *Auth) RefreshTokens(ctx context.Context, refreshToken string) (string, string, error) {
 	const op = "auth.RefreshTokens"
