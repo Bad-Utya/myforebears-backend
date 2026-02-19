@@ -5,10 +5,16 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"time"
 
 	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/lib/grpcerr"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/lib/response"
+)
+
+const (
+	refreshTokenCookie = "refresh_token"
+	refreshTokenTTL    = 30 * 24 * time.Hour
 )
 
 type Handler struct {
@@ -53,13 +59,8 @@ type resetPasswordWithTokenRequest struct {
 	Password string `json:"password"`
 }
 
-type refreshTokensRequest struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
 type tokensResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
+	AccessToken string `json:"access_token"`
 }
 
 // --- Handlers ---
@@ -107,10 +108,8 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.OK(w, tokensResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	})
+	setRefreshTokenCookie(w, refreshToken)
+	response.OK(w, tokensResponse{AccessToken: accessToken})
 }
 
 func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
@@ -133,10 +132,8 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.OK(w, tokensResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	})
+	setRefreshTokenCookie(w, refreshToken)
+	response.OK(w, tokensResponse{AccessToken: accessToken})
 }
 
 func (h *Handler) SendLinkForResetPassword(w http.ResponseWriter, r *http.Request) {
@@ -215,18 +212,19 @@ func (h *Handler) ResetPasswordWithToken(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *Handler) RefreshTokens(w http.ResponseWriter, r *http.Request) {
-	var req refreshTokensRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.Error(w, http.StatusBadRequest, "bad_request", "invalid request body")
+	cookie, err := r.Cookie(refreshTokenCookie)
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "refresh_token cookie is missing")
 		return
 	}
 
-	if req.RefreshToken == "" {
-		response.Error(w, http.StatusBadRequest, "bad_request", "refresh_token is required")
+	refreshToken := strings.TrimSpace(cookie.Value)
+	if refreshToken == "" {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "refresh_token cookie is empty")
 		return
 	}
 
-	accessToken, refreshToken, err := h.client.RefreshTokens(r.Context(), req.RefreshToken)
+	accessToken, newRefreshToken, err := h.client.RefreshTokens(r.Context(), refreshToken)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("refresh tokens failed", slog.String("error", err.Error()))
@@ -234,10 +232,8 @@ func (h *Handler) RefreshTokens(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.OK(w, tokensResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-	})
+	setRefreshTokenCookie(w, newRefreshToken)
+	response.OK(w, tokensResponse{AccessToken: accessToken})
 }
 
 func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
@@ -255,6 +251,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clearRefreshTokenCookie(w)
 	response.OK(w, map[string]string{"status": "ok"})
 }
 
@@ -273,7 +270,34 @@ func (h *Handler) LogoutFromAllDevices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clearRefreshTokenCookie(w)
 	response.OK(w, map[string]string{"status": "ok"})
+}
+
+// setRefreshTokenCookie sets the refresh token as an HttpOnly cookie.
+func setRefreshTokenCookie(w http.ResponseWriter, token string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     refreshTokenCookie,
+		Value:    token,
+		Path:     "/api/auth",
+		MaxAge:   int(refreshTokenTTL.Seconds()),
+		HttpOnly: true,
+		Secure:   false, // set to true in production (HTTPS)
+		SameSite: http.SameSiteStrictMode,
+	})
+}
+
+// clearRefreshTokenCookie removes the refresh token cookie.
+func clearRefreshTokenCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     refreshTokenCookie,
+		Value:    "",
+		Path:     "/api/auth",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteStrictMode,
+	})
 }
 
 // extractBearerToken extracts the token from the Authorization header.
