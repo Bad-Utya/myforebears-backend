@@ -54,8 +54,8 @@ func (s *Storage) SaveUser(ctx context.Context, email string, passHash []byte) (
 	return id, nil
 }
 
-func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
-	const op = "storage.postgres.User"
+func (s *Storage) GetUser(ctx context.Context, email string) (models.User, error) {
+	const op = "storage.postgres.GetUser"
 
 	var user models.User
 	err := s.pool.QueryRow(ctx,
@@ -70,6 +70,24 @@ func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
 	}
 
 	return user, nil
+}
+
+func (s *Storage) UpdatePassword(ctx context.Context, email string, newPassHash []byte) error {
+	const op = "storage.postgres.UpdatePassword"
+
+	cmdTag, err := s.pool.Exec(ctx,
+		"UPDATE users SET pass_hash = $1 WHERE email = $2",
+		newPassHash, email,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
+	}
+
+	return nil
 }
 
 func (s *Storage) Close() {

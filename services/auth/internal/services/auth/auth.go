@@ -28,6 +28,7 @@ var (
 	ErrUserExists         = errors.New("user already exists")
 	ErrInvalidCode        = errors.New("invalid code")
 	ErrInvalidToken       = errors.New("invalid token")
+	ErrInvalidLink        = errors.New("invalid link")
 	ErrCodeCooldown       = errors.New("code resend cooldown not expired")
 	ErrNoAttemptsLeft     = errors.New("no attempts left")
 	ErrCodeNotFound       = errors.New("verification code not found")
@@ -35,8 +36,7 @@ var (
 
 type Auth struct {
 	log                  *slog.Logger
-	userSaver            UserSaver
-	userProvider         UserProvider
+	userStorage          UserStorage
 	verificationStorage  VerificationStorage
 	jwtSecret            string
 	accessTokenTTL       time.Duration
@@ -45,12 +45,10 @@ type Auth struct {
 	linkTTL              time.Duration
 }
 
-type UserSaver interface {
+type UserStorage interface {
 	SaveUser(ctx context.Context, email string, passHash []byte) (int, error)
-}
-
-type UserProvider interface {
-	User(ctx context.Context, email string) (models.User, error)
+	GetUser(ctx context.Context, email string) (models.User, error)
+	UpdatePassword(ctx context.Context, email string, password []byte) error
 }
 
 type VerificationStorage interface {
@@ -58,14 +56,13 @@ type VerificationStorage interface {
 	GetCode(ctx context.Context, email string) (passHash []byte, codeHash string, attempts int, createdAt time.Time, err error)
 	VerifyCode(ctx context.Context, email string, inputCodeHash string) (passHash []byte, matched bool, err error)
 	SaveLink(ctx context.Context, email string, linkHash string, ttl time.Duration) error
-	GetLink(ctx context.Context, linkHash string) (email string, err error)
+	GetEmailByLink(ctx context.Context, linkHash string) (email string, err error)
 	DeleteCode(ctx context.Context, email string) error
 }
 
 func New(
 	log *slog.Logger,
-	userSaver UserSaver,
-	userProvider UserProvider,
+	userStorage UserStorage,
 	verificationStorage VerificationStorage,
 	jwtSecret string,
 	accessTokenTTL time.Duration,
@@ -75,8 +72,7 @@ func New(
 ) *Auth {
 	return &Auth{
 		log:                  log,
-		userSaver:            userSaver,
-		userProvider:         userProvider,
+		userStorage:          userStorage,
 		verificationStorage:  verificationStorage,
 		jwtSecret:            jwtSecret,
 		accessTokenTTL:       accessTokenTTL,
@@ -97,7 +93,7 @@ func generateCode() (string, error) {
 
 func generateLink() (string, error) {
 	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	b := make([]byte, 32)
+	b := make([]byte, 64)
 	for i := range b {
 		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
 		if err != nil {
@@ -123,7 +119,7 @@ func (a *Auth) SendCode(ctx context.Context, email string, password string) (str
 	log.Info("sending verification code", slog.String("email", email))
 
 	// Check if user already exists in DB
-	_, err := a.userProvider.User(ctx, email)
+	_, err := a.userStorage.GetUser(ctx, email)
 	if err == nil {
 		log.Info("user already exists")
 		return "", fmt.Errorf("%s: %w", op, ErrUserExists)
@@ -233,7 +229,7 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 
 	// Code is correct and already deleted from Redis by the Lua script.
 	// Save user to the database.
-	userID, err := a.userSaver.SaveUser(ctx, email, passHash)
+	userID, err := a.userStorage.SaveUser(ctx, email, passHash)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExists) {
 			log.Info("user already exists")
@@ -275,7 +271,7 @@ func (a *Auth) Login(ctx context.Context, email string, password string) (string
 
 	log.Info("logging in user")
 
-	user, err := a.userProvider.User(ctx, email)
+	user, err := a.userStorage.GetUser(ctx, email)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			log.Info("user not found")
@@ -316,7 +312,7 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 
 	log.Info("sending link for reset password", slog.String("email", email))
 
-	_, err := a.userProvider.User(ctx, email)
+	_, err := a.userStorage.GetUser(ctx, email)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			log.Info("user not found")
@@ -329,9 +325,10 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 
 	// Generate a link for password reset
 	var linkHash string
+	var secondPartLink string
 	isUniqueLink := false
 	for !isUniqueLink {
-		secondPartLink, err := generateLink()
+		secondPartLink, err = generateLink()
 		if err != nil {
 			log.Error("failed to generate reset link", slog.String("error", err.Error()))
 			return "", fmt.Errorf("%s: %w", op, err)
@@ -339,7 +336,7 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 		linkHash = hashString(secondPartLink)
 
 		// Ensure the generated link is unique (not already in use)
-		_, err = a.verificationStorage.GetLink(ctx, linkHash)
+		_, err = a.verificationStorage.GetEmailByLink(ctx, linkHash)
 		if err != nil {
 			if errors.Is(err, storage.ErrLinkNotFound) {
 				isUniqueLink = true
@@ -357,9 +354,46 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	link := fmt.Sprintf(a.linkForResetPassword, linkHash)
+	link := fmt.Sprintf(a.linkForResetPassword, secondPartLink)
 
 	return link, nil
+}
+
+// ResetPasswordWithLink validates the reset link and updates the user's password if the link is valid.
+func (a *Auth) ResetPasswordWithLink(ctx context.Context, link string, password string) error {
+	const op = "auth.ResetPasswordWithLink"
+
+	log := a.log.With(slog.String("op", op))
+
+	log.Info("resetting password with link")
+
+	linkHash := hashString(link)
+
+	email, err := a.verificationStorage.GetEmailByLink(ctx, linkHash)
+	if err != nil {
+		if errors.Is(err, storage.ErrLinkNotFound) {
+			log.Info("reset link not found")
+			return fmt.Errorf("%s: %w", op, ErrInvalidLink)
+		}
+		log.Info("failed to get email by link", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, ErrInvalidLink)
+	}
+
+	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Error("failed to hash new password", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	// Update the user's password in the user storage
+	err = a.userStorage.UpdatePassword(ctx, email, passHash)
+	if err != nil {
+		log.Info("failed to update password", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("password reset with link successful")
+	return nil
 }
 
 // RefreshTokens validates a refresh token and issues a new token pair.
@@ -390,7 +424,7 @@ func (a *Auth) RefreshTokens(ctx context.Context, refreshToken string) (string, 
 		return "", "", fmt.Errorf("%s: %w", op, ErrInvalidToken)
 	}
 
-	user, err := a.userProvider.User(ctx, email)
+	user, err := a.userStorage.GetUser(ctx, email)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			log.Info("user not found")

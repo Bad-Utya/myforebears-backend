@@ -106,6 +106,7 @@ func (s *Storage) GetCode(
 	return passHash, codeHash, attempts, createdAt, nil
 }
 
+// SaveLink saves a password reset link hash associated with the email in Redis with the given TTL.
 func (s *Storage) SaveLink(ctx context.Context, email string, linkHash string, ttl time.Duration) error {
 	const op = "storage.redis.SaveLink"
 
@@ -117,8 +118,9 @@ func (s *Storage) SaveLink(ctx context.Context, email string, linkHash string, t
 	return nil
 }
 
-func (s *Storage) GetLink(ctx context.Context, linkHash string) (string, error) {
-	const op = "storage.redis.GetLink"
+// GetEmailByLink retrieves the email associated with the given password reset link hash from Redis.
+func (s *Storage) GetEmailByLink(ctx context.Context, linkHash string) (string, error) {
+	const op = "storage.redis.GetEmailByLink"
 
 	key := "reset_link:" + linkHash
 	email, err := s.client.Get(ctx, key).Result()
@@ -136,8 +138,8 @@ func (s *Storage) GetLink(ctx context.Context, linkHash string) (string, error) 
 //   - KEYS[1]: Redis hash key for the email
 //   - ARGV[1]: SHA-256 hex of the code entered by the user
 //
-// Returns {pass_hash, "1", "0"} on a match (key is DELeted inside the script).
-// Returns {pass_hash, "0", remaining} on a mismatch (key DELeted when exhausted).
+// Returns {pass_hash, "1"} on a match (key is DELeted inside the script).
+// Returns {pass_hash, "0"} on a mismatch (key DELeted when exhausted).
 // Returns an error reply for missing key or exhausted attempts.
 var verifyCodeScript = redis.NewScript(`
 local key        = KEYS[1]

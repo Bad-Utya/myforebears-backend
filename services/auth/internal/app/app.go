@@ -32,7 +32,7 @@ func New(
 	linkTTL time.Duration,
 ) *App {
 	// Fail fast on startup if storage connections cannot be established.
-	storage, err := postgres.New(pgHost, pgPort, pgUser, pgPassword, pgDBName)
+	userStorage, err := postgres.New(pgHost, pgPort, pgUser, pgPassword, pgDBName)
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +43,7 @@ func New(
 	}
 
 	// Auth service uses Postgres for users and Redis for verification codes.
-	authService := auth.New(log, storage, storage, verificationStorage, jwtSecret, accessTokenTTL, refreshTokenTTL, linkForResetPassword, linkTTL)
+	authService := auth.New(log, userStorage, verificationStorage, jwtSecret, accessTokenTTL, refreshTokenTTL, linkForResetPassword, linkTTL)
 
 	grpcApp := grpcapp.New(log, authService, grpcPort)
 
