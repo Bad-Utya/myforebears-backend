@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/Bad-Utya/myforebears-backend/services/auth/internal/domain/models"
-	"github.com/Bad-Utya/myforebears-backend/services/auth/internal/lib/jwt"
 	"github.com/Bad-Utya/myforebears-backend/services/auth/internal/storage"
+	"github.com/Bad-Utya/myforebears-backend/utility/pkg/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -43,6 +43,7 @@ type Auth struct {
 	refreshTokenTTL      time.Duration
 	linkForResetPassword string
 	linkTTL              time.Duration
+	accessBlacklist      AccessBlacklist
 }
 
 type UserStorage interface {
@@ -60,6 +61,10 @@ type VerificationStorage interface {
 	DeleteCode(ctx context.Context, email string) error
 }
 
+type AccessBlacklist interface {
+	BlacklistToken(ctx context.Context, token string, ttl time.Duration) error
+}
+
 func New(
 	log *slog.Logger,
 	userStorage UserStorage,
@@ -69,6 +74,7 @@ func New(
 	refreshTokenTTL time.Duration,
 	linkForResetPassword string,
 	linkTTL time.Duration,
+	accessBlacklist AccessBlacklist,
 ) *Auth {
 	return &Auth{
 		log:                  log,
@@ -79,6 +85,7 @@ func New(
 		refreshTokenTTL:      refreshTokenTTL,
 		linkForResetPassword: linkForResetPassword,
 		linkTTL:              linkTTL,
+		accessBlacklist:      accessBlacklist,
 	}
 }
 
@@ -246,13 +253,13 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 		PassHash: passHash,
 	}
 
-	accessToken, err := jwt.NewToken(user, a.jwtSecret, a.accessTokenTTL, "access")
+	accessToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.accessTokenTTL, "access")
 	if err != nil {
 		log.Error("failed to create access token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	refreshToken, err := jwt.NewToken(user, a.jwtSecret, a.refreshTokenTTL, "refresh")
+	refreshToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.refreshTokenTTL, "refresh")
 	if err != nil {
 		log.Error("failed to create refresh token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
@@ -289,13 +296,13 @@ func (a *Auth) Login(ctx context.Context, email string, password string) (string
 
 	log.Info("user logged in")
 
-	accessToken, err := jwt.NewToken(user, a.jwtSecret, a.accessTokenTTL, "access")
+	accessToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.accessTokenTTL, "access")
 	if err != nil {
 		log.Error("failed to create access token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	refreshToken, err := jwt.NewToken(user, a.jwtSecret, a.refreshTokenTTL, "refresh")
+	refreshToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.refreshTokenTTL, "refresh")
 	if err != nil {
 		log.Error("failed to create refresh token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
@@ -471,13 +478,13 @@ func (a *Auth) RefreshTokens(ctx context.Context, refreshToken string) (string, 
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	newAccessToken, err := jwt.NewToken(user, a.jwtSecret, a.accessTokenTTL, "access")
+	newAccessToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.accessTokenTTL, "access")
 	if err != nil {
 		log.Error("failed to create access token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	newRefreshToken, err := jwt.NewToken(user, a.jwtSecret, a.refreshTokenTTL, "refresh")
+	newRefreshToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.refreshTokenTTL, "refresh")
 	if err != nil {
 		log.Error("failed to create refresh token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)

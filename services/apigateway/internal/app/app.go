@@ -10,15 +10,17 @@ import (
 	chimw "github.com/go-chi/chi/v5/middleware"
 
 	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
+	redisclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/redis"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/config"
 	authhandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/auth"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/middleware"
 )
 
 type App struct {
-	log        *slog.Logger
-	httpServer *http.Server
-	authClient *authclient.Client
+	log         *slog.Logger
+	httpServer  *http.Server
+	authClient  *authclient.Client
+	redisClient *redisclient.Client
 }
 
 func New(log *slog.Logger, cfg *config.Config) *App {
@@ -45,19 +47,37 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	router.Use(middleware.Logging(log))
 	router.Use(chimw.Recoverer)
 
+	// Connect to Redis for token blacklist checks.
+	redisClient, err := redisclient.New(
+		cfg.Clients.TokenStorage.Address,
+		cfg.Clients.TokenStorage.Password,
+		cfg.Clients.TokenStorage.Database,
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to Redis: %v", err))
+	}
+
+	tokenChecker := middleware.NewTokenChecker(redisClient, cfg.JWTSecret, log)
+
 	// Auth routes.
 	authHandler := authhandler.New(log, authGRPC)
 
 	router.Route("/api/auth", func(r chi.Router) {
+		// Public routes.
 		r.Post("/send-code", authHandler.SendCode)
 		r.Post("/register", authHandler.Register)
 		r.Post("/login", authHandler.Login)
 		r.Post("/send-link-for-reset-password", authHandler.SendLinkForResetPassword)
 		r.Post("/reset-password-with-link", authHandler.ResetPasswordWithLink)
-		r.Post("/reset-password-with-token", authHandler.ResetPasswordWithToken)
 		r.Post("/refresh", authHandler.RefreshTokens)
-		r.Post("/logout", authHandler.Logout)
-		r.Post("/logout-all", authHandler.LogoutFromAllDevices)
+
+		// Protected routes.
+		r.Group(func(r chi.Router) {
+			r.Use(tokenChecker.Middleware)
+			r.Post("/reset-password-with-token", authHandler.ResetPasswordWithToken)
+			r.Post("/logout", authHandler.Logout)
+			r.Post("/logout-all", authHandler.LogoutFromAllDevices)
+		})
 	})
 
 	httpServer := &http.Server{
@@ -69,9 +89,10 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	}
 
 	return &App{
-		log:        log,
-		httpServer: httpServer,
-		authClient: authGRPC,
+		log:         log,
+		httpServer:  httpServer,
+		authClient:  authGRPC,
+		redisClient: redisClient,
 	}
 }
 
@@ -104,5 +125,9 @@ func (a *App) Stop(ctx context.Context) {
 
 	if err := a.authClient.Close(); err != nil {
 		a.log.Error("failed to close auth grpc connection", slog.String("op", op), slog.String("error", err.Error()))
+	}
+
+	if err := a.redisClient.Close(); err != nil {
+		a.log.Error("failed to close redis connection", slog.String("op", op), slog.String("error", err.Error()))
 	}
 }

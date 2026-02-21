@@ -8,3 +8,7 @@ clients:
     address: "localhost:50051"
     timeout: 5s
     retries_count: 3
+  token_storage:
+    address: "localhost:6379"
+    password: "local_password"
+    database: 1

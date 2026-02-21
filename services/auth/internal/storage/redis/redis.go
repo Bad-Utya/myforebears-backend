@@ -210,6 +210,32 @@ func (s *Storage) DeleteCode(ctx context.Context, email string) error {
 	return nil
 }
 
+// BlacklistToken adds the given token to Redis with a value of "1" and the specified TTL.
+func (s *Storage) BlacklistToken(ctx context.Context, token string, ttl time.Duration) error {
+	const op = "storage.redis.BlacklistToken"
+
+	key := "blacklist:" + token
+	if err := s.client.Set(ctx, key, "1", ttl).Err(); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+// BlacklistEmail saves the current Unix timestamp under "blacklist:<email>" with the given TTL.
+// Any token whose created_at is less than this timestamp is considered revoked.
+func (s *Storage) BlacklistEmail(ctx context.Context, email string, ttl time.Duration) error {
+	const op = "storage.redis.BlacklistEmail"
+
+	key := "blacklist:" + email
+	logoutAt := time.Now().Unix()
+	if err := s.client.Set(ctx, key, strconv.FormatInt(logoutAt, 10), ttl).Err(); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
 func (s *Storage) Close() {
 	s.client.Close()
 }

@@ -10,9 +10,10 @@ import (
 )
 
 type Config struct {
-	Env     string        `yaml:"env" env-required:"true"`
-	HTTP    HTTPConfig    `yaml:"http" env-required:"true"`
-	Clients ClientsConfig `yaml:"clients" env-required:"true"`
+	Env       string        `yaml:"env" env-required:"true"`
+	HTTP      HTTPConfig    `yaml:"http" env-required:"true"`
+	Clients   ClientsConfig `yaml:"clients" env-required:"true"`
+	JWTSecret string        `yaml:"jwt_secret" env:"JWT_SECRET" env-required:"true"`
 }
 
 type HTTPConfig struct {
@@ -22,13 +23,20 @@ type HTTPConfig struct {
 }
 
 type ClientsConfig struct {
-	Auth AuthClientConfig `yaml:"auth" env-required:"true"`
+	Auth         AuthClientConfig   `yaml:"auth" env-required:"true"`
+	TokenStorage TokenStorageConfig `yaml:"token_storage" env-required:"true"`
 }
 
 type AuthClientConfig struct {
 	Address      string        `yaml:"address" env-required:"true"`
 	Timeout      time.Duration `yaml:"timeout" env-required:"true"`
 	RetriesCount int           `yaml:"retries_count" env-required:"true"`
+}
+
+type TokenStorageConfig struct {
+	Address  string `yaml:"address" env-required:"true"`
+	Password string `yaml:"password" env-required:"true"`
+	Database int    `yaml:"database" env-required:"true"`
 }
 
 func MustLoad() *Config {

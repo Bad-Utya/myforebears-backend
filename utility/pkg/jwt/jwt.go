@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Bad-Utya/myforebears-backend/services/auth/internal/domain/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func NewToken(user models.User, secret string, duration time.Duration, tokenType string) (string, error) {
+func NewToken(email string, secret string, duration time.Duration, tokenType string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
 	// Store minimal identity and token metadata in claims.
-	claims["uid"] = user.ID
-	claims["email"] = user.Email
-	claims["exp"] = time.Now().Add(duration).Unix()
+	now := time.Now()
+	claims["email"] = email
+	claims["created_at"] = now.Unix()
+	claims["exp"] = now.Add(duration).Unix()
 	claims["type"] = tokenType
 
 	tokenString, err := token.SignedString([]byte(secret))

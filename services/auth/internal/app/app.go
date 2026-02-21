@@ -43,7 +43,7 @@ func New(
 	}
 
 	// Auth service uses Postgres for users and Redis for verification codes.
-	authService := auth.New(log, userStorage, verificationStorage, jwtSecret, accessTokenTTL, refreshTokenTTL, linkForResetPassword, linkTTL)
+	authService := auth.New(log, userStorage, verificationStorage, jwtSecret, accessTokenTTL, refreshTokenTTL, linkForResetPassword, linkTTL, verificationStorage)
 
 	grpcApp := grpcapp.New(log, authService, grpcPort)
 
