@@ -19,6 +19,7 @@ type Auth interface {
 	ResetPasswordWithLink(ctx context.Context, link string, password string) error
 	ResetPasswordWithToken(ctx context.Context, accessToken string, password string) error
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
+	Logout(ctx context.Context, accessToken string) error
 }
 
 type ServerAPI struct {
@@ -140,4 +141,17 @@ func (s *ServerAPI) RefreshToken(ctx context.Context, req *authpb.RefreshTokensR
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
+
+func (s *ServerAPI) Logout(ctx context.Context, req *authpb.LogoutRequest) (*authpb.LogoutResponse, error) {
+	err := s.auth.Logout(ctx, req.GetAccessToken())
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidToken) {
+			return nil, status.Error(codes.InvalidArgument, "invalid token")
+		}
+
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	return &authpb.LogoutResponse{}, nil
 }

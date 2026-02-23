@@ -494,3 +494,22 @@ func (a *Auth) RefreshTokens(ctx context.Context, refreshToken string) (string, 
 
 	return newAccessToken, newRefreshToken, nil
 }
+
+// Logout blacklists the access token to prevent further use until it naturally expires.
+func (a *Auth) Logout(ctx context.Context, accessToken string) error {
+	const op = "auth.Logout"
+
+	log := a.log.With(slog.String("op", op))
+
+	log.Info("logging out user")
+
+	// Blacklist the access token until it naturally expires to prevent further use.
+	err := a.accessBlacklist.BlacklistToken(ctx, accessToken, a.accessTokenTTL)
+	if err != nil {
+		log.Error("failed to blacklist access token", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("user logged out")
+	return nil
+}
