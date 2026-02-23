@@ -63,6 +63,7 @@ type VerificationStorage interface {
 
 type AccessBlacklist interface {
 	BlacklistToken(ctx context.Context, token string, ttl time.Duration) error
+	BlacklistEmail(ctx context.Context, email string, ttl time.Duration) error
 }
 
 func New(
@@ -511,5 +512,36 @@ func (a *Auth) Logout(ctx context.Context, accessToken string) error {
 	}
 
 	log.Info("user logged out")
+	return nil
+}
+
+// LogoutFromAllDevices blacklists all tokens for the user by saving the current timestamp in Redis.
+func (a *Auth) LogoutFromAllDevices(ctx context.Context, accessToken string) error {
+	const op = "auth.LogoutFromAllDevices"
+
+	log := a.log.With(slog.String("op", op))
+
+	log.Info("logging out user from all devices")
+
+	claims, err := jwt.ParseToken(accessToken, a.jwtSecret)
+	if err != nil {
+		log.Info("invalid access token", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, ErrInvalidToken)
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok {
+		log.Info("email not found in token")
+		return fmt.Errorf("%s: %w", op, ErrInvalidToken)
+	}
+
+	// Blacklist all tokens for the user.
+	err = a.accessBlacklist.BlacklistEmail(ctx, email, a.accessTokenTTL)
+	if err != nil {
+		log.Error("failed to blacklist email", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("user logged out from all devices")
 	return nil
 }

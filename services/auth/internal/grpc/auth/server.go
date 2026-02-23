@@ -20,6 +20,7 @@ type Auth interface {
 	ResetPasswordWithToken(ctx context.Context, accessToken string, password string) error
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 	Logout(ctx context.Context, accessToken string) error
+	LogoutFromAllDevices(ctx context.Context, accessToken string) error
 }
 
 type ServerAPI struct {
@@ -154,4 +155,17 @@ func (s *ServerAPI) Logout(ctx context.Context, req *authpb.LogoutRequest) (*aut
 	}
 
 	return &authpb.LogoutResponse{}, nil
+}
+
+func (s *ServerAPI) LogoutFromAllDevices(ctx context.Context, req *authpb.LogoutFromAllDevicesRequest) (*authpb.LogoutFromAllDevicesResponse, error) {
+	err := s.auth.LogoutFromAllDevices(ctx, req.GetAccessToken())
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidToken) {
+			return nil, status.Error(codes.InvalidArgument, "invalid token")
+		}
+
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	return &authpb.LogoutFromAllDevicesResponse{}, nil
 }
