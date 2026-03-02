@@ -1,0 +1,47 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: auth-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: local_user
+      POSTGRES_PASSWORD: local_password
+      POSTGRES_DB: auth_local_db
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U local_user -d auth_local_db"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: auth-redis
+    restart: unless-stopped
+
+    command: redis-server --requirepass local_password
+
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redisdata:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "local_password", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+volumes:
+  pgdata:
+  redisdata:

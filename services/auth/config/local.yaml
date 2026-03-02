@@ -1,0 +1,18 @@
+env: "local"
+access_token_ttl: 15m
+refresh_token_ttl: 720h
+user_storage:
+  host: "localhost"
+  port: 5432
+  username: "local_user"
+  password: "local_password"
+  database: "auth_local_db"
+verification_storage:
+  address: "localhost:6379"
+  password: "local_password"
+  database: 1
+grpc:
+  port: 50051
+  timeout: 10h
+link_for_reset_password: "http://localhost:3000/reset-password?token=%s"
+link_ttl: 15m
