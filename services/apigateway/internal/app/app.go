@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 
 	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
 	redisclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/redis"
@@ -42,6 +43,14 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	router := chi.NewRouter()
 
 	// Global middleware.
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://myforebears.ru.tuna.am"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Request-Id"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
 	router.Use(chimw.RequestID)
 	router.Use(chimw.RealIP)
 	router.Use(middleware.Logging(log))
