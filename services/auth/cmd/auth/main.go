@@ -8,17 +8,13 @@ import (
 
 	"github.com/Bad-Utya/myforebears-backend/services/auth/internal/app"
 	"github.com/Bad-Utya/myforebears-backend/services/auth/internal/config"
-)
-
-const (
-	envLocal = "local"
-	envProd  = "prod"
+	"github.com/Bad-Utya/myforebears-backend/utility/pkg/log"
 )
 
 func main() {
 	cfg := config.MustLoad()
 
-	log := setupLogger(cfg.Env)
+	log := log.SetupLogger(cfg.Env)
 
 	log.Info("starting app", slog.Any("config", cfg))
 
@@ -56,21 +52,4 @@ func main() {
 	application.Stop()
 
 	log.Info("app stopped")
-}
-
-func setupLogger(env string) *slog.Logger {
-	var log *slog.Logger
-
-	switch env {
-	case envLocal:
-		log = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		)
-	case envProd:
-		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
-		)
-	}
-
-	return log
 }

@@ -1,9 +1,9 @@
 package config
 
 import (
-	"flag"
 	"os"
 	"time"
+	"utility/pkg/config"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
@@ -42,7 +42,7 @@ type TokenStorageConfig struct {
 func MustLoad() *Config {
 	_ = godotenv.Load()
 
-	path := fetchConfigPath()
+	path := config.FetchConfigPath()
 	if path == "" {
 		panic("config path is empty")
 	}
@@ -57,17 +57,4 @@ func MustLoad() *Config {
 	}
 
 	return &cfg
-}
-
-func fetchConfigPath() string {
-	var res string
-
-	flag.StringVar(&res, "config", "", "path to config file")
-	flag.Parse()
-
-	if res == "" {
-		res = os.Getenv("CONFIG_PATH")
-	}
-
-	return res
 }

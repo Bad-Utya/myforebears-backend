@@ -1,8 +1,8 @@
 package config
 
 import (
-	"flag"
 	"os"
+	"utility/pkg/config"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
@@ -24,7 +24,7 @@ type RabbitMQConfig struct {
 func MustLoad() *Config {
 	_ = godotenv.Load()
 
-	path := fetchConfigPath()
+	path := config.FetchConfigPath()
 	if path == "" {
 		panic("config path is empty")
 	}
@@ -39,17 +39,4 @@ func MustLoad() *Config {
 	}
 
 	return &cfg
-}
-
-func fetchConfigPath() string {
-	var path string
-
-	flag.StringVar(&path, "config", "", "path to config file")
-	flag.Parse()
-
-	if path == "" {
-		path = os.Getenv("CONFIG_PATH")
-	}
-
-	return path
 }

@@ -8,17 +8,13 @@ import (
 
 	"github.com/Bad-Utya/myforebears-backend/services/emailprovider/internal/app"
 	"github.com/Bad-Utya/myforebears-backend/services/emailprovider/internal/config"
-)
-
-const (
-	envLocal = "local"
-	envProd  = "prod"
+	"github.com/Bad-Utya/myforebears-backend/utility/pkg/log"
 )
 
 func main() {
 	cfg := config.MustLoad()
 
-	log := setupLogger(cfg.Env)
+	log := log.SetupLogger(cfg.Env)
 
 	log.Info("starting emailprovider", slog.Any("config", cfg))
 
@@ -41,21 +37,4 @@ func main() {
 
 	log.Info("stopping emailprovider")
 	application.Stop()
-}
-
-func setupLogger(env string) *slog.Logger {
-	var log *slog.Logger
-
-	switch env {
-	case envLocal:
-		log = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		)
-	case envProd:
-		log = slog.New(
-			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}),
-		)
-	}
-
-	return log
 }
