@@ -38,3 +38,6 @@ Thumbs.db
 # Build output
 bin/
 dist/
+
+# Local configuration files
+local.yaml

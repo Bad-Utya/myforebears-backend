@@ -77,7 +77,7 @@ func (h *Handler) SendCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	code, err := h.client.SendCode(r.Context(), req.Email, req.Password)
+	err := h.client.SendCode(r.Context(), req.Email, req.Password)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("send code failed", slog.String("error", err.Error()))
@@ -85,7 +85,7 @@ func (h *Handler) SendCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.OK(w, map[string]string{"code": code})
+	response.OK(w, map[string]string{"status": "ok"})
 }
 
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {

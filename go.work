@@ -4,5 +4,6 @@ use (
 	./gen/go
 	./services/apigateway
 	./services/auth
+	./services/emailprovider
 	./utility
 )

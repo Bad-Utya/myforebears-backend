@@ -22,7 +22,6 @@ message SendCodeRequest {
 }
 
 message SendCodeResponse {
-    string code = 1;
 }
 
 message RegisterRequest {

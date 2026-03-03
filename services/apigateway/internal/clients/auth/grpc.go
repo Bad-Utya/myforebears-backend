@@ -39,18 +39,18 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) SendCode(ctx context.Context, email, password string) (string, error) {
+func (c *Client) SendCode(ctx context.Context, email, password string) error {
 	const op = "clients.auth.SendCode"
 
-	resp, err := c.api.SendCode(ctx, &authpb.SendCodeRequest{
+	_, err := c.api.SendCode(ctx, &authpb.SendCodeRequest{
 		Email:    email,
 		Password: password,
 	})
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	return resp.GetCode(), nil
+	return nil
 }
 
 func (c *Client) Register(ctx context.Context, email, code string) (string, string, error) {

@@ -75,7 +75,6 @@ func (x *SendCodeRequest) GetPassword() string {
 
 type SendCodeResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -108,13 +107,6 @@ func (x *SendCodeResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use SendCodeResponse.ProtoReflect.Descriptor instead.
 func (*SendCodeResponse) Descriptor() ([]byte, []int) {
 	return file_auth_auth_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *SendCodeResponse) GetCode() string {
-	if x != nil {
-		return x.Code
-	}
-	return ""
 }
 
 type RegisterRequest struct {
@@ -852,9 +844,8 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\x0fauth/auth.proto\x12\x04auth\"C\n" +
 	"\x0fSendCodeRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"&\n" +
-	"\x10SendCodeResponse\x12\x12\n" +
-	"\x04code\x18\x01 \x01(\tR\x04code\";\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x12\n" +
+	"\x10SendCodeResponse\";\n" +
 	"\x0fRegisterRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\"Z\n" +

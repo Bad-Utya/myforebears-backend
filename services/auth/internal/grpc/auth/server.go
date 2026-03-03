@@ -12,7 +12,7 @@ import (
 )
 
 type Auth interface {
-	SendCode(ctx context.Context, email string, password string) (string, error)
+	SendCode(ctx context.Context, email string, password string) error
 	Register(ctx context.Context, email string, code string) (string, string, error)
 	Login(ctx context.Context, email string, password string) (string, string, error)
 	SendLinkForResetPassword(ctx context.Context, email string) (string, error)
@@ -33,7 +33,7 @@ func Register(gRPC *grpc.Server, auth Auth) {
 }
 
 func (s *ServerAPI) SendCode(ctx context.Context, req *authpb.SendCodeRequest) (*authpb.SendCodeResponse, error) {
-	code, err := s.auth.SendCode(ctx, req.GetEmail(), req.GetPassword())
+	err := s.auth.SendCode(ctx, req.GetEmail(), req.GetPassword())
 	if err != nil {
 		if errors.Is(err, auth.ErrUserExists) {
 			return nil, status.Error(codes.AlreadyExists, "user already exists")
@@ -48,7 +48,8 @@ func (s *ServerAPI) SendCode(ctx context.Context, req *authpb.SendCodeRequest) (
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
-	return &authpb.SendCodeResponse{Code: code}, nil
+	// Code is delivered via email; the response field is intentionally empty.
+	return &authpb.SendCodeResponse{}, nil
 }
 
 func (s *ServerAPI) Register(ctx context.Context, req *authpb.RegisterRequest) (*authpb.RegisterResponse, error) {

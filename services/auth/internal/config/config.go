@@ -19,6 +19,7 @@ type Config struct {
 	GRPC                 GRPCConfig                `yaml:"grpc" env-required:"true"`
 	LinkForResetPassword string                    `yaml:"link_for_reset_password" env-required:"true"`
 	LinkTTL              time.Duration             `yaml:"link_ttl" env-required:"true"`
+	RabbitMQ             RabbitMQConfig            `yaml:"rabbitmq" env-required:"true"`
 }
 
 type UserStorageConfig struct {
@@ -38,6 +39,12 @@ type VerificationStorageConfig struct {
 type GRPCConfig struct {
 	Port    int    `yaml:"port" env-required:"true"`
 	Timeout string `yaml:"timeout" env-required:"true"`
+}
+
+type RabbitMQConfig struct {
+	URL        string `yaml:"url" env-required:"true"`
+	Exchange   string `yaml:"exchange" env-required:"true"`
+	RoutingKey string `yaml:"routing_key" env-required:"true"`
 }
 
 func MustLoad() *Config {
