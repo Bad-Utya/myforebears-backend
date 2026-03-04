@@ -25,6 +25,11 @@ func main() {
 		cfg.RabbitMQ.Queue,
 		cfg.RabbitMQ.RoutingKey,
 		cfg.RabbitMQ.ConsumerTag,
+		cfg.SMTP.Host,
+		cfg.SMTP.Port,
+		cfg.SMTP.Username,
+		cfg.SMTP.Password,
+		cfg.SMTP.From,
 	)
 
 	// Run consumer in background goroutine.

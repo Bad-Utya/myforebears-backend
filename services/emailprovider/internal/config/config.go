@@ -11,6 +11,15 @@ import (
 type Config struct {
 	Env      string         `yaml:"env" env-required:"true"`
 	RabbitMQ RabbitMQConfig `yaml:"rabbitmq" env-required:"true"`
+	SMTP     SMTPConfig     `yaml:"smtp" env-required:"true"`
+}
+
+type SMTPConfig struct {
+	Host     string `yaml:"host" env:"SMTP_HOST" env-required:"true"`
+	Port     int    `yaml:"port" env:"SMTP_PORT" env-required:"true"`
+	Username string `yaml:"username" env:"SMTP_USERNAME" env-required:"true"`
+	Password string `yaml:"password" env:"SMTP_PASSWORD" env-required:"true"`
+	From     string `yaml:"from" env:"SMTP_FROM" env-required:"true"`
 }
 
 type RabbitMQConfig struct {
