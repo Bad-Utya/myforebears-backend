@@ -148,7 +148,7 @@ func (h *Handler) SendLinkForResetPassword(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	link, err := h.client.SendLinkForResetPassword(r.Context(), req.Email)
+	err := h.client.SendLinkForResetPassword(r.Context(), req.Email)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("send link for reset password failed", slog.String("error", err.Error()))
@@ -156,7 +156,7 @@ func (h *Handler) SendLinkForResetPassword(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	response.OK(w, map[string]string{"link": link})
+	response.OK(w, map[string]string{"status": "ok"})
 }
 
 func (h *Handler) ResetPasswordWithLink(w http.ResponseWriter, r *http.Request) {

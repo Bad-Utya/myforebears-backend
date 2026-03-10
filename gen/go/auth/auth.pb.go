@@ -363,7 +363,6 @@ func (x *SendLinkForResetPasswordRequest) GetEmail() string {
 
 type SendLinkForResetPasswordResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Link          string                 `protobuf:"bytes,1,opt,name=link,proto3" json:"link,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -396,13 +395,6 @@ func (x *SendLinkForResetPasswordResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use SendLinkForResetPasswordResponse.ProtoReflect.Descriptor instead.
 func (*SendLinkForResetPasswordResponse) Descriptor() ([]byte, []int) {
 	return file_auth_auth_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *SendLinkForResetPasswordResponse) GetLink() string {
-	if x != nil {
-		return x.Link
-	}
-	return ""
 }
 
 type ResetPasswordWithLinkRequest struct {
@@ -859,9 +851,8 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
 	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\"7\n" +
 	"\x1fSendLinkForResetPasswordRequest\x12\x14\n" +
-	"\x05email\x18\x01 \x01(\tR\x05email\"6\n" +
-	" SendLinkForResetPasswordResponse\x12\x12\n" +
-	"\x04link\x18\x01 \x01(\tR\x04link\"N\n" +
+	"\x05email\x18\x01 \x01(\tR\x05email\"\"\n" +
+	" SendLinkForResetPasswordResponse\"N\n" +
 	"\x1cResetPasswordWithLinkRequest\x12\x12\n" +
 	"\x04link\x18\x01 \x01(\tR\x04link\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x1f\n" +

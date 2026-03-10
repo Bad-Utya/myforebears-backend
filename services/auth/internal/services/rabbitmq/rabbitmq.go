@@ -44,6 +44,41 @@ const (
   </table>
 </body>
 </html>`
+
+	sendLinkText = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f7;font-family:Arial,Helvetica,sans-serif">
+  <table width="100%%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;padding:40px 0">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden">
+        <tr>
+          <td style="background:#2d6a4f;padding:24px;text-align:center;color:#ffffff;font-size:22px;font-weight:bold">
+            Rooots
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 32px 16px;text-align:center;color:#333333;font-size:16px">
+            Click the button below to reset your password
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 24px;text-align:center">
+            <a href="%s" style="display:inline-block;background:#2d6a4f;color:#ffffff;text-decoration:none;font-size:16px;font-weight:bold;padding:14px 40px;border-radius:6px">
+              Reset Password
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 32px;text-align:center;color:#888888;font-size:13px">
+            If you didn't request a password reset, just ignore this email.
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
 )
 
 // emailMessage is the wire format consumed by the email-provider service.
@@ -109,6 +144,11 @@ func New(log *slog.Logger, url string, exchange string, routingKey string) (*Pub
 func (p *Publisher) PublishCode(ctx context.Context, to string, code string) error {
 	body := fmt.Sprintf(sendCodeText, code)
 	return p.publishEmail(ctx, to, "Rooots — Verification Code", body)
+}
+
+func (p *Publisher) PublishLink(ctx context.Context, to string, link string) error {
+	body := fmt.Sprintf(sendLinkText, link)
+	return p.publishEmail(ctx, to, "Rooots — Verification Link", body)
 }
 
 // PublishEmail serializes the email task and publishes it as a persistent

@@ -81,17 +81,17 @@ func (c *Client) Login(ctx context.Context, email, password string) (string, str
 	return resp.GetAccessToken(), resp.GetRefreshToken(), nil
 }
 
-func (c *Client) SendLinkForResetPassword(ctx context.Context, email string) (string, error) {
+func (c *Client) SendLinkForResetPassword(ctx context.Context, email string) error {
 	const op = "clients.auth.SendLinkForResetPassword"
 
-	resp, err := c.api.SendLinkForResetPassword(ctx, &authpb.SendLinkForResetPasswordRequest{
+	_, err := c.api.SendLinkForResetPassword(ctx, &authpb.SendLinkForResetPasswordRequest{
 		Email: email,
 	})
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	return resp.GetLink(), nil
+	return nil
 }
 
 func (c *Client) ResetPasswordWithLink(ctx context.Context, link, password string) error {

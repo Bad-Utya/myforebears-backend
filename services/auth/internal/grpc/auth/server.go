@@ -15,7 +15,7 @@ type Auth interface {
 	SendCode(ctx context.Context, email string, password string) error
 	Register(ctx context.Context, email string, code string) (string, string, error)
 	Login(ctx context.Context, email string, password string) (string, string, error)
-	SendLinkForResetPassword(ctx context.Context, email string) (string, error)
+	SendLinkForResetPassword(ctx context.Context, email string) error
 	ResetPasswordWithLink(ctx context.Context, link string, password string) error
 	ResetPasswordWithToken(ctx context.Context, accessToken string, password string) error
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
@@ -94,7 +94,7 @@ func (s *ServerAPI) Login(ctx context.Context, req *authpb.LoginRequest) (*authp
 }
 
 func (s *ServerAPI) SendLinkForResetPassword(ctx context.Context, req *authpb.SendLinkForResetPasswordRequest) (*authpb.SendLinkForResetPasswordResponse, error) {
-	link, err := s.auth.SendLinkForResetPassword(ctx, req.GetEmail())
+	err := s.auth.SendLinkForResetPassword(ctx, req.GetEmail())
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidCredentials) {
 			return nil, status.Error(codes.NotFound, "user not found")
@@ -102,7 +102,7 @@ func (s *ServerAPI) SendLinkForResetPassword(ctx context.Context, req *authpb.Se
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
-	return &authpb.SendLinkForResetPasswordResponse{Link: link}, nil
+	return &authpb.SendLinkForResetPasswordResponse{}, nil
 }
 
 func (s *ServerAPI) ResetPasswordWithLink(ctx context.Context, req *authpb.ResetPasswordWithLinkRequest) (*authpb.ResetPasswordWithLinkResponse, error) {

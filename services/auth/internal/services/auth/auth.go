@@ -70,6 +70,7 @@ type AccessBlacklist interface {
 // EmailPublisher publishes outbound email tasks to the message broker.
 type EmailPublisher interface {
 	PublishCode(ctx context.Context, to string, code string) error
+	PublishLink(ctx context.Context, to string, link string) error
 }
 
 func New(
@@ -347,7 +348,7 @@ func (a *Auth) Login(ctx context.Context, email string, password string) (string
 }
 
 // SendLinkForResetPassword generates a unique link for password reset, saves it in the verification storage, and returns the link.
-func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (string, error) {
+func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) error {
 	const op = "auth.SendLinkForResetPassword"
 
 	log := a.log.With(slog.String("op", op))
@@ -358,11 +359,11 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			log.Info("user not found")
-			return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+			return fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 		}
 
 		log.Error("failed to get user", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	// Generate a link for password reset
@@ -373,7 +374,7 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 		secondPartLink, err = generateLink()
 		if err != nil {
 			log.Error("failed to generate reset link", slog.String("error", err.Error()))
-			return "", fmt.Errorf("%s: %w", op, err)
+			return fmt.Errorf("%s: %w", op, err)
 		}
 		linkHash = hashString(secondPartLink)
 
@@ -385,7 +386,7 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 				continue
 			}
 			log.Error("failed to check link uniqueness", slog.String("error", err.Error()))
-			return "", fmt.Errorf("%s: %w", op, err)
+			return fmt.Errorf("%s: %w", op, err)
 		}
 	}
 
@@ -393,12 +394,17 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 	err = a.verificationStorage.SaveLink(ctx, email, linkHash, a.linkTTL)
 	if err != nil {
 		log.Error("failed to save reset link", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	link := fmt.Sprintf(a.linkForResetPassword, secondPartLink)
 
-	return link, nil
+	if err := a.emailPublisher.PublishLink(ctx, email, link); err != nil {
+		log.Error("failed to publish reset link email", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
 }
 
 // ResetPasswordWithLink validates the reset link and updates the user's password if the link is valid.
