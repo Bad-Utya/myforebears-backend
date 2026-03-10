@@ -9,6 +9,43 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+const (
+	sendCodeText = `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f7;font-family:Arial,Helvetica,sans-serif">
+  <table width="100%%" cellpadding="0" cellspacing="0" style="background:#f4f4f7;padding:40px 0">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden">
+        <tr>
+          <td style="background:#2d6a4f;padding:24px;text-align:center;color:#ffffff;font-size:22px;font-weight:bold">
+            Rooots
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:32px 32px 16px;text-align:center;color:#333333;font-size:16px">
+            Your verification code
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 32px;text-align:center">
+            <div style="display:inline-block;background:#f0faf4;border:2px dashed #2d6a4f;border-radius:8px;padding:16px 32px;font-size:32px;font-weight:bold;letter-spacing:6px;color:#2d6a4f">
+              %s
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:0 32px 32px;text-align:center;color:#888888;font-size:13px">
+            If you didn't request this code, just ignore this email.
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+)
+
 // emailMessage is the wire format consumed by the email-provider service.
 type emailMessage struct {
 	To      string `json:"to"`
@@ -70,8 +107,8 @@ func New(log *slog.Logger, url string, exchange string, routingKey string) (*Pub
 }
 
 func (p *Publisher) PublishCode(ctx context.Context, to string, code string) error {
-	body := fmt.Sprintf("Your verification code is: %s", code)
-	return p.publishEmail(ctx, to, "Your verification code", body)
+	body := fmt.Sprintf(sendCodeText, code)
+	return p.publishEmail(ctx, to, "Rooots — Verification Code", body)
 }
 
 // PublishEmail serializes the email task and publishes it as a persistent
