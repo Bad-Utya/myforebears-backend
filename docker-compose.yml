@@ -42,6 +42,29 @@ services:
       timeout: 2s
       retries: 10
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: emailprovider-rabbitmq
+    restart: unless-stopped
+
+    environment:
+      RABBITMQ_DEFAULT_USER: local_user
+      RABBITMQ_DEFAULT_PASS: local_password
+
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   pgdata:
   redisdata:
+  rabbitmqdata:

@@ -44,7 +44,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 
 	// Global middleware.
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://myforebears.ru.tuna.am"},
+		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Request-Id"},
 		ExposedHeaders:   []string{"Link"},

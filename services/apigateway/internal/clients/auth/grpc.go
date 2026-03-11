@@ -39,18 +39,18 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) SendCode(ctx context.Context, email, password string) (string, error) {
+func (c *Client) SendCode(ctx context.Context, email, password string) error {
 	const op = "clients.auth.SendCode"
 
-	resp, err := c.api.SendCode(ctx, &authpb.SendCodeRequest{
+	_, err := c.api.SendCode(ctx, &authpb.SendCodeRequest{
 		Email:    email,
 		Password: password,
 	})
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	return resp.GetCode(), nil
+	return nil
 }
 
 func (c *Client) Register(ctx context.Context, email, code string) (string, string, error) {
@@ -81,17 +81,17 @@ func (c *Client) Login(ctx context.Context, email, password string) (string, str
 	return resp.GetAccessToken(), resp.GetRefreshToken(), nil
 }
 
-func (c *Client) SendLinkForResetPassword(ctx context.Context, email string) (string, error) {
+func (c *Client) SendLinkForResetPassword(ctx context.Context, email string) error {
 	const op = "clients.auth.SendLinkForResetPassword"
 
-	resp, err := c.api.SendLinkForResetPassword(ctx, &authpb.SendLinkForResetPasswordRequest{
+	_, err := c.api.SendLinkForResetPassword(ctx, &authpb.SendLinkForResetPasswordRequest{
 		Email: email,
 	})
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	return resp.GetLink(), nil
+	return nil
 }
 
 func (c *Client) ResetPasswordWithLink(ctx context.Context, link, password string) error {

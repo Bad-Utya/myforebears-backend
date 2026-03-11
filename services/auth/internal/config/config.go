@@ -1,9 +1,9 @@
 package config
 
 import (
-	"flag"
 	"os"
 	"time"
+	"utility/pkg/config"
 
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
@@ -19,6 +19,7 @@ type Config struct {
 	GRPC                 GRPCConfig                `yaml:"grpc" env-required:"true"`
 	LinkForResetPassword string                    `yaml:"link_for_reset_password" env-required:"true"`
 	LinkTTL              time.Duration             `yaml:"link_ttl" env-required:"true"`
+	RabbitMQ             RabbitMQConfig            `yaml:"rabbitmq" env-required:"true"`
 }
 
 type UserStorageConfig struct {
@@ -40,11 +41,17 @@ type GRPCConfig struct {
 	Timeout string `yaml:"timeout" env-required:"true"`
 }
 
+type RabbitMQConfig struct {
+	URL        string `yaml:"url" env-required:"true"`
+	Exchange   string `yaml:"exchange" env-required:"true"`
+	RoutingKey string `yaml:"routing_key" env-required:"true"`
+}
+
 func MustLoad() *Config {
 	// Load .env if present to populate environment variables.
 	_ = godotenv.Load()
 
-	path := fetchConfigPath()
+	path := config.FetchConfigPath()
 	if path == "" {
 		panic("config path is empty")
 	}
@@ -59,17 +66,4 @@ func MustLoad() *Config {
 	}
 
 	return &cfg
-}
-
-func fetchConfigPath() string {
-	var res string
-
-	flag.StringVar(&res, "config", "", "path to config file")
-	flag.Parse()
-
-	if res == "" {
-		res = os.Getenv("CONFIG_PATH")
-	}
-
-	return res
 }

@@ -16,3 +16,7 @@ grpc:
   timeout: 10h
 link_for_reset_password: "http://localhost:3000/reset-password?token=%s"
 link_ttl: 15m
+rabbitmq:
+  url: "amqp://local_user:local_password@localhost:5672/"
+  exchange: "email"
+  routing_key: "email.send"

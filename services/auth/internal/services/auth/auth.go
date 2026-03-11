@@ -44,6 +44,7 @@ type Auth struct {
 	linkForResetPassword string
 	linkTTL              time.Duration
 	accessBlacklist      AccessBlacklist
+	emailPublisher       EmailPublisher
 }
 
 type UserStorage interface {
@@ -66,6 +67,12 @@ type AccessBlacklist interface {
 	BlacklistEmail(ctx context.Context, email string, ttl time.Duration) error
 }
 
+// EmailPublisher publishes outbound email tasks to the message broker.
+type EmailPublisher interface {
+	PublishCode(ctx context.Context, to string, code string) error
+	PublishLink(ctx context.Context, to string, link string) error
+}
+
 func New(
 	log *slog.Logger,
 	userStorage UserStorage,
@@ -76,6 +83,7 @@ func New(
 	linkForResetPassword string,
 	linkTTL time.Duration,
 	accessBlacklist AccessBlacklist,
+	emailPublisher EmailPublisher,
 ) *Auth {
 	return &Auth{
 		log:                  log,
@@ -87,6 +95,7 @@ func New(
 		linkForResetPassword: linkForResetPassword,
 		linkTTL:              linkTTL,
 		accessBlacklist:      accessBlacklist,
+		emailPublisher:       emailPublisher,
 	}
 }
 
@@ -119,7 +128,8 @@ func hashString(str string) string {
 
 // SendCode initiates registration when a password is provided, or resends the
 // verification code (with cooldown) when the password is empty.
-func (a *Auth) SendCode(ctx context.Context, email string, password string) (string, error) {
+// The code is published to RabbitMQ so the email-provider service delivers it.
+func (a *Auth) SendCode(ctx context.Context, email string, password string) error {
 	const op = "auth.SendCode"
 
 	log := a.log.With(slog.String("op", op))
@@ -130,11 +140,11 @@ func (a *Auth) SendCode(ctx context.Context, email string, password string) (str
 	_, err := a.userStorage.GetUser(ctx, email)
 	if err == nil {
 		log.Info("user already exists")
-		return "", fmt.Errorf("%s: %w", op, ErrUserExists)
+		return fmt.Errorf("%s: %w", op, ErrUserExists)
 	}
 	if !errors.Is(err, storage.ErrUserNotFound) {
 		log.Error("failed to check user existence", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	// Enforce resend cooldown if a verification is already pending.
@@ -142,43 +152,68 @@ func (a *Auth) SendCode(ctx context.Context, email string, password string) (str
 	if err == nil {
 		if time.Since(createdAt) < resendCooldown {
 			log.Info("resend cooldown not expired")
-			return "", fmt.Errorf("%s: %w", op, ErrCodeCooldown)
+			return fmt.Errorf("%s: %w", op, ErrCodeCooldown)
 		}
 		// Cooldown passed: replace old verification data.
 		if err := a.verificationStorage.DeleteCode(ctx, email); err != nil {
 			log.Error("failed to delete old verification data", slog.String("error", err.Error()))
-			return "", fmt.Errorf("%s: %w", op, err)
+			return fmt.Errorf("%s: %w", op, err)
 		}
 
 		log.Info("existing verification data found, creating new code")
 		code, err := a.createAndSaveCode(ctx, email, passHash)
 		if err != nil {
-			return "", fmt.Errorf("%s: %w", op, err)
+			return fmt.Errorf("%s: %w", op, err)
 		}
-		log.Info("verification code resent")
 
-		return code, nil
+		if err := a.publishVerificationCode(ctx, email, code); err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+
+		log.Info("verification code resent")
+		return nil
 	} else if !errors.Is(err, storage.ErrCodeNotFound) {
 		log.Error("failed to get verification data", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	// Hash password
 	passHash, err = bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Error("failed to hash password", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	// Generate code, save verification data to Redis, and send the code to the user.
+	// Generate code, save verification data to Redis, then publish the email task.
 	code, err := a.createAndSaveCode(ctx, email, passHash)
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err := a.publishVerificationCode(ctx, email, code); err != nil {
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	log.Info("verification code sent")
 
-	return code, nil
+	return nil
+}
+
+// publishVerificationCode publishes the 6-digit code to RabbitMQ so the
+// email-provider service picks it up and delivers the email to the user.
+func (a *Auth) publishVerificationCode(ctx context.Context, email string, code string) error {
+	const op = "auth.publishVerificationCode"
+
+	if err := a.emailPublisher.PublishCode(ctx, email, code); err != nil {
+		a.log.Error("failed to publish verification email",
+			slog.String("op", op),
+			slog.String("email", email),
+			slog.String("error", err.Error()),
+		)
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
 }
 
 func (a *Auth) createAndSaveCode(ctx context.Context, email string, passHash []byte) (string, error) {
@@ -313,7 +348,7 @@ func (a *Auth) Login(ctx context.Context, email string, password string) (string
 }
 
 // SendLinkForResetPassword generates a unique link for password reset, saves it in the verification storage, and returns the link.
-func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (string, error) {
+func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) error {
 	const op = "auth.SendLinkForResetPassword"
 
 	log := a.log.With(slog.String("op", op))
@@ -324,11 +359,11 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
 			log.Info("user not found")
-			return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
+			return fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 		}
 
 		log.Error("failed to get user", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	// Generate a link for password reset
@@ -339,7 +374,7 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 		secondPartLink, err = generateLink()
 		if err != nil {
 			log.Error("failed to generate reset link", slog.String("error", err.Error()))
-			return "", fmt.Errorf("%s: %w", op, err)
+			return fmt.Errorf("%s: %w", op, err)
 		}
 		linkHash = hashString(secondPartLink)
 
@@ -351,7 +386,7 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 				continue
 			}
 			log.Error("failed to check link uniqueness", slog.String("error", err.Error()))
-			return "", fmt.Errorf("%s: %w", op, err)
+			return fmt.Errorf("%s: %w", op, err)
 		}
 	}
 
@@ -359,12 +394,17 @@ func (a *Auth) SendLinkForResetPassword(ctx context.Context, email string) (stri
 	err = a.verificationStorage.SaveLink(ctx, email, linkHash, a.linkTTL)
 	if err != nil {
 		log.Error("failed to save reset link", slog.String("error", err.Error()))
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	link := fmt.Sprintf(a.linkForResetPassword, secondPartLink)
 
-	return link, nil
+	if err := a.emailPublisher.PublishLink(ctx, email, link); err != nil {
+		log.Error("failed to publish reset link email", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
 }
 
 // ResetPasswordWithLink validates the reset link and updates the user's password if the link is valid.

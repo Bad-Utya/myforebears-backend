@@ -22,7 +22,7 @@ message SendCodeRequest {
 }
 
 message SendCodeResponse {
-    string code = 1;
+    
 }
 
 message RegisterRequest {
@@ -50,7 +50,7 @@ message SendLinkForResetPasswordRequest {
 }
 
 message SendLinkForResetPasswordResponse {
-    string link = 1;
+
 }
 
 message ResetPasswordWithLinkRequest {
