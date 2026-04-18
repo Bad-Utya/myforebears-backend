@@ -64,7 +64,29 @@ services:
       timeout: 5s
       retries: 10
 
+  neo4j:
+    image: neo4j:5.26
+    container_name: person-neo4j
+    restart: unless-stopped
+
+    environment:
+      NEO4J_AUTH: neo4j/local_password
+
+    ports:
+      - "7474:7474" # Browser
+      - "7687:7687" # Bolt
+
+    volumes:
+      - neo4jdata:/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p local_password 'RETURN 1;' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
 volumes:
   pgdata:
   redisdata:
   rabbitmqdata:
+  neo4jdata:
