@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package person;
+
+option go_package = "github.com/Bad-Utya/myforebears-backend/gen/go/person;personpb";
+
+enum Gender {
+    GENDER_UNSPECIFIED = 0;
+    GENDER_MALE = 1;
+    GENDER_FEMALE = 2;
+}
+
+enum RelationshipType {
+    RELATIONSHIP_TYPE_UNSPECIFIED = 0;
+    RELATIONSHIP_PARENT_CHILD = 1;
+    RELATIONSHIP_PARTNER = 2;
+}
+
+enum RelationDirection {
+    RELATION_DIRECTION_UNSPECIFIED = 0;
+    RELATION_DIRECTION_OUTGOING = 1;
+    RELATION_DIRECTION_INCOMING = 2;
+}
+
+message Person {
+    string id = 1;
+    string tree_id = 2;
+    string first_name = 3;
+    string last_name = 4;
+    string patronymic = 5;
+    Gender gender = 6;
+}
+
+message Relationship {
+    string person_id_from = 1;
+    string person_id_to = 2;
+    RelationshipType type = 3;
+}
+
+message Relative {
+    Person person = 1;
+    RelationshipType relationship_type = 2;
+    RelationDirection direction = 3;
+}
+
+service PersonService {
+    rpc CreatePerson (CreatePersonRequest) returns (CreatePersonResponse);
+    rpc GetPerson (GetPersonRequest) returns (GetPersonResponse);
+    rpc UpdatePerson (UpdatePersonRequest) returns (UpdatePersonResponse);
+    rpc DeletePerson (DeletePersonRequest) returns (DeletePersonResponse);
+
+    rpc AddRelationship (AddRelationshipRequest) returns (AddRelationshipResponse);
+    rpc RemoveRelationship (RemoveRelationshipRequest) returns (RemoveRelationshipResponse);
+    rpc GetRelatives (GetRelativesRequest) returns (GetRelativesResponse);
+    rpc GetTree (GetTreeRequest) returns (GetTreeResponse);
+}
+
+message CreatePersonRequest {
+    string tree_id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string patronymic = 4;
+    Gender gender = 5;
+}
+
+message CreatePersonResponse {
+    Person person = 1;
+}
+
+message GetPersonRequest {
+    string person_id = 1;
+}
+
+message GetPersonResponse {
+    Person person = 1;
+}
+
+message UpdatePersonRequest {
+    string person_id = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string patronymic = 4;
+    Gender gender = 5;
+}
+
+message UpdatePersonResponse {
+    Person person = 1;
+}
+
+message DeletePersonRequest {
+    string person_id = 1;
+}
+
+message DeletePersonResponse {}
+
+message AddRelationshipRequest {
+    string person_id_from = 1;
+    string person_id_to = 2;
+    RelationshipType type = 3;
+}
+
+message AddRelationshipResponse {}
+
+message RemoveRelationshipRequest {
+    string person_id_from = 1;
+    string person_id_to = 2;
+    RelationshipType type = 3;
+}
+
+message RemoveRelationshipResponse {}
+
+message GetRelativesRequest {
+    string person_id = 1;
+}
+
+message GetRelativesResponse {
+    repeated Relative relatives = 1;
+}
+
+message GetTreeRequest {
+    string tree_id = 1;
+}
+
+message GetTreeResponse {
+    repeated Person persons = 1;
+    repeated Relationship relationships = 2;
+}
