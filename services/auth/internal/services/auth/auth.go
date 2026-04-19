@@ -289,13 +289,13 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 		PassHash: passHash,
 	}
 
-	accessToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.accessTokenTTL, "access")
+	accessToken, err := jwt.NewToken(user.ID, user.Email, a.jwtSecret, a.accessTokenTTL, "access")
 	if err != nil {
 		log.Error("failed to create access token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	refreshToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.refreshTokenTTL, "refresh")
+	refreshToken, err := jwt.NewToken(user.ID, user.Email, a.jwtSecret, a.refreshTokenTTL, "refresh")
 	if err != nil {
 		log.Error("failed to create refresh token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
@@ -332,13 +332,13 @@ func (a *Auth) Login(ctx context.Context, email string, password string) (string
 
 	log.Info("user logged in")
 
-	accessToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.accessTokenTTL, "access")
+	accessToken, err := jwt.NewToken(user.ID, user.Email, a.jwtSecret, a.accessTokenTTL, "access")
 	if err != nil {
 		log.Error("failed to create access token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	refreshToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.refreshTokenTTL, "refresh")
+	refreshToken, err := jwt.NewToken(user.ID, user.Email, a.jwtSecret, a.refreshTokenTTL, "refresh")
 	if err != nil {
 		log.Error("failed to create refresh token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
@@ -519,13 +519,13 @@ func (a *Auth) RefreshTokens(ctx context.Context, refreshToken string) (string, 
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	newAccessToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.accessTokenTTL, "access")
+	newAccessToken, err := jwt.NewToken(user.ID, user.Email, a.jwtSecret, a.accessTokenTTL, "access")
 	if err != nil {
 		log.Error("failed to create access token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	newRefreshToken, err := jwt.NewToken(user.Email, a.jwtSecret, a.refreshTokenTTL, "refresh")
+	newRefreshToken, err := jwt.NewToken(user.ID, user.Email, a.jwtSecret, a.refreshTokenTTL, "refresh")
 	if err != nil {
 		log.Error("failed to create refresh token", slog.String("error", err.Error()))
 		return "", "", fmt.Errorf("%s: %w", op, err)

@@ -7,12 +7,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func NewToken(email string, secret string, duration time.Duration, tokenType string) (string, error) {
+func NewToken(userID int, email string, secret string, duration time.Duration, tokenType string) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
 	// Store minimal identity and token metadata in claims.
 	now := time.Now()
+	claims["user_id"] = userID
 	claims["email"] = email
 	claims["created_at"] = now.Unix()
 	claims["exp"] = now.Add(duration).Unix()

@@ -1,4 +1,4 @@
-module github.com/Bad-Utya/myforebears-backend/services/person
+module github.com/Bad-Utya/myforebears-backend/services/familytree
 
 go 1.25.1
 

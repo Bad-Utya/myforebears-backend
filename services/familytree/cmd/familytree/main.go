@@ -8,15 +8,15 @@ import (
 
 	"utility/pkg/log"
 
-	"github.com/Bad-Utya/myforebears-backend/services/person/internal/app"
-	"github.com/Bad-Utya/myforebears-backend/services/person/internal/config"
+	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/app"
+	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/config"
 )
 
 func main() {
 	cfg := config.MustLoad()
 
 	log := log.SetupLogger(cfg.Env)
-	log.Info("starting person service", slog.Any("config", cfg))
+	log.Info("starting familytree service", slog.Any("config", cfg))
 
 	application := app.New(
 		log,
@@ -37,8 +37,8 @@ func main() {
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
 
 	sign := <-stop
-	log.Info("stopping person service", slog.String("signal", sign.String()))
+	log.Info("stopping familytree service", slog.String("signal", sign.String()))
 
 	application.Stop()
-	log.Info("person service stopped")
+	log.Info("familytree service stopped")
 }

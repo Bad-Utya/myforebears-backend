@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package person;
+package familytree;
 
-option go_package = "github.com/Bad-Utya/myforebears-backend/gen/go/person;personpb";
+option go_package = "github.com/Bad-Utya/myforebears-backend/gen/go/familytree;familytreepb";
 
 enum Gender {
     GENDER_UNSPECIFIED = 0;
@@ -20,6 +20,18 @@ enum RelationDirection {
     RELATION_DIRECTION_UNSPECIFIED = 0;
     RELATION_DIRECTION_OUTGOING = 1;
     RELATION_DIRECTION_INCOMING = 2;
+}
+
+enum ParentRole {
+    PARENT_ROLE_UNSPECIFIED = 0;
+    PARENT_ROLE_FATHER = 1;
+    PARENT_ROLE_MOTHER = 2;
+}
+
+message Tree {
+    string id = 1;
+    int32 creator_id = 2;
+    int64 created_at_unix = 3;
 }
 
 message Person {
@@ -43,7 +55,16 @@ message Relative {
     RelationDirection direction = 3;
 }
 
-service PersonService {
+service FamilyTreeService {
+    rpc CreateTree (CreateTreeRequest) returns (CreateTreeResponse);
+    rpc ListTreesByCreator (ListTreesByCreatorRequest) returns (ListTreesByCreatorResponse);
+
+    rpc AddParent (AddParentRequest) returns (AddParentResponse);
+    rpc AddChild (AddChildRequest) returns (AddChildResponse);
+    rpc AddPartner (AddPartnerRequest) returns (AddPartnerResponse);
+    rpc UpdatePersonName (UpdatePersonNameRequest) returns (UpdatePersonNameResponse);
+    rpc DeletePersonInTree (DeletePersonInTreeRequest) returns (DeletePersonInTreeResponse);
+
     rpc CreatePerson (CreatePersonRequest) returns (CreatePersonResponse);
     rpc GetPerson (GetPersonRequest) returns (GetPersonResponse);
     rpc UpdatePerson (UpdatePersonRequest) returns (UpdatePersonResponse);
@@ -54,6 +75,88 @@ service PersonService {
     rpc GetRelatives (GetRelativesRequest) returns (GetRelativesResponse);
     rpc GetTree (GetTreeRequest) returns (GetTreeResponse);
 }
+
+message CreateTreeRequest {
+    int32 request_user_id = 1;
+}
+
+message CreateTreeResponse {
+    Tree tree = 1;
+    Person root_person = 2;
+}
+
+message ListTreesByCreatorRequest {
+    int32 request_user_id = 1;
+}
+
+message ListTreesByCreatorResponse {
+    repeated Tree trees = 1;
+}
+
+message AddParentRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string child_id = 3;
+    ParentRole role = 4;
+    string first_name = 5;
+    string last_name = 6;
+    string patronymic = 7;
+}
+
+message AddParentResponse {
+    Person parent = 1;
+    Person auto_created_second_parent = 2;
+}
+
+message AddChildRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string parent1_id = 3;
+    string parent2_id = 4;
+    string first_name = 5;
+    string last_name = 6;
+    string patronymic = 7;
+    Gender gender = 8;
+}
+
+message AddChildResponse {
+    Person child = 1;
+    Person auto_created_parent = 2;
+}
+
+message AddPartnerRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string person_id = 3;
+    string first_name = 4;
+    string last_name = 5;
+    string patronymic = 6;
+}
+
+message AddPartnerResponse {
+    Person partner = 1;
+}
+
+message UpdatePersonNameRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string person_id = 3;
+    string first_name = 4;
+    string last_name = 5;
+    string patronymic = 6;
+}
+
+message UpdatePersonNameResponse {
+    Person person = 1;
+}
+
+message DeletePersonInTreeRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string person_id = 3;
+}
+
+message DeletePersonInTreeResponse {}
 
 message CreatePersonRequest {
     string tree_id = 1;
@@ -119,6 +222,7 @@ message GetRelativesResponse {
 
 message GetTreeRequest {
     string tree_id = 1;
+    int32 request_user_id = 2;
 }
 
 message GetTreeResponse {

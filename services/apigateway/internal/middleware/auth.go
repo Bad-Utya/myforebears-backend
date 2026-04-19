@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -74,4 +75,37 @@ func extractBearer(r *http.Request) string {
 		return ""
 	}
 	return strings.TrimSpace(parts[1])
+}
+
+func ClaimsFromContext(ctx context.Context) (map[string]interface{}, error) {
+	v := ctx.Value(ClainsKey)
+	if v == nil {
+		return nil, fmt.Errorf("claims are missing in context")
+	}
+
+	claims, ok := v.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("claims have invalid type")
+	}
+
+	return claims, nil
+}
+
+func UserIDFromContext(ctx context.Context) (int, error) {
+	claims, err := ClaimsFromContext(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	// JWT numeric claims are decoded as float64.
+	userIDRaw, ok := claims["user_id"].(float64)
+	if !ok {
+		return 0, fmt.Errorf("user_id claim is missing or invalid")
+	}
+
+	if userIDRaw <= 0 {
+		return 0, fmt.Errorf("user_id claim must be positive")
+	}
+
+	return int(userIDRaw), nil
 }
