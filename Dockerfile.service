@@ -1,0 +1,24 @@
+FROM golang:1.25 AS builder
+
+WORKDIR /app
+
+COPY go.work go.work.sum ./
+COPY gen/go ./gen/go
+COPY services ./services
+COPY utility ./utility
+
+ARG SERVICE_NAME
+RUN test -n "$SERVICE_NAME"
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/service ./services/${SERVICE_NAME}/cmd/${SERVICE_NAME}
+
+FROM alpine:3.20
+
+RUN apk add --no-cache ca-certificates
+
+WORKDIR /app
+
+ARG SERVICE_NAME
+COPY --from=builder /out/service /usr/local/bin/service
+COPY services/${SERVICE_NAME}/config ./config
+
+ENTRYPOINT ["/usr/local/bin/service"]

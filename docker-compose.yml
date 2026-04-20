@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16
@@ -12,10 +10,11 @@ services:
       POSTGRES_DB: auth_local_db
 
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
 
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U local_user -d auth_local_db"]
@@ -84,6 +83,187 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+
+  db-init:
+    image: postgres:16
+    container_name: db-init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: local_password
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        psql -h postgres -U local_user -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='events_local_db'" | grep -q 1 || psql -h postgres -U local_user -d postgres -c "CREATE DATABASE events_local_db";
+        psql -h postgres -U local_user -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='familytree_local_db'" | grep -q 1 || psql -h postgres -U local_user -d postgres -c "CREATE DATABASE familytree_local_db";
+
+  migrate-auth:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrator
+    container_name: migrate-auth
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    command:
+      - -host
+      - postgres
+      - -port
+      - "5432"
+      - -user
+      - local_user
+      - -password
+      - local_password
+      - -dbname
+      - auth_local_db
+      - -sslmode
+      - disable
+      - -migrations-path
+      - /migrations/auth
+
+  migrate-familytree:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrator
+    container_name: migrate-familytree
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    command:
+      - -host
+      - postgres
+      - -port
+      - "5432"
+      - -user
+      - local_user
+      - -password
+      - local_password
+      - -dbname
+      - familytree_local_db
+      - -sslmode
+      - disable
+      - -migrations-path
+      - /migrations/familytree
+
+  migrate-events:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrator
+    container_name: migrate-events
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    command:
+      - -host
+      - postgres
+      - -port
+      - "5432"
+      - -user
+      - local_user
+      - -password
+      - local_password
+      - -dbname
+      - events_local_db
+      - -sslmode
+      - disable
+      - -migrations-path
+      - /migrations/events
+
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: auth
+    container_name: auth-service
+    restart: unless-stopped
+    depends_on:
+      migrate-auth:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+      JWT_SECRET: local_jwt_secret
+    ports:
+      - "50051:50051"
+
+  familytree:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: familytree
+    container_name: familytree-service
+    restart: unless-stopped
+    depends_on:
+      migrate-familytree:
+        condition: service_completed_successfully
+      neo4j:
+        condition: service_healthy
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+    ports:
+      - "50052:50052"
+
+  events:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: events
+    container_name: events-service
+    restart: unless-stopped
+    depends_on:
+      migrate-events:
+        condition: service_completed_successfully
+      familytree:
+        condition: service_started
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+    ports:
+      - "50053:50053"
+
+  emailprovider:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: emailprovider
+    container_name: emailprovider-service
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+
+  apigateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: apigateway
+    container_name: apigateway-service
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth:
+        condition: service_started
+      familytree:
+        condition: service_started
+      events:
+        condition: service_started
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+      JWT_SECRET: local_jwt_secret
+    ports:
+      - "8081:8080"
 
 volumes:
   pgdata:

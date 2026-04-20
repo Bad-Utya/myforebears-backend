@@ -1,0 +1,13 @@
+env: "local"
+rabbitmq:
+  url: "amqp://local_user:local_password@rabbitmq:5672/"
+  exchange: "email"
+  queue: "email.send"
+  routing_key: "email.send"
+  consumer_tag: "emailprovider"
+smtp:
+  host: "smtp.gmail.com"
+  port: 587
+  username: "gen.warps.notifications@gmail.com"
+  password: "aonf spxc mvlk hnpm"
+  from: "gen.warps.notifications@gmail.com"

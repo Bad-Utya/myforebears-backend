@@ -1,6 +1,26 @@
-CREATE TYPE IF NOT EXISTS primary_persons_mode_enum AS ENUM ('FIXED', 'UNLIMITED');
-CREATE TYPE IF NOT EXISTS event_date_precision_enum AS ENUM ('DAY', 'MONTH', 'YEAR');
-CREATE TYPE IF NOT EXISTS event_date_bound_enum AS ENUM ('EXACT', 'NOT_BEFORE', 'NOT_AFTER');
+DO $$
+BEGIN
+    CREATE TYPE primary_persons_mode_enum AS ENUM ('FIXED', 'UNLIMITED');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END
+$$;
+
+DO $$
+BEGIN
+    CREATE TYPE event_date_precision_enum AS ENUM ('DAY', 'MONTH', 'YEAR');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END
+$$;
+
+DO $$
+BEGIN
+    CREATE TYPE event_date_bound_enum AS ENUM ('EXACT', 'NOT_BEFORE', 'NOT_AFTER');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END
+$$;
 
 CREATE TABLE IF NOT EXISTS event_types
 (
