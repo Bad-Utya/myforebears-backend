@@ -11,17 +11,20 @@ import (
 	"github.com/go-chi/cors"
 
 	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
+	familytreeclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/familytree"
 	redisclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/redis"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/config"
 	authhandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/auth"
+	familytreehandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/familytree"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/middleware"
 )
 
 type App struct {
-	log         *slog.Logger
-	httpServer  *http.Server
-	authClient  *authclient.Client
-	redisClient *redisclient.Client
+	log              *slog.Logger
+	httpServer       *http.Server
+	authClient       *authclient.Client
+	familyTreeClient *familytreeclient.Client
+	redisClient      *redisclient.Client
 }
 
 func New(log *slog.Logger, cfg *config.Config) *App {
@@ -37,6 +40,17 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	)
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect to auth service: %v", err))
+	}
+
+	familyTreeGRPC, err := familytreeclient.New(
+		ctx,
+		log,
+		cfg.Clients.FamilyTree.Address,
+		cfg.Clients.FamilyTree.Timeout,
+		cfg.Clients.FamilyTree.RetriesCount,
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to familytree service: %v", err))
 	}
 
 	// Build HTTP router.
@@ -70,6 +84,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 
 	// Auth routes.
 	authHandler := authhandler.New(log, authGRPC)
+	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC)
 
 	router.Route("/api/auth", func(r chi.Router) {
 		// Public routes.
@@ -89,6 +104,23 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		})
 	})
 
+	router.Route("/api/familytree", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(tokenChecker.Middleware)
+
+			r.Post("/trees", familyTreeHandler.CreateTree)
+			r.Get("/trees", familyTreeHandler.ListTrees)
+			r.Get("/trees/{tree_id}", familyTreeHandler.GetTree)
+
+			r.Post("/trees/{tree_id}/parents", familyTreeHandler.AddParent)
+			r.Post("/trees/{tree_id}/children", familyTreeHandler.AddChild)
+			r.Post("/trees/{tree_id}/partners", familyTreeHandler.AddPartner)
+
+			r.Patch("/trees/{tree_id}/persons/{person_id}", familyTreeHandler.UpdatePersonName)
+			r.Delete("/trees/{tree_id}/persons/{person_id}", familyTreeHandler.DeletePerson)
+		})
+	})
+
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.HTTP.Port),
 		Handler:      router,
@@ -98,10 +130,11 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	}
 
 	return &App{
-		log:         log,
-		httpServer:  httpServer,
-		authClient:  authGRPC,
-		redisClient: redisClient,
+		log:              log,
+		httpServer:       httpServer,
+		authClient:       authGRPC,
+		familyTreeClient: familyTreeGRPC,
+		redisClient:      redisClient,
 	}
 }
 
@@ -134,6 +167,10 @@ func (a *App) Stop(ctx context.Context) {
 
 	if err := a.authClient.Close(); err != nil {
 		a.log.Error("failed to close auth grpc connection", slog.String("op", op), slog.String("error", err.Error()))
+	}
+
+	if err := a.familyTreeClient.Close(); err != nil {
+		a.log.Error("failed to close familytree grpc connection", slog.String("op", op), slog.String("error", err.Error()))
 	}
 
 	if err := a.redisClient.Close(); err != nil {

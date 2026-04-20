@@ -23,8 +23,15 @@ type HTTPConfig struct {
 }
 
 type ClientsConfig struct {
-	Auth         AuthClientConfig   `yaml:"auth" env-required:"true"`
-	TokenStorage TokenStorageConfig `yaml:"token_storage" env-required:"true"`
+	Auth         AuthClientConfig       `yaml:"auth" env-required:"true"`
+	FamilyTree   FamilyTreeClientConfig `yaml:"familytree" env-required:"true"`
+	TokenStorage TokenStorageConfig     `yaml:"token_storage" env-required:"true"`
+}
+
+type FamilyTreeClientConfig struct {
+	Address      string        `yaml:"address" env-required:"true"`
+	Timeout      time.Duration `yaml:"timeout" env-required:"true"`
+	RetriesCount int           `yaml:"retries_count" env-required:"true"`
 }
 
 type AuthClientConfig struct {
