@@ -74,6 +74,7 @@ service FamilyTreeService {
     rpc RemoveRelationship (RemoveRelationshipRequest) returns (RemoveRelationshipResponse);
     rpc GetRelatives (GetRelativesRequest) returns (GetRelativesResponse);
     rpc GetTree (GetTreeRequest) returns (GetTreeResponse);
+    rpc ValidatePersonsInTree (ValidatePersonsInTreeRequest) returns (ValidatePersonsInTreeResponse);
 }
 
 message CreateTreeRequest {
@@ -229,3 +230,11 @@ message GetTreeResponse {
     repeated Person persons = 1;
     repeated Relationship relationships = 2;
 }
+
+message ValidatePersonsInTreeRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    repeated string person_ids = 3;
+}
+
+message ValidatePersonsInTreeResponse {}

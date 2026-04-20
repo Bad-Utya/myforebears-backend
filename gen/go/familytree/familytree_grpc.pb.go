@@ -19,21 +19,22 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FamilyTreeService_CreateTree_FullMethodName         = "/familytree.FamilyTreeService/CreateTree"
-	FamilyTreeService_ListTreesByCreator_FullMethodName = "/familytree.FamilyTreeService/ListTreesByCreator"
-	FamilyTreeService_AddParent_FullMethodName          = "/familytree.FamilyTreeService/AddParent"
-	FamilyTreeService_AddChild_FullMethodName           = "/familytree.FamilyTreeService/AddChild"
-	FamilyTreeService_AddPartner_FullMethodName         = "/familytree.FamilyTreeService/AddPartner"
-	FamilyTreeService_UpdatePersonName_FullMethodName   = "/familytree.FamilyTreeService/UpdatePersonName"
-	FamilyTreeService_DeletePersonInTree_FullMethodName = "/familytree.FamilyTreeService/DeletePersonInTree"
-	FamilyTreeService_CreatePerson_FullMethodName       = "/familytree.FamilyTreeService/CreatePerson"
-	FamilyTreeService_GetPerson_FullMethodName          = "/familytree.FamilyTreeService/GetPerson"
-	FamilyTreeService_UpdatePerson_FullMethodName       = "/familytree.FamilyTreeService/UpdatePerson"
-	FamilyTreeService_DeletePerson_FullMethodName       = "/familytree.FamilyTreeService/DeletePerson"
-	FamilyTreeService_AddRelationship_FullMethodName    = "/familytree.FamilyTreeService/AddRelationship"
-	FamilyTreeService_RemoveRelationship_FullMethodName = "/familytree.FamilyTreeService/RemoveRelationship"
-	FamilyTreeService_GetRelatives_FullMethodName       = "/familytree.FamilyTreeService/GetRelatives"
-	FamilyTreeService_GetTree_FullMethodName            = "/familytree.FamilyTreeService/GetTree"
+	FamilyTreeService_CreateTree_FullMethodName            = "/familytree.FamilyTreeService/CreateTree"
+	FamilyTreeService_ListTreesByCreator_FullMethodName    = "/familytree.FamilyTreeService/ListTreesByCreator"
+	FamilyTreeService_AddParent_FullMethodName             = "/familytree.FamilyTreeService/AddParent"
+	FamilyTreeService_AddChild_FullMethodName              = "/familytree.FamilyTreeService/AddChild"
+	FamilyTreeService_AddPartner_FullMethodName            = "/familytree.FamilyTreeService/AddPartner"
+	FamilyTreeService_UpdatePersonName_FullMethodName      = "/familytree.FamilyTreeService/UpdatePersonName"
+	FamilyTreeService_DeletePersonInTree_FullMethodName    = "/familytree.FamilyTreeService/DeletePersonInTree"
+	FamilyTreeService_CreatePerson_FullMethodName          = "/familytree.FamilyTreeService/CreatePerson"
+	FamilyTreeService_GetPerson_FullMethodName             = "/familytree.FamilyTreeService/GetPerson"
+	FamilyTreeService_UpdatePerson_FullMethodName          = "/familytree.FamilyTreeService/UpdatePerson"
+	FamilyTreeService_DeletePerson_FullMethodName          = "/familytree.FamilyTreeService/DeletePerson"
+	FamilyTreeService_AddRelationship_FullMethodName       = "/familytree.FamilyTreeService/AddRelationship"
+	FamilyTreeService_RemoveRelationship_FullMethodName    = "/familytree.FamilyTreeService/RemoveRelationship"
+	FamilyTreeService_GetRelatives_FullMethodName          = "/familytree.FamilyTreeService/GetRelatives"
+	FamilyTreeService_GetTree_FullMethodName               = "/familytree.FamilyTreeService/GetTree"
+	FamilyTreeService_ValidatePersonsInTree_FullMethodName = "/familytree.FamilyTreeService/ValidatePersonsInTree"
 )
 
 // FamilyTreeServiceClient is the client API for FamilyTreeService service.
@@ -55,17 +56,18 @@ type FamilyTreeServiceClient interface {
 	RemoveRelationship(ctx context.Context, in *RemoveRelationshipRequest, opts ...grpc.CallOption) (*RemoveRelationshipResponse, error)
 	GetRelatives(ctx context.Context, in *GetRelativesRequest, opts ...grpc.CallOption) (*GetRelativesResponse, error)
 	GetTree(ctx context.Context, in *GetTreeRequest, opts ...grpc.CallOption) (*GetTreeResponse, error)
+	ValidatePersonsInTree(ctx context.Context, in *ValidatePersonsInTreeRequest, opts ...grpc.CallOption) (*ValidatePersonsInTreeResponse, error)
 }
 
-type personServiceClient struct {
+type familyTreeServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
 func NewFamilyTreeServiceClient(cc grpc.ClientConnInterface) FamilyTreeServiceClient {
-	return &personServiceClient{cc}
+	return &familyTreeServiceClient{cc}
 }
 
-func (c *personServiceClient) CreateTree(ctx context.Context, in *CreateTreeRequest, opts ...grpc.CallOption) (*CreateTreeResponse, error) {
+func (c *familyTreeServiceClient) CreateTree(ctx context.Context, in *CreateTreeRequest, opts ...grpc.CallOption) (*CreateTreeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateTreeResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_CreateTree_FullMethodName, in, out, cOpts...)
@@ -75,7 +77,7 @@ func (c *personServiceClient) CreateTree(ctx context.Context, in *CreateTreeRequ
 	return out, nil
 }
 
-func (c *personServiceClient) ListTreesByCreator(ctx context.Context, in *ListTreesByCreatorRequest, opts ...grpc.CallOption) (*ListTreesByCreatorResponse, error) {
+func (c *familyTreeServiceClient) ListTreesByCreator(ctx context.Context, in *ListTreesByCreatorRequest, opts ...grpc.CallOption) (*ListTreesByCreatorResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListTreesByCreatorResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_ListTreesByCreator_FullMethodName, in, out, cOpts...)
@@ -85,7 +87,7 @@ func (c *personServiceClient) ListTreesByCreator(ctx context.Context, in *ListTr
 	return out, nil
 }
 
-func (c *personServiceClient) AddParent(ctx context.Context, in *AddParentRequest, opts ...grpc.CallOption) (*AddParentResponse, error) {
+func (c *familyTreeServiceClient) AddParent(ctx context.Context, in *AddParentRequest, opts ...grpc.CallOption) (*AddParentResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddParentResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_AddParent_FullMethodName, in, out, cOpts...)
@@ -95,7 +97,7 @@ func (c *personServiceClient) AddParent(ctx context.Context, in *AddParentReques
 	return out, nil
 }
 
-func (c *personServiceClient) AddChild(ctx context.Context, in *AddChildRequest, opts ...grpc.CallOption) (*AddChildResponse, error) {
+func (c *familyTreeServiceClient) AddChild(ctx context.Context, in *AddChildRequest, opts ...grpc.CallOption) (*AddChildResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddChildResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_AddChild_FullMethodName, in, out, cOpts...)
@@ -105,7 +107,7 @@ func (c *personServiceClient) AddChild(ctx context.Context, in *AddChildRequest,
 	return out, nil
 }
 
-func (c *personServiceClient) AddPartner(ctx context.Context, in *AddPartnerRequest, opts ...grpc.CallOption) (*AddPartnerResponse, error) {
+func (c *familyTreeServiceClient) AddPartner(ctx context.Context, in *AddPartnerRequest, opts ...grpc.CallOption) (*AddPartnerResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddPartnerResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_AddPartner_FullMethodName, in, out, cOpts...)
@@ -115,7 +117,7 @@ func (c *personServiceClient) AddPartner(ctx context.Context, in *AddPartnerRequ
 	return out, nil
 }
 
-func (c *personServiceClient) UpdatePersonName(ctx context.Context, in *UpdatePersonNameRequest, opts ...grpc.CallOption) (*UpdatePersonNameResponse, error) {
+func (c *familyTreeServiceClient) UpdatePersonName(ctx context.Context, in *UpdatePersonNameRequest, opts ...grpc.CallOption) (*UpdatePersonNameResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdatePersonNameResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_UpdatePersonName_FullMethodName, in, out, cOpts...)
@@ -125,7 +127,7 @@ func (c *personServiceClient) UpdatePersonName(ctx context.Context, in *UpdatePe
 	return out, nil
 }
 
-func (c *personServiceClient) DeletePersonInTree(ctx context.Context, in *DeletePersonInTreeRequest, opts ...grpc.CallOption) (*DeletePersonInTreeResponse, error) {
+func (c *familyTreeServiceClient) DeletePersonInTree(ctx context.Context, in *DeletePersonInTreeRequest, opts ...grpc.CallOption) (*DeletePersonInTreeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeletePersonInTreeResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_DeletePersonInTree_FullMethodName, in, out, cOpts...)
@@ -135,7 +137,7 @@ func (c *personServiceClient) DeletePersonInTree(ctx context.Context, in *Delete
 	return out, nil
 }
 
-func (c *personServiceClient) CreatePerson(ctx context.Context, in *CreatePersonRequest, opts ...grpc.CallOption) (*CreatePersonResponse, error) {
+func (c *familyTreeServiceClient) CreatePerson(ctx context.Context, in *CreatePersonRequest, opts ...grpc.CallOption) (*CreatePersonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreatePersonResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_CreatePerson_FullMethodName, in, out, cOpts...)
@@ -145,7 +147,7 @@ func (c *personServiceClient) CreatePerson(ctx context.Context, in *CreatePerson
 	return out, nil
 }
 
-func (c *personServiceClient) GetPerson(ctx context.Context, in *GetPersonRequest, opts ...grpc.CallOption) (*GetPersonResponse, error) {
+func (c *familyTreeServiceClient) GetPerson(ctx context.Context, in *GetPersonRequest, opts ...grpc.CallOption) (*GetPersonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetPersonResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_GetPerson_FullMethodName, in, out, cOpts...)
@@ -155,7 +157,7 @@ func (c *personServiceClient) GetPerson(ctx context.Context, in *GetPersonReques
 	return out, nil
 }
 
-func (c *personServiceClient) UpdatePerson(ctx context.Context, in *UpdatePersonRequest, opts ...grpc.CallOption) (*UpdatePersonResponse, error) {
+func (c *familyTreeServiceClient) UpdatePerson(ctx context.Context, in *UpdatePersonRequest, opts ...grpc.CallOption) (*UpdatePersonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdatePersonResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_UpdatePerson_FullMethodName, in, out, cOpts...)
@@ -165,7 +167,7 @@ func (c *personServiceClient) UpdatePerson(ctx context.Context, in *UpdatePerson
 	return out, nil
 }
 
-func (c *personServiceClient) DeletePerson(ctx context.Context, in *DeletePersonRequest, opts ...grpc.CallOption) (*DeletePersonResponse, error) {
+func (c *familyTreeServiceClient) DeletePerson(ctx context.Context, in *DeletePersonRequest, opts ...grpc.CallOption) (*DeletePersonResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeletePersonResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_DeletePerson_FullMethodName, in, out, cOpts...)
@@ -175,7 +177,7 @@ func (c *personServiceClient) DeletePerson(ctx context.Context, in *DeletePerson
 	return out, nil
 }
 
-func (c *personServiceClient) AddRelationship(ctx context.Context, in *AddRelationshipRequest, opts ...grpc.CallOption) (*AddRelationshipResponse, error) {
+func (c *familyTreeServiceClient) AddRelationship(ctx context.Context, in *AddRelationshipRequest, opts ...grpc.CallOption) (*AddRelationshipResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddRelationshipResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_AddRelationship_FullMethodName, in, out, cOpts...)
@@ -185,7 +187,7 @@ func (c *personServiceClient) AddRelationship(ctx context.Context, in *AddRelati
 	return out, nil
 }
 
-func (c *personServiceClient) RemoveRelationship(ctx context.Context, in *RemoveRelationshipRequest, opts ...grpc.CallOption) (*RemoveRelationshipResponse, error) {
+func (c *familyTreeServiceClient) RemoveRelationship(ctx context.Context, in *RemoveRelationshipRequest, opts ...grpc.CallOption) (*RemoveRelationshipResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(RemoveRelationshipResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_RemoveRelationship_FullMethodName, in, out, cOpts...)
@@ -195,7 +197,7 @@ func (c *personServiceClient) RemoveRelationship(ctx context.Context, in *Remove
 	return out, nil
 }
 
-func (c *personServiceClient) GetRelatives(ctx context.Context, in *GetRelativesRequest, opts ...grpc.CallOption) (*GetRelativesResponse, error) {
+func (c *familyTreeServiceClient) GetRelatives(ctx context.Context, in *GetRelativesRequest, opts ...grpc.CallOption) (*GetRelativesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetRelativesResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_GetRelatives_FullMethodName, in, out, cOpts...)
@@ -205,10 +207,20 @@ func (c *personServiceClient) GetRelatives(ctx context.Context, in *GetRelatives
 	return out, nil
 }
 
-func (c *personServiceClient) GetTree(ctx context.Context, in *GetTreeRequest, opts ...grpc.CallOption) (*GetTreeResponse, error) {
+func (c *familyTreeServiceClient) GetTree(ctx context.Context, in *GetTreeRequest, opts ...grpc.CallOption) (*GetTreeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetTreeResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_GetTree_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *familyTreeServiceClient) ValidatePersonsInTree(ctx context.Context, in *ValidatePersonsInTreeRequest, opts ...grpc.CallOption) (*ValidatePersonsInTreeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ValidatePersonsInTreeResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_ValidatePersonsInTree_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -234,6 +246,7 @@ type FamilyTreeServiceServer interface {
 	RemoveRelationship(context.Context, *RemoveRelationshipRequest) (*RemoveRelationshipResponse, error)
 	GetRelatives(context.Context, *GetRelativesRequest) (*GetRelativesResponse, error)
 	GetTree(context.Context, *GetTreeRequest) (*GetTreeResponse, error)
+	ValidatePersonsInTree(context.Context, *ValidatePersonsInTreeRequest) (*ValidatePersonsInTreeResponse, error)
 	mustEmbedUnimplementedFamilyTreeServiceServer()
 }
 
@@ -289,8 +302,11 @@ func (UnimplementedFamilyTreeServiceServer) GetRelatives(context.Context, *GetRe
 func (UnimplementedFamilyTreeServiceServer) GetTree(context.Context, *GetTreeRequest) (*GetTreeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetTree not implemented")
 }
+func (UnimplementedFamilyTreeServiceServer) ValidatePersonsInTree(context.Context, *ValidatePersonsInTreeRequest) (*ValidatePersonsInTreeResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ValidatePersonsInTree not implemented")
+}
 func (UnimplementedFamilyTreeServiceServer) mustEmbedUnimplementedFamilyTreeServiceServer() {}
-func (UnimplementedFamilyTreeServiceServer) testEmbeddedByValue()                       {}
+func (UnimplementedFamilyTreeServiceServer) testEmbeddedByValue()                           {}
 
 // UnsafeFamilyTreeServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to FamilyTreeServiceServer will
@@ -580,6 +596,24 @@ func _FamilyTreeService_GetTree_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FamilyTreeService_ValidatePersonsInTree_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ValidatePersonsInTreeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).ValidatePersonsInTree(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_ValidatePersonsInTree_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).ValidatePersonsInTree(ctx, req.(*ValidatePersonsInTreeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FamilyTreeService_ServiceDesc is the grpc.ServiceDesc for FamilyTreeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -646,6 +680,10 @@ var FamilyTreeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTree",
 			Handler:    _FamilyTreeService_GetTree_Handler,
+		},
+		{
+			MethodName: "ValidatePersonsInTree",
+			Handler:    _FamilyTreeService_ValidatePersonsInTree_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
