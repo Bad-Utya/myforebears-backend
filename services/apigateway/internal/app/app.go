@@ -11,10 +11,12 @@ import (
 	"github.com/go-chi/cors"
 
 	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
+	eventsclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/events"
 	familytreeclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/familytree"
 	redisclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/redis"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/config"
 	authhandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/auth"
+	eventshandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/events"
 	familytreehandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/familytree"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/middleware"
 )
@@ -24,6 +26,7 @@ type App struct {
 	httpServer       *http.Server
 	authClient       *authclient.Client
 	familyTreeClient *familytreeclient.Client
+	eventsClient     *eventsclient.Client
 	redisClient      *redisclient.Client
 }
 
@@ -51,6 +54,17 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	)
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect to familytree service: %v", err))
+	}
+
+	eventsGRPC, err := eventsclient.New(
+		ctx,
+		log,
+		cfg.Clients.Events.Address,
+		cfg.Clients.Events.Timeout,
+		cfg.Clients.Events.RetriesCount,
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to events service: %v", err))
 	}
 
 	// Build HTTP router.
@@ -85,6 +99,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	// Auth routes.
 	authHandler := authhandler.New(log, authGRPC)
 	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC)
+	eventsHandler := eventshandler.New(log, eventsGRPC)
 
 	router.Route("/api/auth", func(r chi.Router) {
 		// Public routes.
@@ -121,6 +136,23 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		})
 	})
 
+	router.Route("/api/event-types", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(tokenChecker.Middleware)
+			r.Post("/", eventsHandler.CreateEventType)
+			r.Delete("/{event_type_id}", eventsHandler.DeleteEventType)
+		})
+	})
+
+	router.Route("/api/events", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(tokenChecker.Middleware)
+			r.Post("/", eventsHandler.CreateEvent)
+			r.Put("/{event_id}", eventsHandler.UpdateEvent)
+			r.Delete("/{event_id}", eventsHandler.DeleteEvent)
+		})
+	})
+
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.HTTP.Port),
 		Handler:      router,
@@ -134,6 +166,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		httpServer:       httpServer,
 		authClient:       authGRPC,
 		familyTreeClient: familyTreeGRPC,
+		eventsClient:     eventsGRPC,
 		redisClient:      redisClient,
 	}
 }
@@ -171,6 +204,10 @@ func (a *App) Stop(ctx context.Context) {
 
 	if err := a.familyTreeClient.Close(); err != nil {
 		a.log.Error("failed to close familytree grpc connection", slog.String("op", op), slog.String("error", err.Error()))
+	}
+
+	if err := a.eventsClient.Close(); err != nil {
+		a.log.Error("failed to close events grpc connection", slog.String("op", op), slog.String("error", err.Error()))
 	}
 
 	if err := a.redisClient.Close(); err != nil {
