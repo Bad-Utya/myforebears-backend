@@ -28,6 +28,7 @@ type FamilyTreeService interface {
 	RemoveRelationship(ctx context.Context, personIDFrom string, personIDTo string, relType models.RelationshipType) error
 	GetRelatives(ctx context.Context, personID string) ([]models.Relative, error)
 	GetTree(ctx context.Context, treeID string) ([]models.Person, []models.Relationship, error)
+	ValidatePersonsInTree(ctx context.Context, requestUserID int, treeID string, personIDs []string) error
 }
 
 type Handler struct {

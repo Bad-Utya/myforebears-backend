@@ -99,6 +99,14 @@ func (h *Handler) AddPartner(ctx context.Context, req *familytreepb.AddPartnerRe
 	return &familytreepb.AddPartnerResponse{Partner: toProtoPerson(partner)}, nil
 }
 
+func (h *Handler) ValidatePersonsInTree(ctx context.Context, req *familytreepb.ValidatePersonsInTreeRequest) (*familytreepb.ValidatePersonsInTreeResponse, error) {
+	err := h.service.ValidatePersonsInTree(ctx, int(req.GetRequestUserId()), req.GetTreeId(), req.GetPersonIds())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &familytreepb.ValidatePersonsInTreeResponse{}, nil
+}
 func (h *Handler) UpdatePersonName(ctx context.Context, req *familytreepb.UpdatePersonNameRequest) (*familytreepb.UpdatePersonNameResponse, error) {
 	person, err := h.service.UpdatePersonName(
 		ctx,
