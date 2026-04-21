@@ -135,6 +135,51 @@ func (h *Handler) GetTree(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"persons": persons, "relationships": relationships})
 }
 
+func (h *Handler) ListPersons(w http.ResponseWriter, r *http.Request) {
+	userID, treeID, ok := h.requireUserAndTree(w, r)
+	if !ok {
+		return
+	}
+
+	resp, err := h.client.ListPersonsByTree(r.Context(), userID, treeID)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("list persons failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	persons := make([]map[string]any, 0, len(resp.GetPersons()))
+	for _, p := range resp.GetPersons() {
+		persons = append(persons, toPersonJSON(p))
+	}
+
+	response.OK(w, map[string]any{"persons": persons})
+}
+
+func (h *Handler) GetPerson(w http.ResponseWriter, r *http.Request) {
+	userID, treeID, ok := h.requireUserAndTree(w, r)
+	if !ok {
+		return
+	}
+
+	personID := chi.URLParam(r, "person_id")
+	if strings.TrimSpace(personID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "person_id is required")
+		return
+	}
+
+	resp, err := h.client.GetPersonInTree(r.Context(), userID, treeID, personID)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("get person failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"person": toPersonJSON(resp.GetPerson())})
+}
+
 func (h *Handler) AddParent(w http.ResponseWriter, r *http.Request) {
 	userID, treeID, ok := h.requireUserAndTree(w, r)
 	if !ok {

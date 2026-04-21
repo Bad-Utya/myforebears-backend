@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16
@@ -7,18 +5,19 @@ services:
     restart: unless-stopped
 
     environment:
-      POSTGRES_USER: local_user
-      POSTGRES_PASSWORD: local_password
-      POSTGRES_DB: auth_local_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${AUTH_POSTGRES_DB}
 
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
 
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U local_user -d auth_local_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${AUTH_POSTGRES_DB}"]
       interval: 2s
       timeout: 2s
       retries: 10
@@ -28,7 +27,7 @@ services:
     container_name: auth-redis
     restart: unless-stopped
 
-    command: redis-server --requirepass local_password
+    command: redis-server --requirepass ${REDIS_PASSWORD}
 
     ports:
       - "6379:6379"
@@ -37,7 +36,7 @@ services:
       - redisdata:/data
 
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "local_password", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 2s
       timeout: 2s
       retries: 10
@@ -48,8 +47,8 @@ services:
     restart: unless-stopped
 
     environment:
-      RABBITMQ_DEFAULT_USER: local_user
-      RABBITMQ_DEFAULT_PASS: local_password
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
 
     ports:
       - "5672:5672"   # AMQP
@@ -70,7 +69,7 @@ services:
     restart: unless-stopped
 
     environment:
-      NEO4J_AUTH: neo4j/local_password
+      NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
 
     ports:
       - "7474:7474" # Browser
@@ -80,10 +79,208 @@ services:
       - neo4jdata:/data
 
     healthcheck:
-      test: ["CMD-SHELL", "cypher-shell -u neo4j -p local_password 'RETURN 1;' || exit 1"]
+      test: ["CMD-SHELL", "cypher-shell -u ${NEO4J_USER} -p ${NEO4J_PASSWORD} 'RETURN 1;' || exit 1"]
       interval: 5s
       timeout: 5s
       retries: 20
+
+  db-init:
+    image: postgres:16
+    container_name: db-init
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        psql -h postgres -U ${POSTGRES_USER} -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${EVENTS_POSTGRES_DB}'" | grep -q 1 || psql -h postgres -U ${POSTGRES_USER} -d postgres -c "CREATE DATABASE ${EVENTS_POSTGRES_DB}";
+        psql -h postgres -U ${POSTGRES_USER} -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${FAMILYTREE_POSTGRES_DB}'" | grep -q 1 || psql -h postgres -U ${POSTGRES_USER} -d postgres -c "CREATE DATABASE ${FAMILYTREE_POSTGRES_DB}";
+
+  migrate-auth:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrator
+    container_name: migrate-auth
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    command:
+      - -host
+      - postgres
+      - -port
+      - "5432"
+      - -user
+      - ${POSTGRES_USER}
+      - -password
+      - ${POSTGRES_PASSWORD}
+      - -dbname
+      - ${AUTH_POSTGRES_DB}
+      - -sslmode
+      - disable
+      - -migrations-path
+      - /migrations/auth
+
+  migrate-familytree:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrator
+    container_name: migrate-familytree
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    command:
+      - -host
+      - postgres
+      - -port
+      - "5432"
+      - -user
+      - ${POSTGRES_USER}
+      - -password
+      - ${POSTGRES_PASSWORD}
+      - -dbname
+      - ${FAMILYTREE_POSTGRES_DB}
+      - -sslmode
+      - disable
+      - -migrations-path
+      - /migrations/familytree
+
+  migrate-events:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrator
+    container_name: migrate-events
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    command:
+      - -host
+      - postgres
+      - -port
+      - "5432"
+      - -user
+      - ${POSTGRES_USER}
+      - -password
+      - ${POSTGRES_PASSWORD}
+      - -dbname
+      - ${EVENTS_POSTGRES_DB}
+      - -sslmode
+      - disable
+      - -migrations-path
+      - /migrations/events
+
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: auth
+    container_name: auth-service
+    restart: unless-stopped
+    depends_on:
+      migrate-auth:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+      JWT_SECRET: ${JWT_SECRET}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+    ports:
+      - "50051:50051"
+
+  familytree:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: familytree
+    container_name: familytree-service
+    restart: unless-stopped
+    depends_on:
+      migrate-familytree:
+        condition: service_completed_successfully
+      neo4j:
+        condition: service_healthy
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      NEO4J_USER: ${NEO4J_USER}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+    ports:
+      - "50052:50052"
+
+  events:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: events
+    container_name: events-service
+    restart: unless-stopped
+    depends_on:
+      migrate-events:
+        condition: service_completed_successfully
+      familytree:
+        condition: service_started
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "50053:50053"
+
+  emailprovider:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: emailprovider
+    container_name: emailprovider-service
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+
+  apigateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: apigateway
+    container_name: apigateway-service
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth:
+        condition: service_started
+      familytree:
+        condition: service_started
+      events:
+        condition: service_started
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    ports:
+      - "8081:8080"
 
 volumes:
   pgdata:

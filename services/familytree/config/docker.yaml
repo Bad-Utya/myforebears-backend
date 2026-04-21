@@ -1,0 +1,18 @@
+env: "local"
+grpc:
+  port: 50052
+  timeout: 10h
+postgres:
+  host: "postgres"
+  port: 5432
+  username: "from-env"
+  password: "from-env"
+  database: "familytree_local_db"
+neo4j:
+  uri: "bolt://neo4j:7687"
+  username: "from-env"
+  password: "from-env"
+events:
+  address: "events:50053"
+  timeout: 5s
+  retries_count: 3

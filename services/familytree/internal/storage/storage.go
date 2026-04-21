@@ -31,6 +31,7 @@ type RelationshipStorage interface {
 	EnsurePersonNode(ctx context.Context, personID uuid.UUID, treeID uuid.UUID) error
 	DeletePersonNode(ctx context.Context, personID uuid.UUID) error
 	CreateRelationship(ctx context.Context, personIDFrom uuid.UUID, personIDTo uuid.UUID, relType models.RelationshipType) error
+	SetPartnerRelationshipStatus(ctx context.Context, personID1 uuid.UUID, personID2 uuid.UUID, status models.PartnerRelationshipStatus) error
 	RemoveRelationship(ctx context.Context, personIDFrom uuid.UUID, personIDTo uuid.UUID, relType models.RelationshipType) error
 	GetRelatives(ctx context.Context, personID uuid.UUID) ([]models.Relative, error)
 	GetTreeRelationships(ctx context.Context, treeID uuid.UUID) ([]models.Relationship, error)

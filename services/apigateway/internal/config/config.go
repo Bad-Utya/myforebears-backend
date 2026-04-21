@@ -25,7 +25,14 @@ type HTTPConfig struct {
 type ClientsConfig struct {
 	Auth         AuthClientConfig       `yaml:"auth" env-required:"true"`
 	FamilyTree   FamilyTreeClientConfig `yaml:"familytree" env-required:"true"`
+	Events       EventsClientConfig     `yaml:"events" env-required:"true"`
 	TokenStorage TokenStorageConfig     `yaml:"token_storage" env-required:"true"`
+}
+
+type EventsClientConfig struct {
+	Address      string        `yaml:"address" env-required:"true"`
+	Timeout      time.Duration `yaml:"timeout" env-required:"true"`
+	RetriesCount int           `yaml:"retries_count" env-required:"true"`
 }
 
 type FamilyTreeClientConfig struct {
@@ -42,7 +49,7 @@ type AuthClientConfig struct {
 
 type TokenStorageConfig struct {
 	Address  string `yaml:"address" env-required:"true"`
-	Password string `yaml:"password" env-required:"true"`
+	Password string `yaml:"password" env:"REDIS_PASSWORD" env-required:"true"`
 	Database int    `yaml:"database" env-required:"true"`
 }
 

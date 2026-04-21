@@ -1,0 +1,22 @@
+env: "local"
+http:
+  port: 8080
+  timeout: 10s
+  idle_timeout: 60s
+clients:
+  auth:
+    address: "auth:50051"
+    timeout: 5s
+    retries_count: 3
+  familytree:
+    address: "familytree:50052"
+    timeout: 5s
+    retries_count: 3
+  events:
+    address: "events:50053"
+    timeout: 5s
+    retries_count: 3
+  token_storage:
+    address: "redis:6379"
+    password: "from-env"
+    database: 1

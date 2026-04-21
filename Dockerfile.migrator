@@ -1,0 +1,23 @@
+FROM golang:1.25 AS builder
+
+WORKDIR /src
+
+COPY utility/go.mod ./utility/go.mod
+COPY utility/go.sum ./utility/go.sum
+COPY utility ./utility
+
+WORKDIR /src/utility
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/migrator ./cmd/migrator
+
+FROM alpine:3.20
+
+RUN apk add --no-cache ca-certificates
+
+WORKDIR /app
+
+COPY --from=builder /out/migrator /usr/local/bin/migrator
+COPY services/auth/migrations /migrations/auth
+COPY services/events/migrations /migrations/events
+COPY services/familytree/migrations /migrations/familytree
+
+ENTRYPOINT ["/usr/local/bin/migrator"]

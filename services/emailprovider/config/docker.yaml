@@ -1,0 +1,13 @@
+env: "local"
+rabbitmq:
+  url: "from-env"
+  exchange: "email"
+  queue: "email.send"
+  routing_key: "email.send"
+  consumer_tag: "emailprovider"
+smtp:
+  host: "smtp.gmail.com"
+  port: 587
+  username: "from-env"
+  password: "from-env"
+  from: "from-env"

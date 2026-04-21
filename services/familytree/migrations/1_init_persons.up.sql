@@ -1,4 +1,10 @@
-CREATE TYPE IF NOT EXISTS gender_enum AS ENUM ('MALE', 'FEMALE');
+DO $$
+BEGIN
+    CREATE TYPE gender_enum AS ENUM ('MALE', 'FEMALE');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END
+$$;
 
 CREATE TABLE IF NOT EXISTS persons
 (

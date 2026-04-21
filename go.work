@@ -6,5 +6,6 @@ use (
 	./services/auth
 	./services/familytree
 	./services/emailprovider
+	./services/events
 	./utility
 )

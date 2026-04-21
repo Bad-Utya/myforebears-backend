@@ -67,12 +67,34 @@ func (h *Handler) GetTree(ctx context.Context, req *familytreepb.GetTreeRequest)
 	return &familytreepb.GetTreeResponse{Persons: protoPersons, Relationships: protoRelationships}, nil
 }
 
+func (h *Handler) UpdatePartnerRelationshipStatus(ctx context.Context, req *familytreepb.UpdatePartnerRelationshipStatusRequest) (*familytreepb.UpdatePartnerRelationshipStatusResponse, error) {
+	err := h.service.UpdatePartnerRelationshipStatus(
+		ctx,
+		int(req.GetRequestUserId()),
+		req.GetTreeId(),
+		req.GetPersonId1(),
+		req.GetPersonId2(),
+		toModelPartnerRelationshipStatus(req.GetStatus()),
+	)
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &familytreepb.UpdatePartnerRelationshipStatusResponse{}, nil
+}
+
 func toModelRelationshipType(relType familytreepb.RelationshipType) models.RelationshipType {
 	switch relType {
 	case familytreepb.RelationshipType_RELATIONSHIP_PARENT_CHILD:
 		return models.RelationshipParentChild
 	case familytreepb.RelationshipType_RELATIONSHIP_PARTNER:
 		return models.RelationshipPartner
+	case familytreepb.RelationshipType_RELATIONSHIP_PARTNER_UNMARRIED:
+		return models.RelationshipPartnerUnmarried
+	case familytreepb.RelationshipType_RELATIONSHIP_PARTNER_MARRIED:
+		return models.RelationshipPartnerMarried
+	case familytreepb.RelationshipType_RELATIONSHIP_PARTNER_DIVORCED:
+		return models.RelationshipPartnerDivorced
 	default:
 		return ""
 	}
@@ -84,8 +106,27 @@ func toProtoRelationshipType(relType models.RelationshipType) familytreepb.Relat
 		return familytreepb.RelationshipType_RELATIONSHIP_PARENT_CHILD
 	case models.RelationshipPartner:
 		return familytreepb.RelationshipType_RELATIONSHIP_PARTNER
+	case models.RelationshipPartnerUnmarried:
+		return familytreepb.RelationshipType_RELATIONSHIP_PARTNER_UNMARRIED
+	case models.RelationshipPartnerMarried:
+		return familytreepb.RelationshipType_RELATIONSHIP_PARTNER_MARRIED
+	case models.RelationshipPartnerDivorced:
+		return familytreepb.RelationshipType_RELATIONSHIP_PARTNER_DIVORCED
 	default:
 		return familytreepb.RelationshipType_RELATIONSHIP_TYPE_UNSPECIFIED
+	}
+}
+
+func toModelPartnerRelationshipStatus(status familytreepb.PartnerRelationshipStatus) models.PartnerRelationshipStatus {
+	switch status {
+	case familytreepb.PartnerRelationshipStatus_PARTNER_RELATIONSHIP_STATUS_UNMARRIED:
+		return models.PartnerRelationshipStatusUnmarried
+	case familytreepb.PartnerRelationshipStatus_PARTNER_RELATIONSHIP_STATUS_MARRIED:
+		return models.PartnerRelationshipStatusMarried
+	case familytreepb.PartnerRelationshipStatus_PARTNER_RELATIONSHIP_STATUS_DIVORCED:
+		return models.PartnerRelationshipStatusDivorced
+	default:
+		return ""
 	}
 }
 

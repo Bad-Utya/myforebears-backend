@@ -72,6 +72,32 @@ func (c *Client) GetTree(ctx context.Context, requestUserID int, treeID string) 
 	return resp, nil
 }
 
+func (c *Client) ListPersonsByTree(ctx context.Context, requestUserID int, treeID string) (*familytreepb.ListPersonsByTreeResponse, error) {
+	const op = "clients.familytree.ListPersonsByTree"
+
+	resp, err := c.api.ListPersonsByTree(ctx, &familytreepb.ListPersonsByTreeRequest{TreeId: treeID, RequestUserId: int32(requestUserID)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) GetPersonInTree(ctx context.Context, requestUserID int, treeID string, personID string) (*familytreepb.GetPersonInTreeResponse, error) {
+	const op = "clients.familytree.GetPersonInTree"
+
+	resp, err := c.api.GetPersonInTree(ctx, &familytreepb.GetPersonInTreeRequest{
+		RequestUserId: int32(requestUserID),
+		TreeId:        treeID,
+		PersonId:      personID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) AddParent(ctx context.Context, req *familytreepb.AddParentRequest) (*familytreepb.AddParentResponse, error) {
 	const op = "clients.familytree.AddParent"
 

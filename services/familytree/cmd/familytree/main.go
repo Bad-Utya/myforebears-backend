@@ -29,6 +29,9 @@ func main() {
 		cfg.Neo4j.URI,
 		cfg.Neo4j.Username,
 		cfg.Neo4j.Password,
+		cfg.Events.Address,
+		cfg.Events.Timeout,
+		cfg.Events.RetriesCount,
 	)
 
 	go application.GRPCServer.MustRun()

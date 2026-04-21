@@ -14,6 +14,16 @@ enum RelationshipType {
     RELATIONSHIP_TYPE_UNSPECIFIED = 0;
     RELATIONSHIP_PARENT_CHILD = 1;
     RELATIONSHIP_PARTNER = 2;
+    RELATIONSHIP_PARTNER_UNMARRIED = 3;
+    RELATIONSHIP_PARTNER_MARRIED = 4;
+    RELATIONSHIP_PARTNER_DIVORCED = 5;
+}
+
+enum PartnerRelationshipStatus {
+    PARTNER_RELATIONSHIP_STATUS_UNSPECIFIED = 0;
+    PARTNER_RELATIONSHIP_STATUS_UNMARRIED = 1;
+    PARTNER_RELATIONSHIP_STATUS_MARRIED = 2;
+    PARTNER_RELATIONSHIP_STATUS_DIVORCED = 3;
 }
 
 enum RelationDirection {
@@ -67,6 +77,8 @@ service FamilyTreeService {
 
     rpc CreatePerson (CreatePersonRequest) returns (CreatePersonResponse);
     rpc GetPerson (GetPersonRequest) returns (GetPersonResponse);
+    rpc GetPersonInTree (GetPersonInTreeRequest) returns (GetPersonInTreeResponse);
+    rpc ListPersonsByTree (ListPersonsByTreeRequest) returns (ListPersonsByTreeResponse);
     rpc UpdatePerson (UpdatePersonRequest) returns (UpdatePersonResponse);
     rpc DeletePerson (DeletePersonRequest) returns (DeletePersonResponse);
 
@@ -74,6 +86,8 @@ service FamilyTreeService {
     rpc RemoveRelationship (RemoveRelationshipRequest) returns (RemoveRelationshipResponse);
     rpc GetRelatives (GetRelativesRequest) returns (GetRelativesResponse);
     rpc GetTree (GetTreeRequest) returns (GetTreeResponse);
+    rpc ValidatePersonsInTree (ValidatePersonsInTreeRequest) returns (ValidatePersonsInTreeResponse);
+    rpc UpdatePartnerRelationshipStatus (UpdatePartnerRelationshipStatusRequest) returns (UpdatePartnerRelationshipStatusResponse);
 }
 
 message CreateTreeRequest {
@@ -178,6 +192,25 @@ message GetPersonResponse {
     Person person = 1;
 }
 
+message GetPersonInTreeRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string person_id = 3;
+}
+
+message GetPersonInTreeResponse {
+    Person person = 1;
+}
+
+message ListPersonsByTreeRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+}
+
+message ListPersonsByTreeResponse {
+    repeated Person persons = 1;
+}
+
 message UpdatePersonRequest {
     string person_id = 1;
     string first_name = 2;
@@ -229,3 +262,21 @@ message GetTreeResponse {
     repeated Person persons = 1;
     repeated Relationship relationships = 2;
 }
+
+message ValidatePersonsInTreeRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    repeated string person_ids = 3;
+}
+
+message ValidatePersonsInTreeResponse {}
+
+message UpdatePartnerRelationshipStatusRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string person_id1 = 3;
+    string person_id2 = 4;
+    PartnerRelationshipStatus status = 5;
+}
+
+message UpdatePartnerRelationshipStatusResponse {}
