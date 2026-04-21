@@ -49,7 +49,7 @@ type AuthClientConfig struct {
 
 type TokenStorageConfig struct {
 	Address  string `yaml:"address" env-required:"true"`
-	Password string `yaml:"password" env-required:"true"`
+	Password string `yaml:"password" env:"REDIS_PASSWORD" env-required:"true"`
 	Database int    `yaml:"database" env-required:"true"`
 }
 

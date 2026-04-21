@@ -18,5 +18,5 @@ clients:
     retries_count: 3
   token_storage:
     address: "redis:6379"
-    password: "local_password"
+    password: "from-env"
     database: 1

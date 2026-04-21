@@ -24,8 +24,8 @@ type GRPCConfig struct {
 type PostgresConfig struct {
 	Host     string `yaml:"host" env-required:"true"`
 	Port     int    `yaml:"port" env-required:"true"`
-	Username string `yaml:"username" env-required:"true"`
-	Password string `yaml:"password" env-required:"true"`
+	Username string `yaml:"username" env:"POSTGRES_USER" env-required:"true"`
+	Password string `yaml:"password" env:"POSTGRES_PASSWORD" env-required:"true"`
 	Database string `yaml:"database" env-required:"true"`
 }
 

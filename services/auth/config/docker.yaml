@@ -4,12 +4,12 @@ refresh_token_ttl: 720h
 user_storage:
   host: "postgres"
   port: 5432
-  username: "local_user"
-  password: "local_password"
+  username: "from-env"
+  password: "from-env"
   database: "auth_local_db"
 verification_storage:
   address: "redis:6379"
-  password: "local_password"
+  password: "from-env"
   database: 1
 grpc:
   port: 50051
@@ -17,6 +17,6 @@ grpc:
 link_for_reset_password: "http://localhost:3000/reset-password?token=%s"
 link_ttl: 15m
 rabbitmq:
-  url: "amqp://local_user:local_password@rabbitmq:5672/"
+  url: "from-env"
   exchange: "email"
   routing_key: "email.send"

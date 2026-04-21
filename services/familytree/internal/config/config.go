@@ -24,15 +24,15 @@ type GRPCConfig struct {
 type PostgresConfig struct {
 	Host     string `yaml:"host" env-required:"true"`
 	Port     int    `yaml:"port" env-required:"true"`
-	Username string `yaml:"username" env-required:"true"`
-	Password string `yaml:"password" env-required:"true"`
+	Username string `yaml:"username" env:"POSTGRES_USER" env-required:"true"`
+	Password string `yaml:"password" env:"POSTGRES_PASSWORD" env-required:"true"`
 	Database string `yaml:"database" env-required:"true"`
 }
 
 type Neo4jConfig struct {
 	URI      string `yaml:"uri" env-required:"true"`
-	Username string `yaml:"username" env-required:"true"`
-	Password string `yaml:"password" env-required:"true"`
+	Username string `yaml:"username" env:"NEO4J_USER" env-required:"true"`
+	Password string `yaml:"password" env:"NEO4J_PASSWORD" env-required:"true"`
 }
 
 func MustLoad() *Config {

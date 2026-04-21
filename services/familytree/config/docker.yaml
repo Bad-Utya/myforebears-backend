@@ -5,10 +5,10 @@ grpc:
 postgres:
   host: "postgres"
   port: 5432
-  username: "local_user"
-  password: "local_password"
+  username: "from-env"
+  password: "from-env"
   database: "familytree_local_db"
 neo4j:
   uri: "bolt://neo4j:7687"
-  username: "neo4j"
-  password: "local_password"
+  username: "from-env"
+  password: "from-env"

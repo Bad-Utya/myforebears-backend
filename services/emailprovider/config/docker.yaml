@@ -1,6 +1,6 @@
 env: "local"
 rabbitmq:
-  url: "amqp://local_user:local_password@rabbitmq:5672/"
+  url: "from-env"
   exchange: "email"
   queue: "email.send"
   routing_key: "email.send"
@@ -8,6 +8,6 @@ rabbitmq:
 smtp:
   host: "smtp.gmail.com"
   port: 587
-  username: "gen.warps.notifications@gmail.com"
-  password: "aonf spxc mvlk hnpm"
-  from: "gen.warps.notifications@gmail.com"
+  username: "from-env"
+  password: "from-env"
+  from: "from-env"
