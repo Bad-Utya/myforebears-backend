@@ -68,6 +68,56 @@ func (h *Handler) CreateEventType(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"event_type": toEventTypeJSON(resp.GetEventType())})
 }
 
+func (h *Handler) GetEventType(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.UserIDFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	eventTypeID := chi.URLParam(r, "event_type_id")
+	if strings.TrimSpace(eventTypeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "event_type_id is required")
+		return
+	}
+
+	resp, err := h.client.GetEventType(r.Context(), &eventspb.GetEventTypeRequest{
+		RequestUserId: int32(userID),
+		EventTypeId:   eventTypeID,
+	})
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("get event type failed", slog.String("error", err.Error()))
+		response.Error(w, status, "events_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"event_type": toEventTypeJSON(resp.GetEventType())})
+}
+
+func (h *Handler) ListEventTypes(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.UserIDFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	resp, err := h.client.ListEventTypes(r.Context(), &eventspb.ListEventTypesRequest{RequestUserId: int32(userID)})
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("list event types failed", slog.String("error", err.Error()))
+		response.Error(w, status, "events_error", msg)
+		return
+	}
+
+	eventTypes := make([]map[string]any, 0, len(resp.GetEventTypes()))
+	for _, eventType := range resp.GetEventTypes() {
+		eventTypes = append(eventTypes, toEventTypeJSON(eventType))
+	}
+
+	response.OK(w, map[string]any{"event_types": eventTypes})
+}
+
 func (h *Handler) DeleteEventType(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
@@ -126,6 +176,65 @@ func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, map[string]any{"event": toEventJSON(resp.GetEvent())})
+}
+
+func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.UserIDFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	eventID := chi.URLParam(r, "event_id")
+	if strings.TrimSpace(eventID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "event_id is required")
+		return
+	}
+
+	resp, err := h.client.GetEvent(r.Context(), &eventspb.GetEventRequest{
+		RequestUserId: int32(userID),
+		EventId:       eventID,
+	})
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("get event failed", slog.String("error", err.Error()))
+		response.Error(w, status, "events_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"event": toEventJSON(resp.GetEvent())})
+}
+
+func (h *Handler) ListEventsByTree(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.UserIDFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	treeID := strings.TrimSpace(r.URL.Query().Get("tree_id"))
+	if treeID == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
+		return
+	}
+
+	resp, err := h.client.ListEventsByTree(r.Context(), &eventspb.ListEventsByTreeRequest{
+		RequestUserId: int32(userID),
+		TreeId:        treeID,
+	})
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("list events by tree failed", slog.String("error", err.Error()))
+		response.Error(w, status, "events_error", msg)
+		return
+	}
+
+	events := make([]map[string]any, 0, len(resp.GetEvents()))
+	for _, event := range resp.GetEvents() {
+		events = append(events, toEventJSON(event))
+	}
+
+	response.OK(w, map[string]any{"events": events})
 }
 
 func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {

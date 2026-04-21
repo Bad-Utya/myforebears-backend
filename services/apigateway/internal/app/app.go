@@ -123,22 +123,26 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
 
-			r.Post("/trees", familyTreeHandler.CreateTree)
-			r.Get("/trees", familyTreeHandler.ListTrees)
-			r.Get("/trees/{tree_id}", familyTreeHandler.GetTree)
+			r.Post("/", familyTreeHandler.CreateTree)
+			r.Get("/", familyTreeHandler.ListTrees)
+			r.Get("/{tree_id}", familyTreeHandler.GetTree)
 
-			r.Post("/trees/{tree_id}/parents", familyTreeHandler.AddParent)
-			r.Post("/trees/{tree_id}/children", familyTreeHandler.AddChild)
-			r.Post("/trees/{tree_id}/partners", familyTreeHandler.AddPartner)
+			r.Post("/{tree_id}/parents", familyTreeHandler.AddParent)
+			r.Post("/{tree_id}/children", familyTreeHandler.AddChild)
+			r.Post("/{tree_id}/partners", familyTreeHandler.AddPartner)
+			r.Get("/{tree_id}/persons", familyTreeHandler.ListPersons)
+			r.Get("/{tree_id}/persons/{person_id}", familyTreeHandler.GetPerson)
 
-			r.Patch("/trees/{tree_id}/persons/{person_id}", familyTreeHandler.UpdatePersonName)
-			r.Delete("/trees/{tree_id}/persons/{person_id}", familyTreeHandler.DeletePerson)
+			r.Patch("/{tree_id}/persons/{person_id}", familyTreeHandler.UpdatePersonName)
+			r.Delete("/{tree_id}/persons/{person_id}", familyTreeHandler.DeletePerson)
 		})
 	})
 
 	router.Route("/api/event-types", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
+			r.Get("/", eventsHandler.ListEventTypes)
+			r.Get("/{event_type_id}", eventsHandler.GetEventType)
 			r.Post("/", eventsHandler.CreateEventType)
 			r.Delete("/{event_type_id}", eventsHandler.DeleteEventType)
 		})
@@ -147,6 +151,8 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	router.Route("/api/events", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
+			r.Get("/", eventsHandler.ListEventsByTree)
+			r.Get("/{event_id}", eventsHandler.GetEvent)
 			r.Post("/", eventsHandler.CreateEvent)
 			r.Put("/{event_id}", eventsHandler.UpdateEvent)
 			r.Delete("/{event_id}", eventsHandler.DeleteEvent)

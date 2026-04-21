@@ -35,6 +35,29 @@ func (h *Handler) ListTreesByCreator(ctx context.Context, req *familytreepb.List
 	return &familytreepb.ListTreesByCreatorResponse{Trees: out}, nil
 }
 
+func (h *Handler) ListPersonsByTree(ctx context.Context, req *familytreepb.ListPersonsByTreeRequest) (*familytreepb.ListPersonsByTreeResponse, error) {
+	persons, err := h.service.ListPersonsByTree(ctx, int(req.GetRequestUserId()), req.GetTreeId())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	out := make([]*familytreepb.Person, 0, len(persons))
+	for _, person := range persons {
+		out = append(out, toProtoPerson(person))
+	}
+
+	return &familytreepb.ListPersonsByTreeResponse{Persons: out}, nil
+}
+
+func (h *Handler) GetPersonInTree(ctx context.Context, req *familytreepb.GetPersonInTreeRequest) (*familytreepb.GetPersonInTreeResponse, error) {
+	person, err := h.service.GetPersonInTree(ctx, int(req.GetRequestUserId()), req.GetTreeId(), req.GetPersonId())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &familytreepb.GetPersonInTreeResponse{Person: toProtoPerson(person)}, nil
+}
+
 func (h *Handler) AddParent(ctx context.Context, req *familytreepb.AddParentRequest) (*familytreepb.AddParentResponse, error) {
 	parent, autoParent, err := h.service.AddParent(
 		ctx,

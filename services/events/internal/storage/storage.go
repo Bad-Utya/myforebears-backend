@@ -17,11 +17,13 @@ var (
 type Storage interface {
 	CreateEventType(ctx context.Context, eventType models.EventType) error
 	GetEventType(ctx context.Context, eventTypeID uuid.UUID) (models.EventType, error)
+	ListEventTypesForUser(ctx context.Context, requestUserID int) ([]models.EventType, error)
 	DeleteEventType(ctx context.Context, eventTypeID uuid.UUID) error
 	HasEventsByType(ctx context.Context, eventTypeID uuid.UUID) (bool, error)
 
 	CreateEvent(ctx context.Context, event models.Event) error
 	GetEvent(ctx context.Context, eventID uuid.UUID) (models.Event, error)
+	ListEventsByTree(ctx context.Context, treeID uuid.UUID) ([]models.Event, error)
 	UpdateEvent(ctx context.Context, event models.Event) error
 	DeleteEvent(ctx context.Context, eventID uuid.UUID) error
 

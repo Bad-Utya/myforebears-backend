@@ -50,6 +50,28 @@ func (c *Client) CreateEventType(ctx context.Context, req *eventspb.CreateEventT
 	return resp, nil
 }
 
+func (c *Client) GetEventType(ctx context.Context, req *eventspb.GetEventTypeRequest) (*eventspb.GetEventTypeResponse, error) {
+	const op = "clients.events.GetEventType"
+
+	resp, err := c.api.GetEventType(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) ListEventTypes(ctx context.Context, req *eventspb.ListEventTypesRequest) (*eventspb.ListEventTypesResponse, error) {
+	const op = "clients.events.ListEventTypes"
+
+	resp, err := c.api.ListEventTypes(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) DeleteEventType(ctx context.Context, req *eventspb.DeleteEventTypeRequest) error {
 	const op = "clients.events.DeleteEventType"
 
@@ -65,6 +87,28 @@ func (c *Client) CreateEvent(ctx context.Context, req *eventspb.CreateEventReque
 	const op = "clients.events.CreateEvent"
 
 	resp, err := c.api.CreateEvent(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) GetEvent(ctx context.Context, req *eventspb.GetEventRequest) (*eventspb.GetEventResponse, error) {
+	const op = "clients.events.GetEvent"
+
+	resp, err := c.api.GetEvent(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) ListEventsByTree(ctx context.Context, req *eventspb.ListEventsByTreeRequest) (*eventspb.ListEventsByTreeResponse, error) {
+	const op = "clients.events.ListEventsByTree"
+
+	resp, err := c.api.ListEventsByTree(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

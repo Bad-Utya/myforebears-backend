@@ -67,6 +67,8 @@ service FamilyTreeService {
 
     rpc CreatePerson (CreatePersonRequest) returns (CreatePersonResponse);
     rpc GetPerson (GetPersonRequest) returns (GetPersonResponse);
+    rpc GetPersonInTree (GetPersonInTreeRequest) returns (GetPersonInTreeResponse);
+    rpc ListPersonsByTree (ListPersonsByTreeRequest) returns (ListPersonsByTreeResponse);
     rpc UpdatePerson (UpdatePersonRequest) returns (UpdatePersonResponse);
     rpc DeletePerson (DeletePersonRequest) returns (DeletePersonResponse);
 
@@ -177,6 +179,25 @@ message GetPersonRequest {
 
 message GetPersonResponse {
     Person person = 1;
+}
+
+message GetPersonInTreeRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string person_id = 3;
+}
+
+message GetPersonInTreeResponse {
+    Person person = 1;
+}
+
+message ListPersonsByTreeRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+}
+
+message ListPersonsByTreeResponse {
+    repeated Person persons = 1;
 }
 
 message UpdatePersonRequest {

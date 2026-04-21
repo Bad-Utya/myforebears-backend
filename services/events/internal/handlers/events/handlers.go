@@ -11,8 +11,12 @@ import (
 
 type EventsService interface {
 	CreateEventType(ctx context.Context, requestUserID int, name string, mode models.PrimaryPersonsMode, count int) (models.EventType, error)
+	GetEventType(ctx context.Context, requestUserID int, eventTypeID string) (models.EventType, error)
+	ListEventTypes(ctx context.Context, requestUserID int) ([]models.EventType, error)
 	DeleteEventType(ctx context.Context, requestUserID int, eventTypeID string) error
 	CreateEvent(ctx context.Context, requestUserID int, treeID string, eventTypeID string, primaryPersonIDs []string, additionalPersonIDs []string, dateISO string, datePrecision models.EventDatePrecision, dateBound models.EventDateBound) (models.Event, error)
+	GetEvent(ctx context.Context, requestUserID int, eventID string) (models.Event, error)
+	ListEventsByTree(ctx context.Context, requestUserID int, treeID string) ([]models.Event, error)
 	UpdateEvent(ctx context.Context, requestUserID int, eventID string, eventTypeID string, primaryPersonIDs []string, additionalPersonIDs []string, dateISO string, datePrecision models.EventDatePrecision, dateBound models.EventDateBound) (models.Event, error)
 	DeleteEvent(ctx context.Context, requestUserID int, eventID string) error
 }
@@ -45,6 +49,29 @@ func (h *Handler) CreateEventType(ctx context.Context, req *eventspb.CreateEvent
 	return &eventspb.CreateEventTypeResponse{EventType: toProtoEventType(eventType)}, nil
 }
 
+func (h *Handler) GetEventType(ctx context.Context, req *eventspb.GetEventTypeRequest) (*eventspb.GetEventTypeResponse, error) {
+	eventType, err := h.service.GetEventType(ctx, int(req.GetRequestUserId()), req.GetEventTypeId())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &eventspb.GetEventTypeResponse{EventType: toProtoEventType(eventType)}, nil
+}
+
+func (h *Handler) ListEventTypes(ctx context.Context, req *eventspb.ListEventTypesRequest) (*eventspb.ListEventTypesResponse, error) {
+	eventTypes, err := h.service.ListEventTypes(ctx, int(req.GetRequestUserId()))
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	out := make([]*eventspb.EventType, 0, len(eventTypes))
+	for _, eventType := range eventTypes {
+		out = append(out, toProtoEventType(eventType))
+	}
+
+	return &eventspb.ListEventTypesResponse{EventTypes: out}, nil
+}
+
 func (h *Handler) DeleteEventType(ctx context.Context, req *eventspb.DeleteEventTypeRequest) (*eventspb.DeleteEventTypeResponse, error) {
 	err := h.service.DeleteEventType(ctx, int(req.GetRequestUserId()), req.GetEventTypeId())
 	if err != nil {
@@ -71,6 +98,29 @@ func (h *Handler) CreateEvent(ctx context.Context, req *eventspb.CreateEventRequ
 	}
 
 	return &eventspb.CreateEventResponse{Event: toProtoEvent(event)}, nil
+}
+
+func (h *Handler) GetEvent(ctx context.Context, req *eventspb.GetEventRequest) (*eventspb.GetEventResponse, error) {
+	event, err := h.service.GetEvent(ctx, int(req.GetRequestUserId()), req.GetEventId())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &eventspb.GetEventResponse{Event: toProtoEvent(event)}, nil
+}
+
+func (h *Handler) ListEventsByTree(ctx context.Context, req *eventspb.ListEventsByTreeRequest) (*eventspb.ListEventsByTreeResponse, error) {
+	events, err := h.service.ListEventsByTree(ctx, int(req.GetRequestUserId()), req.GetTreeId())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	out := make([]*eventspb.Event, 0, len(events))
+	for _, event := range events {
+		out = append(out, toProtoEvent(event))
+	}
+
+	return &eventspb.ListEventsByTreeResponse{Events: out}, nil
 }
 
 func (h *Handler) UpdateEvent(ctx context.Context, req *eventspb.UpdateEventRequest) (*eventspb.UpdateEventResponse, error) {

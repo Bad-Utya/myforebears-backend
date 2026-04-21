@@ -80,6 +80,50 @@ func (s *Service) GetTreeForUser(ctx context.Context, requestUserID int, treeID 
 	return persons, relationships, nil
 }
 
+func (s *Service) ListPersonsByTree(ctx context.Context, requestUserID int, treeID string) ([]models.Person, error) {
+	const op = "service.familytree.ListPersonsByTree"
+
+	parsedTreeID, err := s.authorizeTree(ctx, requestUserID, treeID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	persons, err := s.personStorage.GetPersonsByTree(ctx, parsedTreeID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return persons, nil
+}
+
+func (s *Service) GetPersonInTree(ctx context.Context, requestUserID int, treeID string, personID string) (models.Person, error) {
+	const op = "service.familytree.GetPersonInTree"
+
+	parsedTreeID, err := s.authorizeTree(ctx, requestUserID, treeID)
+	if err != nil {
+		return models.Person{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	parsedPersonID, err := uuid.Parse(personID)
+	if err != nil {
+		return models.Person{}, fmt.Errorf("%s: %w", op, ErrInvalidPersonID)
+	}
+
+	person, err := s.personStorage.GetPerson(ctx, parsedPersonID)
+	if err != nil {
+		if errors.Is(err, storage.ErrPersonNotFound) {
+			return models.Person{}, fmt.Errorf("%s: %w", op, ErrPersonNotFound)
+		}
+		return models.Person{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if person.TreeID != parsedTreeID {
+		return models.Person{}, fmt.Errorf("%s: %w", op, ErrTreeMismatch)
+	}
+
+	return person, nil
+}
+
 func (s *Service) AddParent(
 	ctx context.Context,
 	requestUserID int,

@@ -98,6 +98,47 @@ func (s *Storage) GetEventType(ctx context.Context, eventTypeID uuid.UUID) (mode
 	return eventType, nil
 }
 
+func (s *Storage) ListEventTypesForUser(ctx context.Context, requestUserID int) ([]models.EventType, error) {
+	const op = "storage.postgres.ListEventTypesForUser"
+
+	rows, err := s.pool.Query(
+		ctx,
+		`SELECT id, owner_user_id, is_system, name, primary_persons_mode, primary_persons_count, created_at, updated_at
+		 FROM event_types
+		 WHERE is_system = TRUE OR owner_user_id = $1
+		 ORDER BY is_system DESC, lower(name) ASC`,
+		requestUserID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	eventTypes := make([]models.EventType, 0)
+	for rows.Next() {
+		var eventType models.EventType
+		if err := rows.Scan(
+			&eventType.ID,
+			&eventType.OwnerUserID,
+			&eventType.IsSystem,
+			&eventType.Name,
+			&eventType.PrimaryPersonsMode,
+			&eventType.PrimaryPersonsCount,
+			&eventType.CreatedAt,
+			&eventType.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		eventTypes = append(eventTypes, eventType)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return eventTypes, nil
+}
+
 func (s *Storage) DeleteEventType(ctx context.Context, eventTypeID uuid.UUID) error {
 	const op = "storage.postgres.DeleteEventType"
 
@@ -206,6 +247,58 @@ func (s *Storage) GetEvent(ctx context.Context, eventID uuid.UUID) (models.Event
 	}
 
 	return event, nil
+}
+
+func (s *Storage) ListEventsByTree(ctx context.Context, treeID uuid.UUID) ([]models.Event, error) {
+	const op = "storage.postgres.ListEventsByTree"
+
+	rows, err := s.pool.Query(
+		ctx,
+		`SELECT id, tree_id, event_type_id, date_value, date_precision, date_bound, created_at, updated_at
+		 FROM events
+		 WHERE tree_id = $1
+		 ORDER BY date_value ASC, created_at ASC`,
+		treeID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	events := make([]models.Event, 0)
+	for rows.Next() {
+		var event models.Event
+		if err := rows.Scan(
+			&event.ID,
+			&event.TreeID,
+			&event.EventTypeID,
+			&event.DateValue,
+			&event.DatePrecision,
+			&event.DateBound,
+			&event.CreatedAt,
+			&event.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+
+		event.PrimaryPersonIDs, err = selectParticipants(ctx, s.pool, event.ID, true)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+
+		event.AdditionalPersonIDs, err = selectParticipants(ctx, s.pool, event.ID, false)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+
+		events = append(events, event)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return events, nil
 }
 
 func (s *Storage) UpdateEvent(ctx context.Context, event models.Event) error {

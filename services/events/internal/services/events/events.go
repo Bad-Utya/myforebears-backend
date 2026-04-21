@@ -140,6 +140,41 @@ func (s *Service) DeleteEventType(ctx context.Context, requestUserID int, eventT
 	return nil
 }
 
+func (s *Service) GetEventType(ctx context.Context, requestUserID int, eventTypeID string) (models.EventType, error) {
+	const op = "service.events.GetEventType"
+
+	if requestUserID <= 0 {
+		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
+	}
+
+	parsedEventTypeID, err := uuid.Parse(eventTypeID)
+	if err != nil {
+		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrInvalidEventTypeID)
+	}
+
+	eventType, err := s.loadAndAuthorizeEventType(ctx, op, requestUserID, parsedEventTypeID)
+	if err != nil {
+		return models.EventType{}, err
+	}
+
+	return eventType, nil
+}
+
+func (s *Service) ListEventTypes(ctx context.Context, requestUserID int) ([]models.EventType, error) {
+	const op = "service.events.ListEventTypes"
+
+	if requestUserID <= 0 {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
+	}
+
+	eventTypes, err := s.storage.ListEventTypesForUser(ctx, requestUserID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return eventTypes, nil
+}
+
 func (s *Service) CreateEvent(
 	ctx context.Context,
 	requestUserID int,
@@ -312,6 +347,57 @@ func (s *Service) DeleteEvent(ctx context.Context, requestUserID int, eventID st
 	}
 
 	return nil
+}
+
+func (s *Service) GetEvent(ctx context.Context, requestUserID int, eventID string) (models.Event, error) {
+	const op = "service.events.GetEvent"
+
+	if requestUserID <= 0 {
+		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
+	}
+
+	parsedEventID, err := uuid.Parse(eventID)
+	if err != nil {
+		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidEventID)
+	}
+
+	event, err := s.storage.GetEvent(ctx, parsedEventID)
+	if err != nil {
+		if errors.Is(err, storage.ErrEventNotFound) {
+			return models.Event{}, fmt.Errorf("%s: %w", op, ErrEventNotFound)
+		}
+		return models.Event{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, event.TreeID.String(), nil); err != nil {
+		return models.Event{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return event, nil
+}
+
+func (s *Service) ListEventsByTree(ctx context.Context, requestUserID int, treeID string) ([]models.Event, error) {
+	const op = "service.events.ListEventsByTree"
+
+	if requestUserID <= 0 {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
+	}
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, parsedTreeID.String(), nil); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	events, err := s.storage.ListEventsByTree(ctx, parsedTreeID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return events, nil
 }
 
 func (s *Service) parseAndValidateBaseInput(

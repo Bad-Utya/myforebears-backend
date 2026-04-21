@@ -48,8 +48,12 @@ message Event {
 
 service EventsService {
     rpc CreateEventType (CreateEventTypeRequest) returns (CreateEventTypeResponse);
+    rpc GetEventType (GetEventTypeRequest) returns (GetEventTypeResponse);
+    rpc ListEventTypes (ListEventTypesRequest) returns (ListEventTypesResponse);
     rpc DeleteEventType (DeleteEventTypeRequest) returns (DeleteEventTypeResponse);
     rpc CreateEvent (CreateEventRequest) returns (CreateEventResponse);
+    rpc GetEvent (GetEventRequest) returns (GetEventResponse);
+    rpc ListEventsByTree (ListEventsByTreeRequest) returns (ListEventsByTreeResponse);
     rpc UpdateEvent (UpdateEventRequest) returns (UpdateEventResponse);
     rpc DeleteEvent (DeleteEventRequest) returns (DeleteEventResponse);
 }
@@ -63,6 +67,23 @@ message CreateEventTypeRequest {
 
 message CreateEventTypeResponse {
     EventType event_type = 1;
+}
+
+message GetEventTypeRequest {
+    int32 request_user_id = 1;
+    string event_type_id = 2;
+}
+
+message GetEventTypeResponse {
+    EventType event_type = 1;
+}
+
+message ListEventTypesRequest {
+    int32 request_user_id = 1;
+}
+
+message ListEventTypesResponse {
+    repeated EventType event_types = 1;
 }
 
 message DeleteEventTypeRequest {
@@ -85,6 +106,24 @@ message CreateEventRequest {
 
 message CreateEventResponse {
     Event event = 1;
+}
+
+message GetEventRequest {
+    int32 request_user_id = 1;
+    string event_id = 2;
+}
+
+message GetEventResponse {
+    Event event = 1;
+}
+
+message ListEventsByTreeRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+}
+
+message ListEventsByTreeResponse {
+    repeated Event events = 1;
 }
 
 message UpdateEventRequest {
