@@ -53,21 +53,28 @@ func New(log *slog.Logger, storage storage.Storage, familyTree FamilyTreeValidat
 
 func (s *Service) CreateEventType(ctx context.Context, requestUserID int, name string, mode models.PrimaryPersonsMode, count int) (models.EventType, error) {
 	const op = "service.events.CreateEventType"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("creating event type", slog.Int("request_user_id", requestUserID), slog.String("name", name))
 
 	if requestUserID <= 0 {
+		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
 		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
 	}
 
 	normalizedName := strings.TrimSpace(name)
 	if normalizedName == "" {
+		log.Info("invalid event type name")
 		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrInvalidEventTypeName)
 	}
 
 	if !isValidPrimaryPersonsMode(mode) {
+		log.Info("invalid primary persons mode", slog.String("mode", string(mode)))
 		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrInvalidPrimaryPersonsMode)
 	}
 
 	if mode == models.PrimaryPersonsModeFixed && count < 1 {
+		log.Info("invalid primary persons count", slog.Int("count", count))
 		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrInvalidPrimaryPersonsCount)
 	}
 	if mode == models.PrimaryPersonsModeUnlimited {
@@ -88,91 +95,125 @@ func (s *Service) CreateEventType(ctx context.Context, requestUserID int, name s
 
 	if err := s.storage.CreateEventType(ctx, eventType); err != nil {
 		if errors.Is(err, storage.ErrEventTypeAlreadyExists) {
+			log.Info("event type already exists", slog.String("name", normalizedName))
 			return models.EventType{}, fmt.Errorf("%s: %w", op, ErrEventTypeAlreadyExists)
 		}
+		log.Error("failed to create event type", slog.String("error", err.Error()))
 		return models.EventType{}, fmt.Errorf("%s: %w", op, err)
 	}
+
+	log.Info("event type created", slog.String("event_type_id", eventType.ID.String()))
 
 	return eventType, nil
 }
 
 func (s *Service) DeleteEventType(ctx context.Context, requestUserID int, eventTypeID string) error {
 	const op = "service.events.DeleteEventType"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("deleting event type", slog.Int("request_user_id", requestUserID), slog.String("event_type_id", eventTypeID))
 
 	if requestUserID <= 0 {
+		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
 		return fmt.Errorf("%s: %w", op, ErrInvalidUserID)
 	}
 
 	parsedEventTypeID, err := uuid.Parse(eventTypeID)
 	if err != nil {
+		log.Info("invalid event type id", slog.String("event_type_id", eventTypeID))
 		return fmt.Errorf("%s: %w", op, ErrInvalidEventTypeID)
 	}
 
 	eventType, err := s.storage.GetEventType(ctx, parsedEventTypeID)
 	if err != nil {
 		if errors.Is(err, storage.ErrEventTypeNotFound) {
+			log.Info("event type not found", slog.String("event_type_id", parsedEventTypeID.String()))
 			return fmt.Errorf("%s: %w", op, ErrEventTypeNotFound)
 		}
+		log.Error("failed to load event type", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	if eventType.IsSystem {
+		log.Info("attempt to delete system event type", slog.String("event_type_id", parsedEventTypeID.String()))
 		return fmt.Errorf("%s: %w", op, ErrCannotDeleteSystemEventType)
 	}
 
 	if eventType.OwnerUserID != requestUserID {
+		log.Info("forbidden event type delete", slog.Int("owner_user_id", eventType.OwnerUserID), slog.Int("request_user_id", requestUserID))
 		return fmt.Errorf("%s: %w", op, ErrForbidden)
 	}
 
 	hasEvents, err := s.storage.HasEventsByType(ctx, parsedEventTypeID)
 	if err != nil {
+		log.Error("failed to check events by type", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	if hasEvents {
+		log.Info("event type is in use", slog.String("event_type_id", parsedEventTypeID.String()))
 		return fmt.Errorf("%s: %w", op, ErrEventTypeInUse)
 	}
 
 	if err := s.storage.DeleteEventType(ctx, parsedEventTypeID); err != nil {
 		if errors.Is(err, storage.ErrEventTypeNotFound) {
+			log.Info("event type not found during delete", slog.String("event_type_id", parsedEventTypeID.String()))
 			return fmt.Errorf("%s: %w", op, ErrEventTypeNotFound)
 		}
+		log.Error("failed to delete event type", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
+
+	log.Info("event type deleted", slog.String("event_type_id", parsedEventTypeID.String()))
 
 	return nil
 }
 
 func (s *Service) GetEventType(ctx context.Context, requestUserID int, eventTypeID string) (models.EventType, error) {
 	const op = "service.events.GetEventType"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("getting event type", slog.Int("request_user_id", requestUserID), slog.String("event_type_id", eventTypeID))
 
 	if requestUserID <= 0 {
+		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
 		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
 	}
 
 	parsedEventTypeID, err := uuid.Parse(eventTypeID)
 	if err != nil {
+		log.Info("invalid event type id", slog.String("event_type_id", eventTypeID))
 		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrInvalidEventTypeID)
 	}
 
 	eventType, err := s.loadAndAuthorizeEventType(ctx, op, requestUserID, parsedEventTypeID)
 	if err != nil {
+		log.Error("failed to get event type", slog.String("error", err.Error()))
 		return models.EventType{}, err
 	}
+
+	log.Info("event type loaded", slog.String("event_type_id", eventType.ID.String()))
 
 	return eventType, nil
 }
 
 func (s *Service) ListEventTypes(ctx context.Context, requestUserID int) ([]models.EventType, error) {
 	const op = "service.events.ListEventTypes"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("listing event types", slog.Int("request_user_id", requestUserID))
 
 	if requestUserID <= 0 {
+		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
 		return nil, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
 	}
 
 	eventTypes, err := s.storage.ListEventTypesForUser(ctx, requestUserID)
 	if err != nil {
+		log.Error("failed to list event types", slog.String("error", err.Error()))
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+
+	log.Info("event types listed", slog.Int("count", len(eventTypes)))
 
 	return eventTypes, nil
 }
@@ -191,8 +232,12 @@ func (s *Service) CreateEvent(
 	isAutogenerated bool,
 ) (models.Event, error) {
 	const op = "service.events.CreateEvent"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("creating event", slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID), slog.String("event_type_id", eventTypeID))
 
 	parsedTreeID, parsedEventTypeID, parsedDate, err := s.parseAndValidateBaseInput(
+		log,
 		op,
 		requestUserID,
 		treeID,
@@ -208,15 +253,18 @@ func (s *Service) CreateEvent(
 
 	eventType, err := s.loadAndAuthorizeEventType(ctx, op, requestUserID, parsedEventTypeID)
 	if err != nil {
+		log.Error("failed to authorize event type", slog.String("error", err.Error()))
 		return models.Event{}, err
 	}
 
 	primaryParsed, additionalParsed, participantIDs, err := validateAndParseParticipants(primaryPersonIDs, additionalPersonIDs, eventType)
 	if err != nil {
+		log.Info("invalid participants", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, parsedTreeID.String(), participantIDs); err != nil {
+		log.Error("failed to validate participants in tree", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -237,8 +285,11 @@ func (s *Service) CreateEvent(
 	}
 
 	if err := s.storage.CreateEvent(ctx, event); err != nil {
+		log.Error("failed to create event", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
+
+	log.Info("event created", slog.String("event_id", event.ID.String()))
 
 	return event, nil
 }
@@ -256,49 +307,61 @@ func (s *Service) UpdateEvent(
 	dateUnknown bool,
 ) (models.Event, error) {
 	const op = "service.events.UpdateEvent"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("updating event", slog.Int("request_user_id", requestUserID), slog.String("event_id", eventID), slog.String("event_type_id", eventTypeID))
 
 	if requestUserID <= 0 {
+		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
 		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
 	}
 
 	parsedEventID, err := uuid.Parse(eventID)
 	if err != nil {
+		log.Info("invalid event id", slog.String("event_id", eventID))
 		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidEventID)
 	}
 
 	existing, err := s.storage.GetEvent(ctx, parsedEventID)
 	if err != nil {
 		if errors.Is(err, storage.ErrEventNotFound) {
+			log.Info("event not found", slog.String("event_id", parsedEventID.String()))
 			return models.Event{}, fmt.Errorf("%s: %w", op, ErrEventNotFound)
 		}
+		log.Error("failed to get event", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	parsedEventTypeID, err := uuid.Parse(eventTypeID)
 	if err != nil {
+		log.Info("invalid event type id", slog.String("event_type_id", eventTypeID))
 		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidEventTypeID)
 	}
 
-	_, _, parsedDate, err := s.parseAndValidateBaseInput(op, requestUserID, existing.TreeID.String(), eventTypeID, dateISO, datePrecision, dateBound, dateUnknown)
+	_, _, parsedDate, err := s.parseAndValidateBaseInput(log, op, requestUserID, existing.TreeID.String(), eventTypeID, dateISO, datePrecision, dateBound, dateUnknown)
 	if err != nil {
 		return models.Event{}, err
 	}
 
 	eventType, err := s.loadAndAuthorizeEventType(ctx, op, requestUserID, parsedEventTypeID)
 	if err != nil {
+		log.Error("failed to authorize event type", slog.String("error", err.Error()))
 		return models.Event{}, err
 	}
 
 	primaryParsed, additionalParsed, participantIDs, err := validateAndParseParticipants(primaryPersonIDs, additionalPersonIDs, eventType)
 	if err != nil {
+		log.Info("invalid participants", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	if existing.IsAutogenerated && !equalUUIDSlices(existing.PrimaryPersonIDs, primaryParsed) {
+		log.Info("attempt to modify autogenerated primary persons", slog.String("event_id", existing.ID.String()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, ErrCannotModifyAutogeneratedPrimaryPersons)
 	}
 
 	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, existing.TreeID.String(), participantIDs); err != nil {
+		log.Error("failed to validate participants in tree", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -313,104 +376,141 @@ func (s *Service) UpdateEvent(
 
 	if err := s.storage.UpdateEvent(ctx, existing); err != nil {
 		if errors.Is(err, storage.ErrEventNotFound) {
+			log.Info("event not found during update", slog.String("event_id", parsedEventID.String()))
 			return models.Event{}, fmt.Errorf("%s: %w", op, ErrEventNotFound)
 		}
+		log.Error("failed to update event", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
+
+	log.Info("event updated", slog.String("event_id", existing.ID.String()))
 
 	return existing, nil
 }
 
 func (s *Service) DeleteEvent(ctx context.Context, requestUserID int, eventID string) error {
 	const op = "service.events.DeleteEvent"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("deleting event", slog.Int("request_user_id", requestUserID), slog.String("event_id", eventID))
 
 	if requestUserID <= 0 {
+		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
 		return fmt.Errorf("%s: %w", op, ErrInvalidUserID)
 	}
 
 	parsedEventID, err := uuid.Parse(eventID)
 	if err != nil {
+		log.Info("invalid event id", slog.String("event_id", eventID))
 		return fmt.Errorf("%s: %w", op, ErrInvalidEventID)
 	}
 
 	event, err := s.storage.GetEvent(ctx, parsedEventID)
 	if err != nil {
 		if errors.Is(err, storage.ErrEventNotFound) {
+			log.Info("event not found", slog.String("event_id", parsedEventID.String()))
 			return fmt.Errorf("%s: %w", op, ErrEventNotFound)
 		}
+		log.Error("failed to get event", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, event.TreeID.String(), nil); err != nil {
+		log.Error("failed to validate tree access", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	if event.IsAutogenerated {
+		log.Info("attempt to delete autogenerated event", slog.String("event_id", event.ID.String()))
 		return fmt.Errorf("%s: %w", op, ErrCannotDeleteAutogeneratedEvent)
 	}
 
 	if err := s.storage.DeleteEvent(ctx, parsedEventID); err != nil {
 		if errors.Is(err, storage.ErrEventNotFound) {
+			log.Info("event not found during delete", slog.String("event_id", parsedEventID.String()))
 			return fmt.Errorf("%s: %w", op, ErrEventNotFound)
 		}
+		log.Error("failed to delete event", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
+
+	log.Info("event deleted", slog.String("event_id", parsedEventID.String()))
 
 	return nil
 }
 
 func (s *Service) GetEvent(ctx context.Context, requestUserID int, eventID string) (models.Event, error) {
 	const op = "service.events.GetEvent"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("getting event", slog.Int("request_user_id", requestUserID), slog.String("event_id", eventID))
 
 	if requestUserID <= 0 {
+		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
 		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
 	}
 
 	parsedEventID, err := uuid.Parse(eventID)
 	if err != nil {
+		log.Info("invalid event id", slog.String("event_id", eventID))
 		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidEventID)
 	}
 
 	event, err := s.storage.GetEvent(ctx, parsedEventID)
 	if err != nil {
 		if errors.Is(err, storage.ErrEventNotFound) {
+			log.Info("event not found", slog.String("event_id", parsedEventID.String()))
 			return models.Event{}, fmt.Errorf("%s: %w", op, ErrEventNotFound)
 		}
+		log.Error("failed to get event", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, event.TreeID.String(), nil); err != nil {
+		log.Error("failed to validate tree access", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
+
+	log.Info("event loaded", slog.String("event_id", event.ID.String()))
 
 	return event, nil
 }
 
 func (s *Service) ListEventsByTree(ctx context.Context, requestUserID int, treeID string) ([]models.Event, error) {
 	const op = "service.events.ListEventsByTree"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("listing events by tree", slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID))
 
 	if requestUserID <= 0 {
+		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
 		return nil, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
 	}
 
 	parsedTreeID, err := uuid.Parse(treeID)
 	if err != nil {
+		log.Info("invalid tree id", slog.String("tree_id", treeID))
 		return nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
 	}
 
 	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, parsedTreeID.String(), nil); err != nil {
+		log.Error("failed to validate tree access", slog.String("error", err.Error()))
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	events, err := s.storage.ListEventsByTree(ctx, parsedTreeID)
 	if err != nil {
+		log.Error("failed to list events by tree", slog.String("error", err.Error()))
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+
+	log.Info("events listed", slog.Int("count", len(events)))
 
 	return events, nil
 }
 
 func (s *Service) parseAndValidateBaseInput(
+	log *slog.Logger,
 	op string,
 	requestUserID int,
 	treeID string,
@@ -421,23 +521,28 @@ func (s *Service) parseAndValidateBaseInput(
 	dateUnknown bool,
 ) (uuid.UUID, uuid.UUID, *time.Time, error) {
 	if requestUserID <= 0 {
+		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
 		return uuid.Nil, uuid.Nil, nil, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
 	}
 
 	parsedTreeID, err := uuid.Parse(treeID)
 	if err != nil {
+		log.Info("invalid tree id", slog.String("tree_id", treeID))
 		return uuid.Nil, uuid.Nil, nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
 	}
 
 	parsedEventTypeID, err := uuid.Parse(eventTypeID)
 	if err != nil {
+		log.Info("invalid event type id", slog.String("event_type_id", eventTypeID))
 		return uuid.Nil, uuid.Nil, nil, fmt.Errorf("%s: %w", op, ErrInvalidEventTypeID)
 	}
 
 	if !isValidEventDatePrecision(datePrecision) {
+		log.Info("invalid event date precision", slog.String("date_precision", string(datePrecision)))
 		return uuid.Nil, uuid.Nil, nil, fmt.Errorf("%s: %w", op, ErrInvalidEventDatePrecision)
 	}
 	if !isValidEventDateBound(dateBound) {
+		log.Info("invalid event date bound", slog.String("date_bound", string(dateBound)))
 		return uuid.Nil, uuid.Nil, nil, fmt.Errorf("%s: %w", op, ErrInvalidEventDateBound)
 	}
 
@@ -447,6 +552,7 @@ func (s *Service) parseAndValidateBaseInput(
 
 	parsedDate, err := time.Parse("2006-01-02", dateISO)
 	if err != nil {
+		log.Info("invalid event date", slog.String("date_iso", dateISO))
 		return uuid.Nil, uuid.Nil, nil, fmt.Errorf("%s: %w", op, ErrInvalidEventDate)
 	}
 
@@ -468,15 +574,20 @@ func equalUUIDSlices(left []uuid.UUID, right []uuid.UUID) bool {
 }
 
 func (s *Service) loadAndAuthorizeEventType(ctx context.Context, op string, requestUserID int, eventTypeID uuid.UUID) (models.EventType, error) {
+	log := s.log.With(slog.String("op", op))
+
 	eventType, err := s.storage.GetEventType(ctx, eventTypeID)
 	if err != nil {
 		if errors.Is(err, storage.ErrEventTypeNotFound) {
+			log.Info("event type not found", slog.String("event_type_id", eventTypeID.String()))
 			return models.EventType{}, fmt.Errorf("%s: %w", op, ErrEventTypeNotFound)
 		}
+		log.Error("failed to load event type", slog.String("error", err.Error()))
 		return models.EventType{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	if !eventType.IsSystem && eventType.OwnerUserID != requestUserID {
+		log.Info("forbidden event type access", slog.Int("owner_user_id", eventType.OwnerUserID), slog.Int("request_user_id", requestUserID))
 		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrForbidden)
 	}
 
