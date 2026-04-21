@@ -172,13 +172,16 @@ func (s *Storage) GetRelatives(ctx context.Context, personID uuid.UUID) ([]model
 	res, err := session.Run(
 		ctx,
 		`MATCH (root:Person {id: $id})
-		 OPTIONAL MATCH (root)-[r1:PARENT_OF|PARTNER_OF]->(other1:Person)
-		 WITH root, collect({id: other1.id, type: type(r1), dir: 'OUTGOING'}) AS outgoing
-		 OPTIONAL MATCH (other2:Person)-[r2:PARENT_OF|PARTNER_OF]->(root)
-		 WITH outgoing + collect({id: other2.id, type: type(r2), dir: 'INCOMING'}) AS rels
-		 UNWIND rels AS rel
-		 WITH rel WHERE rel.id IS NOT NULL
-		 RETURN rel.id AS rel_id, rel.type AS rel_type, rel.dir AS rel_dir`,
+		OPTIONAL MATCH (root)-[r1:PARENT_OF|PARTNER_OF]->(other1:Person)
+		WITH root, collect({id: other1.id, type: type(r1), dir: 'OUTGOING'}) AS outgoing
+
+		OPTIONAL MATCH (other2:Person)-[r2:PARENT_OF|PARTNER_OF]->(root)
+		WITH outgoing, collect({id: other2.id, type: type(r2), dir: 'INCOMING'}) AS incoming
+
+		WITH outgoing + incoming AS rels
+		UNWIND rels AS rel
+		WITH rel WHERE rel.id IS NOT NULL
+		RETURN rel.id AS rel_id, rel.type AS rel_type, rel.dir AS rel_dir`,
 		map[string]any{"id": personID.String()},
 	)
 	if err != nil {
