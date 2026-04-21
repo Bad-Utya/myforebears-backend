@@ -58,7 +58,7 @@ func (s *Service) AddRelationship(ctx context.Context, personIDFrom string, pers
 		return fmt.Errorf("%s: %w", op, ErrPersonNotInSameTree)
 	}
 
-	if relType == models.RelationshipPartner && fromID.String() > toID.String() {
+	if isPartnerRelationshipType(relType) && fromID.String() > toID.String() {
 		fromID, toID = toID, fromID
 	}
 
@@ -93,7 +93,7 @@ func (s *Service) RemoveRelationship(ctx context.Context, personIDFrom string, p
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if relType == models.RelationshipPartner && fromID.String() > toID.String() {
+	if isPartnerRelationshipType(relType) && fromID.String() > toID.String() {
 		fromID, toID = toID, fromID
 	}
 
@@ -167,5 +167,12 @@ func parseRelationshipIDs(personIDFrom string, personIDTo string) (uuid.UUID, uu
 }
 
 func isValidRelationshipType(relType models.RelationshipType) bool {
-	return relType == models.RelationshipParentChild || relType == models.RelationshipPartner
+	return relType == models.RelationshipParentChild || isPartnerRelationshipType(relType)
+}
+
+func isPartnerRelationshipType(relType models.RelationshipType) bool {
+	return relType == models.RelationshipPartner ||
+		relType == models.RelationshipPartnerUnmarried ||
+		relType == models.RelationshipPartnerMarried ||
+		relType == models.RelationshipPartnerDivorced
 }

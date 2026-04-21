@@ -5,8 +5,19 @@ import "github.com/google/uuid"
 type RelationshipType string
 
 const (
-	RelationshipParentChild RelationshipType = "PARENT_CHILD"
-	RelationshipPartner     RelationshipType = "PARTNER"
+	RelationshipParentChild      RelationshipType = "PARENT_CHILD"
+	RelationshipPartner          RelationshipType = "PARTNER"
+	RelationshipPartnerUnmarried RelationshipType = "PARTNER_UNMARRIED"
+	RelationshipPartnerMarried   RelationshipType = "PARTNER_MARRIED"
+	RelationshipPartnerDivorced  RelationshipType = "PARTNER_DIVORCED"
+)
+
+type PartnerRelationshipStatus string
+
+const (
+	PartnerRelationshipStatusUnmarried PartnerRelationshipStatus = "UNMARRIED"
+	PartnerRelationshipStatusMarried   PartnerRelationshipStatus = "MARRIED"
+	PartnerRelationshipStatusDivorced  PartnerRelationshipStatus = "DIVORCED"
 )
 
 type RelationDirection string

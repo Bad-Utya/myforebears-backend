@@ -31,6 +31,7 @@ type FamilyTreeService interface {
 	GetRelatives(ctx context.Context, personID string) ([]models.Relative, error)
 	GetTree(ctx context.Context, treeID string) ([]models.Person, []models.Relationship, error)
 	ValidatePersonsInTree(ctx context.Context, requestUserID int, treeID string, personIDs []string) error
+	UpdatePartnerRelationshipStatus(ctx context.Context, requestUserID int, treeID string, personID1 string, personID2 string, status models.PartnerRelationshipStatus) error
 }
 
 type Handler struct {

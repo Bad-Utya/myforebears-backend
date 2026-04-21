@@ -78,6 +78,11 @@ func (s *Storage) CreateRelationship(ctx context.Context, personIDFrom uuid.UUID
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
+	partnerStatus, hasPartnerStatus, err := toNeo4jPartnerStatus(relType)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
 	session := s.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
@@ -87,7 +92,8 @@ func (s *Storage) CreateRelationship(ctx context.Context, personIDFrom uuid.UUID
 		 OPTIONAL MATCH (a)-[existing:%s]->(b)
 		 WITH a, b, existing
 		 WHERE existing IS NULL
-		 CREATE (a)-[:%s]->(b)
+		 CREATE (a)-[r:%s]->(b)
+		 SET r.partner_status = CASE WHEN $has_partner_status THEN $partner_status ELSE r.partner_status END
 		 RETURN COUNT(*)`,
 		relName,
 		relName,
@@ -97,8 +103,10 @@ func (s *Storage) CreateRelationship(ctx context.Context, personIDFrom uuid.UUID
 		ctx,
 		query,
 		map[string]any{
-			"from_id": personIDFrom.String(),
-			"to_id":   personIDTo.String(),
+			"from_id":            personIDFrom.String(),
+			"to_id":              personIDTo.String(),
+			"has_partner_status": hasPartnerStatus,
+			"partner_status":     partnerStatus,
 		},
 	)
 	if err != nil {
@@ -114,6 +122,40 @@ func (s *Storage) CreateRelationship(ctx context.Context, personIDFrom uuid.UUID
 
 	if res.Record().Values[0].(int64) == 0 {
 		return fmt.Errorf("%s: %w", op, storage.ErrRelationshipExists)
+	}
+
+	return nil
+}
+
+func (s *Storage) SetPartnerRelationshipStatus(ctx context.Context, personID1 uuid.UUID, personID2 uuid.UUID, status models.PartnerRelationshipStatus) error {
+	const op = "storage.neo4j.SetPartnerRelationshipStatus"
+
+	neoStatus, err := toNeo4jPartnerStatusFromModel(status)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if personID1.String() > personID2.String() {
+		personID1, personID2 = personID2, personID1
+	}
+
+	session := s.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	_, err = session.Run(
+		ctx,
+		`MATCH (a:Person {id: $id1})
+		 MATCH (b:Person {id: $id2})
+		 MERGE (a)-[r:PARTNER_OF]->(b)
+		 SET r.partner_status = $status`,
+		map[string]any{
+			"id1":    personID1.String(),
+			"id2":    personID2.String(),
+			"status": neoStatus,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil
@@ -173,15 +215,15 @@ func (s *Storage) GetRelatives(ctx context.Context, personID uuid.UUID) ([]model
 		ctx,
 		`MATCH (root:Person {id: $id})
 		OPTIONAL MATCH (root)-[r1:PARENT_OF|PARTNER_OF]->(other1:Person)
-		WITH root, collect({id: other1.id, type: type(r1), dir: 'OUTGOING'}) AS outgoing
+		WITH root, collect({id: other1.id, type: type(r1), partner_status: r1.partner_status, dir: 'OUTGOING'}) AS outgoing
 
 		OPTIONAL MATCH (other2:Person)-[r2:PARENT_OF|PARTNER_OF]->(root)
-		WITH outgoing, collect({id: other2.id, type: type(r2), dir: 'INCOMING'}) AS incoming
+		WITH outgoing, collect({id: other2.id, type: type(r2), partner_status: r2.partner_status, dir: 'INCOMING'}) AS incoming
 
 		WITH outgoing + incoming AS rels
 		UNWIND rels AS rel
 		WITH rel WHERE rel.id IS NOT NULL
-		RETURN rel.id AS rel_id, rel.type AS rel_type, rel.dir AS rel_dir`,
+		RETURN rel.id AS rel_id, rel.type AS rel_type, rel.partner_status AS partner_status, rel.dir AS rel_dir`,
 		map[string]any{"id": personID.String()},
 	)
 	if err != nil {
@@ -193,6 +235,7 @@ func (s *Storage) GetRelatives(ctx context.Context, personID uuid.UUID) ([]model
 		rec := res.Record()
 		idValue, _ := rec.Get("rel_id")
 		typeValue, _ := rec.Get("rel_type")
+		partnerStatusValue, _ := rec.Get("partner_status")
 		dirValue, _ := rec.Get("rel_dir")
 
 		relativeID, err := uuid.Parse(idValue.(string))
@@ -200,7 +243,14 @@ func (s *Storage) GetRelatives(ctx context.Context, personID uuid.UUID) ([]model
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 
-		relType, err := fromNeo4jRelationship(typeValue.(string))
+		partnerStatus := ""
+		if partnerStatusValue != nil {
+			if value, ok := partnerStatusValue.(string); ok {
+				partnerStatus = value
+			}
+		}
+
+		relType, err := fromNeo4jRelationship(typeValue.(string), partnerStatus)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
@@ -233,7 +283,7 @@ func (s *Storage) GetTreeRelationships(ctx context.Context, treeID uuid.UUID) ([
 	res, err := session.Run(
 		ctx,
 		`MATCH (a:Person {tree_id: $tree_id})-[r:PARENT_OF|PARTNER_OF]->(b:Person {tree_id: $tree_id})
-		 RETURN a.id AS from_id, b.id AS to_id, type(r) AS rel_type`,
+		 RETURN a.id AS from_id, b.id AS to_id, type(r) AS rel_type, r.partner_status AS partner_status`,
 		map[string]any{"tree_id": treeID.String()},
 	)
 	if err != nil {
@@ -246,6 +296,7 @@ func (s *Storage) GetTreeRelationships(ctx context.Context, treeID uuid.UUID) ([
 		fromValue, _ := rec.Get("from_id")
 		toValue, _ := rec.Get("to_id")
 		typeValue, _ := rec.Get("rel_type")
+		partnerStatusValue, _ := rec.Get("partner_status")
 
 		fromID, err := uuid.Parse(fromValue.(string))
 		if err != nil {
@@ -255,7 +306,14 @@ func (s *Storage) GetTreeRelationships(ctx context.Context, treeID uuid.UUID) ([
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-		relType, err := fromNeo4jRelationship(typeValue.(string))
+		partnerStatus := ""
+		if partnerStatusValue != nil {
+			if value, ok := partnerStatusValue.(string); ok {
+				partnerStatus = value
+			}
+		}
+
+		relType, err := fromNeo4jRelationship(typeValue.(string), partnerStatus)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
@@ -282,19 +340,59 @@ func toNeo4jRelationship(relType models.RelationshipType) (string, error) {
 	switch relType {
 	case models.RelationshipParentChild:
 		return "PARENT_OF", nil
-	case models.RelationshipPartner:
+	case models.RelationshipPartner,
+		models.RelationshipPartnerUnmarried,
+		models.RelationshipPartnerMarried,
+		models.RelationshipPartnerDivorced:
 		return "PARTNER_OF", nil
 	default:
 		return "", errors.New("unknown relationship type")
 	}
 }
 
-func fromNeo4jRelationship(relType string) (models.RelationshipType, error) {
+func toNeo4jPartnerStatus(relType models.RelationshipType) (string, bool, error) {
+	switch relType {
+	case models.RelationshipPartnerUnmarried:
+		return "UNMARRIED", true, nil
+	case models.RelationshipPartnerMarried:
+		return "MARRIED", true, nil
+	case models.RelationshipPartnerDivorced:
+		return "DIVORCED", true, nil
+	case models.RelationshipPartner:
+		return "UNMARRIED", true, nil
+	case models.RelationshipParentChild:
+		return "", false, nil
+	default:
+		return "", false, errors.New("unknown relationship type")
+	}
+}
+
+func toNeo4jPartnerStatusFromModel(status models.PartnerRelationshipStatus) (string, error) {
+	switch status {
+	case models.PartnerRelationshipStatusUnmarried:
+		return "UNMARRIED", nil
+	case models.PartnerRelationshipStatusMarried:
+		return "MARRIED", nil
+	case models.PartnerRelationshipStatusDivorced:
+		return "DIVORCED", nil
+	default:
+		return "", errors.New("unknown partner relationship status")
+	}
+}
+
+func fromNeo4jRelationship(relType string, partnerStatus string) (models.RelationshipType, error) {
 	switch relType {
 	case "PARENT_OF":
 		return models.RelationshipParentChild, nil
 	case "PARTNER_OF":
-		return models.RelationshipPartner, nil
+		switch partnerStatus {
+		case "MARRIED":
+			return models.RelationshipPartnerMarried, nil
+		case "DIVORCED":
+			return models.RelationshipPartnerDivorced, nil
+		default:
+			return models.RelationshipPartnerUnmarried, nil
+		}
 	default:
 		return "", errors.New("unknown relationship type")
 	}

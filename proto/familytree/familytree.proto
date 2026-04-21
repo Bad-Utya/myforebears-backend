@@ -14,6 +14,16 @@ enum RelationshipType {
     RELATIONSHIP_TYPE_UNSPECIFIED = 0;
     RELATIONSHIP_PARENT_CHILD = 1;
     RELATIONSHIP_PARTNER = 2;
+    RELATIONSHIP_PARTNER_UNMARRIED = 3;
+    RELATIONSHIP_PARTNER_MARRIED = 4;
+    RELATIONSHIP_PARTNER_DIVORCED = 5;
+}
+
+enum PartnerRelationshipStatus {
+    PARTNER_RELATIONSHIP_STATUS_UNSPECIFIED = 0;
+    PARTNER_RELATIONSHIP_STATUS_UNMARRIED = 1;
+    PARTNER_RELATIONSHIP_STATUS_MARRIED = 2;
+    PARTNER_RELATIONSHIP_STATUS_DIVORCED = 3;
 }
 
 enum RelationDirection {
@@ -77,6 +87,7 @@ service FamilyTreeService {
     rpc GetRelatives (GetRelativesRequest) returns (GetRelativesResponse);
     rpc GetTree (GetTreeRequest) returns (GetTreeResponse);
     rpc ValidatePersonsInTree (ValidatePersonsInTreeRequest) returns (ValidatePersonsInTreeResponse);
+    rpc UpdatePartnerRelationshipStatus (UpdatePartnerRelationshipStatusRequest) returns (UpdatePartnerRelationshipStatusResponse);
 }
 
 message CreateTreeRequest {
@@ -259,3 +270,13 @@ message ValidatePersonsInTreeRequest {
 }
 
 message ValidatePersonsInTreeResponse {}
+
+message UpdatePartnerRelationshipStatusRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string person_id1 = 3;
+    string person_id2 = 4;
+    PartnerRelationshipStatus status = 5;
+}
+
+message UpdatePartnerRelationshipStatusResponse {}

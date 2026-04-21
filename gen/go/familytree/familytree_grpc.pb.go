@@ -19,24 +19,25 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FamilyTreeService_CreateTree_FullMethodName            = "/familytree.FamilyTreeService/CreateTree"
-	FamilyTreeService_ListTreesByCreator_FullMethodName    = "/familytree.FamilyTreeService/ListTreesByCreator"
-	FamilyTreeService_AddParent_FullMethodName             = "/familytree.FamilyTreeService/AddParent"
-	FamilyTreeService_AddChild_FullMethodName              = "/familytree.FamilyTreeService/AddChild"
-	FamilyTreeService_AddPartner_FullMethodName            = "/familytree.FamilyTreeService/AddPartner"
-	FamilyTreeService_UpdatePersonName_FullMethodName      = "/familytree.FamilyTreeService/UpdatePersonName"
-	FamilyTreeService_DeletePersonInTree_FullMethodName    = "/familytree.FamilyTreeService/DeletePersonInTree"
-	FamilyTreeService_CreatePerson_FullMethodName          = "/familytree.FamilyTreeService/CreatePerson"
-	FamilyTreeService_GetPerson_FullMethodName             = "/familytree.FamilyTreeService/GetPerson"
-	FamilyTreeService_GetPersonInTree_FullMethodName       = "/familytree.FamilyTreeService/GetPersonInTree"
-	FamilyTreeService_ListPersonsByTree_FullMethodName     = "/familytree.FamilyTreeService/ListPersonsByTree"
-	FamilyTreeService_UpdatePerson_FullMethodName          = "/familytree.FamilyTreeService/UpdatePerson"
-	FamilyTreeService_DeletePerson_FullMethodName          = "/familytree.FamilyTreeService/DeletePerson"
-	FamilyTreeService_AddRelationship_FullMethodName       = "/familytree.FamilyTreeService/AddRelationship"
-	FamilyTreeService_RemoveRelationship_FullMethodName    = "/familytree.FamilyTreeService/RemoveRelationship"
-	FamilyTreeService_GetRelatives_FullMethodName          = "/familytree.FamilyTreeService/GetRelatives"
-	FamilyTreeService_GetTree_FullMethodName               = "/familytree.FamilyTreeService/GetTree"
-	FamilyTreeService_ValidatePersonsInTree_FullMethodName = "/familytree.FamilyTreeService/ValidatePersonsInTree"
+	FamilyTreeService_CreateTree_FullMethodName                      = "/familytree.FamilyTreeService/CreateTree"
+	FamilyTreeService_ListTreesByCreator_FullMethodName              = "/familytree.FamilyTreeService/ListTreesByCreator"
+	FamilyTreeService_AddParent_FullMethodName                       = "/familytree.FamilyTreeService/AddParent"
+	FamilyTreeService_AddChild_FullMethodName                        = "/familytree.FamilyTreeService/AddChild"
+	FamilyTreeService_AddPartner_FullMethodName                      = "/familytree.FamilyTreeService/AddPartner"
+	FamilyTreeService_UpdatePersonName_FullMethodName                = "/familytree.FamilyTreeService/UpdatePersonName"
+	FamilyTreeService_DeletePersonInTree_FullMethodName              = "/familytree.FamilyTreeService/DeletePersonInTree"
+	FamilyTreeService_CreatePerson_FullMethodName                    = "/familytree.FamilyTreeService/CreatePerson"
+	FamilyTreeService_GetPerson_FullMethodName                       = "/familytree.FamilyTreeService/GetPerson"
+	FamilyTreeService_GetPersonInTree_FullMethodName                 = "/familytree.FamilyTreeService/GetPersonInTree"
+	FamilyTreeService_ListPersonsByTree_FullMethodName               = "/familytree.FamilyTreeService/ListPersonsByTree"
+	FamilyTreeService_UpdatePerson_FullMethodName                    = "/familytree.FamilyTreeService/UpdatePerson"
+	FamilyTreeService_DeletePerson_FullMethodName                    = "/familytree.FamilyTreeService/DeletePerson"
+	FamilyTreeService_AddRelationship_FullMethodName                 = "/familytree.FamilyTreeService/AddRelationship"
+	FamilyTreeService_RemoveRelationship_FullMethodName              = "/familytree.FamilyTreeService/RemoveRelationship"
+	FamilyTreeService_GetRelatives_FullMethodName                    = "/familytree.FamilyTreeService/GetRelatives"
+	FamilyTreeService_GetTree_FullMethodName                         = "/familytree.FamilyTreeService/GetTree"
+	FamilyTreeService_ValidatePersonsInTree_FullMethodName           = "/familytree.FamilyTreeService/ValidatePersonsInTree"
+	FamilyTreeService_UpdatePartnerRelationshipStatus_FullMethodName = "/familytree.FamilyTreeService/UpdatePartnerRelationshipStatus"
 )
 
 // FamilyTreeServiceClient is the client API for FamilyTreeService service.
@@ -61,6 +62,7 @@ type FamilyTreeServiceClient interface {
 	GetRelatives(ctx context.Context, in *GetRelativesRequest, opts ...grpc.CallOption) (*GetRelativesResponse, error)
 	GetTree(ctx context.Context, in *GetTreeRequest, opts ...grpc.CallOption) (*GetTreeResponse, error)
 	ValidatePersonsInTree(ctx context.Context, in *ValidatePersonsInTreeRequest, opts ...grpc.CallOption) (*ValidatePersonsInTreeResponse, error)
+	UpdatePartnerRelationshipStatus(ctx context.Context, in *UpdatePartnerRelationshipStatusRequest, opts ...grpc.CallOption) (*UpdatePartnerRelationshipStatusResponse, error)
 }
 
 type familyTreeServiceClient struct {
@@ -251,6 +253,16 @@ func (c *familyTreeServiceClient) ValidatePersonsInTree(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *familyTreeServiceClient) UpdatePartnerRelationshipStatus(ctx context.Context, in *UpdatePartnerRelationshipStatusRequest, opts ...grpc.CallOption) (*UpdatePartnerRelationshipStatusResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdatePartnerRelationshipStatusResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_UpdatePartnerRelationshipStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FamilyTreeServiceServer is the server API for FamilyTreeService service.
 // All implementations must embed UnimplementedFamilyTreeServiceServer
 // for forward compatibility.
@@ -273,6 +285,7 @@ type FamilyTreeServiceServer interface {
 	GetRelatives(context.Context, *GetRelativesRequest) (*GetRelativesResponse, error)
 	GetTree(context.Context, *GetTreeRequest) (*GetTreeResponse, error)
 	ValidatePersonsInTree(context.Context, *ValidatePersonsInTreeRequest) (*ValidatePersonsInTreeResponse, error)
+	UpdatePartnerRelationshipStatus(context.Context, *UpdatePartnerRelationshipStatusRequest) (*UpdatePartnerRelationshipStatusResponse, error)
 	mustEmbedUnimplementedFamilyTreeServiceServer()
 }
 
@@ -336,6 +349,9 @@ func (UnimplementedFamilyTreeServiceServer) GetTree(context.Context, *GetTreeReq
 }
 func (UnimplementedFamilyTreeServiceServer) ValidatePersonsInTree(context.Context, *ValidatePersonsInTreeRequest) (*ValidatePersonsInTreeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ValidatePersonsInTree not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) UpdatePartnerRelationshipStatus(context.Context, *UpdatePartnerRelationshipStatusRequest) (*UpdatePartnerRelationshipStatusResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdatePartnerRelationshipStatus not implemented")
 }
 func (UnimplementedFamilyTreeServiceServer) mustEmbedUnimplementedFamilyTreeServiceServer() {}
 func (UnimplementedFamilyTreeServiceServer) testEmbeddedByValue()                           {}
@@ -682,6 +698,24 @@ func _FamilyTreeService_ValidatePersonsInTree_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FamilyTreeService_UpdatePartnerRelationshipStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdatePartnerRelationshipStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).UpdatePartnerRelationshipStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_UpdatePartnerRelationshipStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).UpdatePartnerRelationshipStatus(ctx, req.(*UpdatePartnerRelationshipStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FamilyTreeService_ServiceDesc is the grpc.ServiceDesc for FamilyTreeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -760,6 +794,10 @@ var FamilyTreeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ValidatePersonsInTree",
 			Handler:    _FamilyTreeService_ValidatePersonsInTree_Handler,
+		},
+		{
+			MethodName: "UpdatePartnerRelationshipStatus",
+			Handler:    _FamilyTreeService_UpdatePartnerRelationshipStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

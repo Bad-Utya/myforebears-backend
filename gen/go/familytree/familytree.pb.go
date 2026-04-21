@@ -73,9 +73,12 @@ func (Gender) EnumDescriptor() ([]byte, []int) {
 type RelationshipType int32
 
 const (
-	RelationshipType_RELATIONSHIP_TYPE_UNSPECIFIED RelationshipType = 0
-	RelationshipType_RELATIONSHIP_PARENT_CHILD     RelationshipType = 1
-	RelationshipType_RELATIONSHIP_PARTNER          RelationshipType = 2
+	RelationshipType_RELATIONSHIP_TYPE_UNSPECIFIED  RelationshipType = 0
+	RelationshipType_RELATIONSHIP_PARENT_CHILD      RelationshipType = 1
+	RelationshipType_RELATIONSHIP_PARTNER           RelationshipType = 2
+	RelationshipType_RELATIONSHIP_PARTNER_UNMARRIED RelationshipType = 3
+	RelationshipType_RELATIONSHIP_PARTNER_MARRIED   RelationshipType = 4
+	RelationshipType_RELATIONSHIP_PARTNER_DIVORCED  RelationshipType = 5
 )
 
 // Enum value maps for RelationshipType.
@@ -84,11 +87,17 @@ var (
 		0: "RELATIONSHIP_TYPE_UNSPECIFIED",
 		1: "RELATIONSHIP_PARENT_CHILD",
 		2: "RELATIONSHIP_PARTNER",
+		3: "RELATIONSHIP_PARTNER_UNMARRIED",
+		4: "RELATIONSHIP_PARTNER_MARRIED",
+		5: "RELATIONSHIP_PARTNER_DIVORCED",
 	}
 	RelationshipType_value = map[string]int32{
-		"RELATIONSHIP_TYPE_UNSPECIFIED": 0,
-		"RELATIONSHIP_PARENT_CHILD":     1,
-		"RELATIONSHIP_PARTNER":          2,
+		"RELATIONSHIP_TYPE_UNSPECIFIED":  0,
+		"RELATIONSHIP_PARENT_CHILD":      1,
+		"RELATIONSHIP_PARTNER":           2,
+		"RELATIONSHIP_PARTNER_UNMARRIED": 3,
+		"RELATIONSHIP_PARTNER_MARRIED":   4,
+		"RELATIONSHIP_PARTNER_DIVORCED":  5,
 	}
 )
 
@@ -117,6 +126,58 @@ func (x RelationshipType) Number() protoreflect.EnumNumber {
 // Deprecated: Use RelationshipType.Descriptor instead.
 func (RelationshipType) EnumDescriptor() ([]byte, []int) {
 	return file_familytree_familytree_proto_rawDescGZIP(), []int{1}
+}
+
+type PartnerRelationshipStatus int32
+
+const (
+	PartnerRelationshipStatus_PARTNER_RELATIONSHIP_STATUS_UNSPECIFIED PartnerRelationshipStatus = 0
+	PartnerRelationshipStatus_PARTNER_RELATIONSHIP_STATUS_UNMARRIED   PartnerRelationshipStatus = 1
+	PartnerRelationshipStatus_PARTNER_RELATIONSHIP_STATUS_MARRIED     PartnerRelationshipStatus = 2
+	PartnerRelationshipStatus_PARTNER_RELATIONSHIP_STATUS_DIVORCED    PartnerRelationshipStatus = 3
+)
+
+// Enum value maps for PartnerRelationshipStatus.
+var (
+	PartnerRelationshipStatus_name = map[int32]string{
+		0: "PARTNER_RELATIONSHIP_STATUS_UNSPECIFIED",
+		1: "PARTNER_RELATIONSHIP_STATUS_UNMARRIED",
+		2: "PARTNER_RELATIONSHIP_STATUS_MARRIED",
+		3: "PARTNER_RELATIONSHIP_STATUS_DIVORCED",
+	}
+	PartnerRelationshipStatus_value = map[string]int32{
+		"PARTNER_RELATIONSHIP_STATUS_UNSPECIFIED": 0,
+		"PARTNER_RELATIONSHIP_STATUS_UNMARRIED":   1,
+		"PARTNER_RELATIONSHIP_STATUS_MARRIED":     2,
+		"PARTNER_RELATIONSHIP_STATUS_DIVORCED":    3,
+	}
+)
+
+func (x PartnerRelationshipStatus) Enum() *PartnerRelationshipStatus {
+	p := new(PartnerRelationshipStatus)
+	*p = x
+	return p
+}
+
+func (x PartnerRelationshipStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PartnerRelationshipStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_familytree_familytree_proto_enumTypes[2].Descriptor()
+}
+
+func (PartnerRelationshipStatus) Type() protoreflect.EnumType {
+	return &file_familytree_familytree_proto_enumTypes[2]
+}
+
+func (x PartnerRelationshipStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PartnerRelationshipStatus.Descriptor instead.
+func (PartnerRelationshipStatus) EnumDescriptor() ([]byte, []int) {
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{2}
 }
 
 type RelationDirection int32
@@ -152,11 +213,11 @@ func (x RelationDirection) String() string {
 }
 
 func (RelationDirection) Descriptor() protoreflect.EnumDescriptor {
-	return file_familytree_familytree_proto_enumTypes[2].Descriptor()
+	return file_familytree_familytree_proto_enumTypes[3].Descriptor()
 }
 
 func (RelationDirection) Type() protoreflect.EnumType {
-	return &file_familytree_familytree_proto_enumTypes[2]
+	return &file_familytree_familytree_proto_enumTypes[3]
 }
 
 func (x RelationDirection) Number() protoreflect.EnumNumber {
@@ -165,7 +226,7 @@ func (x RelationDirection) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RelationDirection.Descriptor instead.
 func (RelationDirection) EnumDescriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{2}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{3}
 }
 
 type ParentRole int32
@@ -201,11 +262,11 @@ func (x ParentRole) String() string {
 }
 
 func (ParentRole) Descriptor() protoreflect.EnumDescriptor {
-	return file_familytree_familytree_proto_enumTypes[3].Descriptor()
+	return file_familytree_familytree_proto_enumTypes[4].Descriptor()
 }
 
 func (ParentRole) Type() protoreflect.EnumType {
-	return &file_familytree_familytree_proto_enumTypes[3]
+	return &file_familytree_familytree_proto_enumTypes[4]
 }
 
 func (x ParentRole) Number() protoreflect.EnumNumber {
@@ -214,7 +275,7 @@ func (x ParentRole) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ParentRole.Descriptor instead.
 func (ParentRole) EnumDescriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{3}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{4}
 }
 
 type Tree struct {
@@ -2401,6 +2462,118 @@ func (*ValidatePersonsInTreeResponse) Descriptor() ([]byte, []int) {
 	return file_familytree_familytree_proto_rawDescGZIP(), []int{39}
 }
 
+type UpdatePartnerRelationshipStatusRequest struct {
+	state         protoimpl.MessageState    `protogen:"open.v1"`
+	RequestUserId int32                     `protobuf:"varint,1,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	TreeId        string                    `protobuf:"bytes,2,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
+	PersonId1     string                    `protobuf:"bytes,3,opt,name=person_id1,json=personId1,proto3" json:"person_id1,omitempty"`
+	PersonId2     string                    `protobuf:"bytes,4,opt,name=person_id2,json=personId2,proto3" json:"person_id2,omitempty"`
+	Status        PartnerRelationshipStatus `protobuf:"varint,5,opt,name=status,proto3,enum=familytree.PartnerRelationshipStatus" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdatePartnerRelationshipStatusRequest) Reset() {
+	*x = UpdatePartnerRelationshipStatusRequest{}
+	mi := &file_familytree_familytree_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdatePartnerRelationshipStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePartnerRelationshipStatusRequest) ProtoMessage() {}
+
+func (x *UpdatePartnerRelationshipStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_familytree_familytree_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePartnerRelationshipStatusRequest.ProtoReflect.Descriptor instead.
+func (*UpdatePartnerRelationshipStatusRequest) Descriptor() ([]byte, []int) {
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *UpdatePartnerRelationshipStatusRequest) GetRequestUserId() int32 {
+	if x != nil {
+		return x.RequestUserId
+	}
+	return 0
+}
+
+func (x *UpdatePartnerRelationshipStatusRequest) GetTreeId() string {
+	if x != nil {
+		return x.TreeId
+	}
+	return ""
+}
+
+func (x *UpdatePartnerRelationshipStatusRequest) GetPersonId1() string {
+	if x != nil {
+		return x.PersonId1
+	}
+	return ""
+}
+
+func (x *UpdatePartnerRelationshipStatusRequest) GetPersonId2() string {
+	if x != nil {
+		return x.PersonId2
+	}
+	return ""
+}
+
+func (x *UpdatePartnerRelationshipStatusRequest) GetStatus() PartnerRelationshipStatus {
+	if x != nil {
+		return x.Status
+	}
+	return PartnerRelationshipStatus_PARTNER_RELATIONSHIP_STATUS_UNSPECIFIED
+}
+
+type UpdatePartnerRelationshipStatusResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdatePartnerRelationshipStatusResponse) Reset() {
+	*x = UpdatePartnerRelationshipStatusResponse{}
+	mi := &file_familytree_familytree_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdatePartnerRelationshipStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePartnerRelationshipStatusResponse) ProtoMessage() {}
+
+func (x *UpdatePartnerRelationshipStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_familytree_familytree_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePartnerRelationshipStatusResponse.ProtoReflect.Descriptor instead.
+func (*UpdatePartnerRelationshipStatusResponse) Descriptor() ([]byte, []int) {
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{41}
+}
+
 var File_familytree_familytree_proto protoreflect.FileDescriptor
 
 const file_familytree_familytree_proto_rawDesc = "" +
@@ -2568,15 +2741,32 @@ const file_familytree_familytree_proto_rawDesc = "" +
 	"\atree_id\x18\x02 \x01(\tR\x06treeId\x12\x1d\n" +
 	"\n" +
 	"person_ids\x18\x03 \x03(\tR\tpersonIds\"\x1f\n" +
-	"\x1dValidatePersonsInTreeResponse*D\n" +
+	"\x1dValidatePersonsInTreeResponse\"\xe6\x01\n" +
+	"&UpdatePartnerRelationshipStatusRequest\x12&\n" +
+	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\x12\x17\n" +
+	"\atree_id\x18\x02 \x01(\tR\x06treeId\x12\x1d\n" +
+	"\n" +
+	"person_id1\x18\x03 \x01(\tR\tpersonId1\x12\x1d\n" +
+	"\n" +
+	"person_id2\x18\x04 \x01(\tR\tpersonId2\x12=\n" +
+	"\x06status\x18\x05 \x01(\x0e2%.familytree.PartnerRelationshipStatusR\x06status\")\n" +
+	"'UpdatePartnerRelationshipStatusResponse*D\n" +
 	"\x06Gender\x12\x16\n" +
 	"\x12GENDER_UNSPECIFIED\x10\x00\x12\x0f\n" +
 	"\vGENDER_MALE\x10\x01\x12\x11\n" +
-	"\rGENDER_FEMALE\x10\x02*n\n" +
+	"\rGENDER_FEMALE\x10\x02*\xd7\x01\n" +
 	"\x10RelationshipType\x12!\n" +
 	"\x1dRELATIONSHIP_TYPE_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19RELATIONSHIP_PARENT_CHILD\x10\x01\x12\x18\n" +
-	"\x14RELATIONSHIP_PARTNER\x10\x02*y\n" +
+	"\x14RELATIONSHIP_PARTNER\x10\x02\x12\"\n" +
+	"\x1eRELATIONSHIP_PARTNER_UNMARRIED\x10\x03\x12 \n" +
+	"\x1cRELATIONSHIP_PARTNER_MARRIED\x10\x04\x12!\n" +
+	"\x1dRELATIONSHIP_PARTNER_DIVORCED\x10\x05*\xc6\x01\n" +
+	"\x19PartnerRelationshipStatus\x12+\n" +
+	"'PARTNER_RELATIONSHIP_STATUS_UNSPECIFIED\x10\x00\x12)\n" +
+	"%PARTNER_RELATIONSHIP_STATUS_UNMARRIED\x10\x01\x12'\n" +
+	"#PARTNER_RELATIONSHIP_STATUS_MARRIED\x10\x02\x12(\n" +
+	"$PARTNER_RELATIONSHIP_STATUS_DIVORCED\x10\x03*y\n" +
 	"\x11RelationDirection\x12\"\n" +
 	"\x1eRELATION_DIRECTION_UNSPECIFIED\x10\x00\x12\x1f\n" +
 	"\x1bRELATION_DIRECTION_OUTGOING\x10\x01\x12\x1f\n" +
@@ -2585,7 +2775,7 @@ const file_familytree_familytree_proto_rawDesc = "" +
 	"ParentRole\x12\x1b\n" +
 	"\x17PARENT_ROLE_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12PARENT_ROLE_FATHER\x10\x01\x12\x16\n" +
-	"\x12PARENT_ROLE_MOTHER\x10\x022\xae\f\n" +
+	"\x12PARENT_ROLE_MOTHER\x10\x022\xbb\r\n" +
 	"\x11FamilyTreeService\x12K\n" +
 	"\n" +
 	"CreateTree\x12\x1d.familytree.CreateTreeRequest\x1a\x1e.familytree.CreateTreeResponse\x12c\n" +
@@ -2606,7 +2796,8 @@ const file_familytree_familytree_proto_rawDesc = "" +
 	"\x12RemoveRelationship\x12%.familytree.RemoveRelationshipRequest\x1a&.familytree.RemoveRelationshipResponse\x12Q\n" +
 	"\fGetRelatives\x12\x1f.familytree.GetRelativesRequest\x1a .familytree.GetRelativesResponse\x12B\n" +
 	"\aGetTree\x12\x1a.familytree.GetTreeRequest\x1a\x1b.familytree.GetTreeResponse\x12l\n" +
-	"\x15ValidatePersonsInTree\x12(.familytree.ValidatePersonsInTreeRequest\x1a).familytree.ValidatePersonsInTreeResponseBHZFgithub.com/Bad-Utya/myforebears-backend/gen/go/familytree;familytreepbb\x06proto3"
+	"\x15ValidatePersonsInTree\x12(.familytree.ValidatePersonsInTreeRequest\x1a).familytree.ValidatePersonsInTreeResponse\x12\x8a\x01\n" +
+	"\x1fUpdatePartnerRelationshipStatus\x122.familytree.UpdatePartnerRelationshipStatusRequest\x1a3.familytree.UpdatePartnerRelationshipStatusResponseBHZFgithub.com/Bad-Utya/myforebears-backend/gen/go/familytree;familytreepbb\x06proto3"
 
 var (
 	file_familytree_familytree_proto_rawDescOnce sync.Once
@@ -2620,124 +2811,130 @@ func file_familytree_familytree_proto_rawDescGZIP() []byte {
 	return file_familytree_familytree_proto_rawDescData
 }
 
-var file_familytree_familytree_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_familytree_familytree_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
+var file_familytree_familytree_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_familytree_familytree_proto_msgTypes = make([]protoimpl.MessageInfo, 42)
 var file_familytree_familytree_proto_goTypes = []any{
-	(Gender)(0),                           // 0: familytree.Gender
-	(RelationshipType)(0),                 // 1: familytree.RelationshipType
-	(RelationDirection)(0),                // 2: familytree.RelationDirection
-	(ParentRole)(0),                       // 3: familytree.ParentRole
-	(*Tree)(nil),                          // 4: familytree.Tree
-	(*Person)(nil),                        // 5: familytree.Person
-	(*Relationship)(nil),                  // 6: familytree.Relationship
-	(*Relative)(nil),                      // 7: familytree.Relative
-	(*CreateTreeRequest)(nil),             // 8: familytree.CreateTreeRequest
-	(*CreateTreeResponse)(nil),            // 9: familytree.CreateTreeResponse
-	(*ListTreesByCreatorRequest)(nil),     // 10: familytree.ListTreesByCreatorRequest
-	(*ListTreesByCreatorResponse)(nil),    // 11: familytree.ListTreesByCreatorResponse
-	(*AddParentRequest)(nil),              // 12: familytree.AddParentRequest
-	(*AddParentResponse)(nil),             // 13: familytree.AddParentResponse
-	(*AddChildRequest)(nil),               // 14: familytree.AddChildRequest
-	(*AddChildResponse)(nil),              // 15: familytree.AddChildResponse
-	(*AddPartnerRequest)(nil),             // 16: familytree.AddPartnerRequest
-	(*AddPartnerResponse)(nil),            // 17: familytree.AddPartnerResponse
-	(*UpdatePersonNameRequest)(nil),       // 18: familytree.UpdatePersonNameRequest
-	(*UpdatePersonNameResponse)(nil),      // 19: familytree.UpdatePersonNameResponse
-	(*DeletePersonInTreeRequest)(nil),     // 20: familytree.DeletePersonInTreeRequest
-	(*DeletePersonInTreeResponse)(nil),    // 21: familytree.DeletePersonInTreeResponse
-	(*CreatePersonRequest)(nil),           // 22: familytree.CreatePersonRequest
-	(*CreatePersonResponse)(nil),          // 23: familytree.CreatePersonResponse
-	(*GetPersonRequest)(nil),              // 24: familytree.GetPersonRequest
-	(*GetPersonResponse)(nil),             // 25: familytree.GetPersonResponse
-	(*GetPersonInTreeRequest)(nil),        // 26: familytree.GetPersonInTreeRequest
-	(*GetPersonInTreeResponse)(nil),       // 27: familytree.GetPersonInTreeResponse
-	(*ListPersonsByTreeRequest)(nil),      // 28: familytree.ListPersonsByTreeRequest
-	(*ListPersonsByTreeResponse)(nil),     // 29: familytree.ListPersonsByTreeResponse
-	(*UpdatePersonRequest)(nil),           // 30: familytree.UpdatePersonRequest
-	(*UpdatePersonResponse)(nil),          // 31: familytree.UpdatePersonResponse
-	(*DeletePersonRequest)(nil),           // 32: familytree.DeletePersonRequest
-	(*DeletePersonResponse)(nil),          // 33: familytree.DeletePersonResponse
-	(*AddRelationshipRequest)(nil),        // 34: familytree.AddRelationshipRequest
-	(*AddRelationshipResponse)(nil),       // 35: familytree.AddRelationshipResponse
-	(*RemoveRelationshipRequest)(nil),     // 36: familytree.RemoveRelationshipRequest
-	(*RemoveRelationshipResponse)(nil),    // 37: familytree.RemoveRelationshipResponse
-	(*GetRelativesRequest)(nil),           // 38: familytree.GetRelativesRequest
-	(*GetRelativesResponse)(nil),          // 39: familytree.GetRelativesResponse
-	(*GetTreeRequest)(nil),                // 40: familytree.GetTreeRequest
-	(*GetTreeResponse)(nil),               // 41: familytree.GetTreeResponse
-	(*ValidatePersonsInTreeRequest)(nil),  // 42: familytree.ValidatePersonsInTreeRequest
-	(*ValidatePersonsInTreeResponse)(nil), // 43: familytree.ValidatePersonsInTreeResponse
+	(Gender)(0),                                     // 0: familytree.Gender
+	(RelationshipType)(0),                           // 1: familytree.RelationshipType
+	(PartnerRelationshipStatus)(0),                  // 2: familytree.PartnerRelationshipStatus
+	(RelationDirection)(0),                          // 3: familytree.RelationDirection
+	(ParentRole)(0),                                 // 4: familytree.ParentRole
+	(*Tree)(nil),                                    // 5: familytree.Tree
+	(*Person)(nil),                                  // 6: familytree.Person
+	(*Relationship)(nil),                            // 7: familytree.Relationship
+	(*Relative)(nil),                                // 8: familytree.Relative
+	(*CreateTreeRequest)(nil),                       // 9: familytree.CreateTreeRequest
+	(*CreateTreeResponse)(nil),                      // 10: familytree.CreateTreeResponse
+	(*ListTreesByCreatorRequest)(nil),               // 11: familytree.ListTreesByCreatorRequest
+	(*ListTreesByCreatorResponse)(nil),              // 12: familytree.ListTreesByCreatorResponse
+	(*AddParentRequest)(nil),                        // 13: familytree.AddParentRequest
+	(*AddParentResponse)(nil),                       // 14: familytree.AddParentResponse
+	(*AddChildRequest)(nil),                         // 15: familytree.AddChildRequest
+	(*AddChildResponse)(nil),                        // 16: familytree.AddChildResponse
+	(*AddPartnerRequest)(nil),                       // 17: familytree.AddPartnerRequest
+	(*AddPartnerResponse)(nil),                      // 18: familytree.AddPartnerResponse
+	(*UpdatePersonNameRequest)(nil),                 // 19: familytree.UpdatePersonNameRequest
+	(*UpdatePersonNameResponse)(nil),                // 20: familytree.UpdatePersonNameResponse
+	(*DeletePersonInTreeRequest)(nil),               // 21: familytree.DeletePersonInTreeRequest
+	(*DeletePersonInTreeResponse)(nil),              // 22: familytree.DeletePersonInTreeResponse
+	(*CreatePersonRequest)(nil),                     // 23: familytree.CreatePersonRequest
+	(*CreatePersonResponse)(nil),                    // 24: familytree.CreatePersonResponse
+	(*GetPersonRequest)(nil),                        // 25: familytree.GetPersonRequest
+	(*GetPersonResponse)(nil),                       // 26: familytree.GetPersonResponse
+	(*GetPersonInTreeRequest)(nil),                  // 27: familytree.GetPersonInTreeRequest
+	(*GetPersonInTreeResponse)(nil),                 // 28: familytree.GetPersonInTreeResponse
+	(*ListPersonsByTreeRequest)(nil),                // 29: familytree.ListPersonsByTreeRequest
+	(*ListPersonsByTreeResponse)(nil),               // 30: familytree.ListPersonsByTreeResponse
+	(*UpdatePersonRequest)(nil),                     // 31: familytree.UpdatePersonRequest
+	(*UpdatePersonResponse)(nil),                    // 32: familytree.UpdatePersonResponse
+	(*DeletePersonRequest)(nil),                     // 33: familytree.DeletePersonRequest
+	(*DeletePersonResponse)(nil),                    // 34: familytree.DeletePersonResponse
+	(*AddRelationshipRequest)(nil),                  // 35: familytree.AddRelationshipRequest
+	(*AddRelationshipResponse)(nil),                 // 36: familytree.AddRelationshipResponse
+	(*RemoveRelationshipRequest)(nil),               // 37: familytree.RemoveRelationshipRequest
+	(*RemoveRelationshipResponse)(nil),              // 38: familytree.RemoveRelationshipResponse
+	(*GetRelativesRequest)(nil),                     // 39: familytree.GetRelativesRequest
+	(*GetRelativesResponse)(nil),                    // 40: familytree.GetRelativesResponse
+	(*GetTreeRequest)(nil),                          // 41: familytree.GetTreeRequest
+	(*GetTreeResponse)(nil),                         // 42: familytree.GetTreeResponse
+	(*ValidatePersonsInTreeRequest)(nil),            // 43: familytree.ValidatePersonsInTreeRequest
+	(*ValidatePersonsInTreeResponse)(nil),           // 44: familytree.ValidatePersonsInTreeResponse
+	(*UpdatePartnerRelationshipStatusRequest)(nil),  // 45: familytree.UpdatePartnerRelationshipStatusRequest
+	(*UpdatePartnerRelationshipStatusResponse)(nil), // 46: familytree.UpdatePartnerRelationshipStatusResponse
 }
 var file_familytree_familytree_proto_depIdxs = []int32{
 	0,  // 0: familytree.Person.gender:type_name -> familytree.Gender
 	1,  // 1: familytree.Relationship.type:type_name -> familytree.RelationshipType
-	5,  // 2: familytree.Relative.person:type_name -> familytree.Person
+	6,  // 2: familytree.Relative.person:type_name -> familytree.Person
 	1,  // 3: familytree.Relative.relationship_type:type_name -> familytree.RelationshipType
-	2,  // 4: familytree.Relative.direction:type_name -> familytree.RelationDirection
-	4,  // 5: familytree.CreateTreeResponse.tree:type_name -> familytree.Tree
-	5,  // 6: familytree.CreateTreeResponse.root_person:type_name -> familytree.Person
-	4,  // 7: familytree.ListTreesByCreatorResponse.trees:type_name -> familytree.Tree
-	3,  // 8: familytree.AddParentRequest.role:type_name -> familytree.ParentRole
-	5,  // 9: familytree.AddParentResponse.parent:type_name -> familytree.Person
-	5,  // 10: familytree.AddParentResponse.auto_created_second_parent:type_name -> familytree.Person
+	3,  // 4: familytree.Relative.direction:type_name -> familytree.RelationDirection
+	5,  // 5: familytree.CreateTreeResponse.tree:type_name -> familytree.Tree
+	6,  // 6: familytree.CreateTreeResponse.root_person:type_name -> familytree.Person
+	5,  // 7: familytree.ListTreesByCreatorResponse.trees:type_name -> familytree.Tree
+	4,  // 8: familytree.AddParentRequest.role:type_name -> familytree.ParentRole
+	6,  // 9: familytree.AddParentResponse.parent:type_name -> familytree.Person
+	6,  // 10: familytree.AddParentResponse.auto_created_second_parent:type_name -> familytree.Person
 	0,  // 11: familytree.AddChildRequest.gender:type_name -> familytree.Gender
-	5,  // 12: familytree.AddChildResponse.child:type_name -> familytree.Person
-	5,  // 13: familytree.AddChildResponse.auto_created_parent:type_name -> familytree.Person
-	5,  // 14: familytree.AddPartnerResponse.partner:type_name -> familytree.Person
-	5,  // 15: familytree.UpdatePersonNameResponse.person:type_name -> familytree.Person
+	6,  // 12: familytree.AddChildResponse.child:type_name -> familytree.Person
+	6,  // 13: familytree.AddChildResponse.auto_created_parent:type_name -> familytree.Person
+	6,  // 14: familytree.AddPartnerResponse.partner:type_name -> familytree.Person
+	6,  // 15: familytree.UpdatePersonNameResponse.person:type_name -> familytree.Person
 	0,  // 16: familytree.CreatePersonRequest.gender:type_name -> familytree.Gender
-	5,  // 17: familytree.CreatePersonResponse.person:type_name -> familytree.Person
-	5,  // 18: familytree.GetPersonResponse.person:type_name -> familytree.Person
-	5,  // 19: familytree.GetPersonInTreeResponse.person:type_name -> familytree.Person
-	5,  // 20: familytree.ListPersonsByTreeResponse.persons:type_name -> familytree.Person
+	6,  // 17: familytree.CreatePersonResponse.person:type_name -> familytree.Person
+	6,  // 18: familytree.GetPersonResponse.person:type_name -> familytree.Person
+	6,  // 19: familytree.GetPersonInTreeResponse.person:type_name -> familytree.Person
+	6,  // 20: familytree.ListPersonsByTreeResponse.persons:type_name -> familytree.Person
 	0,  // 21: familytree.UpdatePersonRequest.gender:type_name -> familytree.Gender
-	5,  // 22: familytree.UpdatePersonResponse.person:type_name -> familytree.Person
+	6,  // 22: familytree.UpdatePersonResponse.person:type_name -> familytree.Person
 	1,  // 23: familytree.AddRelationshipRequest.type:type_name -> familytree.RelationshipType
 	1,  // 24: familytree.RemoveRelationshipRequest.type:type_name -> familytree.RelationshipType
-	7,  // 25: familytree.GetRelativesResponse.relatives:type_name -> familytree.Relative
-	5,  // 26: familytree.GetTreeResponse.persons:type_name -> familytree.Person
-	6,  // 27: familytree.GetTreeResponse.relationships:type_name -> familytree.Relationship
-	8,  // 28: familytree.FamilyTreeService.CreateTree:input_type -> familytree.CreateTreeRequest
-	10, // 29: familytree.FamilyTreeService.ListTreesByCreator:input_type -> familytree.ListTreesByCreatorRequest
-	12, // 30: familytree.FamilyTreeService.AddParent:input_type -> familytree.AddParentRequest
-	14, // 31: familytree.FamilyTreeService.AddChild:input_type -> familytree.AddChildRequest
-	16, // 32: familytree.FamilyTreeService.AddPartner:input_type -> familytree.AddPartnerRequest
-	18, // 33: familytree.FamilyTreeService.UpdatePersonName:input_type -> familytree.UpdatePersonNameRequest
-	20, // 34: familytree.FamilyTreeService.DeletePersonInTree:input_type -> familytree.DeletePersonInTreeRequest
-	22, // 35: familytree.FamilyTreeService.CreatePerson:input_type -> familytree.CreatePersonRequest
-	24, // 36: familytree.FamilyTreeService.GetPerson:input_type -> familytree.GetPersonRequest
-	26, // 37: familytree.FamilyTreeService.GetPersonInTree:input_type -> familytree.GetPersonInTreeRequest
-	28, // 38: familytree.FamilyTreeService.ListPersonsByTree:input_type -> familytree.ListPersonsByTreeRequest
-	30, // 39: familytree.FamilyTreeService.UpdatePerson:input_type -> familytree.UpdatePersonRequest
-	32, // 40: familytree.FamilyTreeService.DeletePerson:input_type -> familytree.DeletePersonRequest
-	34, // 41: familytree.FamilyTreeService.AddRelationship:input_type -> familytree.AddRelationshipRequest
-	36, // 42: familytree.FamilyTreeService.RemoveRelationship:input_type -> familytree.RemoveRelationshipRequest
-	38, // 43: familytree.FamilyTreeService.GetRelatives:input_type -> familytree.GetRelativesRequest
-	40, // 44: familytree.FamilyTreeService.GetTree:input_type -> familytree.GetTreeRequest
-	42, // 45: familytree.FamilyTreeService.ValidatePersonsInTree:input_type -> familytree.ValidatePersonsInTreeRequest
-	9,  // 46: familytree.FamilyTreeService.CreateTree:output_type -> familytree.CreateTreeResponse
-	11, // 47: familytree.FamilyTreeService.ListTreesByCreator:output_type -> familytree.ListTreesByCreatorResponse
-	13, // 48: familytree.FamilyTreeService.AddParent:output_type -> familytree.AddParentResponse
-	15, // 49: familytree.FamilyTreeService.AddChild:output_type -> familytree.AddChildResponse
-	17, // 50: familytree.FamilyTreeService.AddPartner:output_type -> familytree.AddPartnerResponse
-	19, // 51: familytree.FamilyTreeService.UpdatePersonName:output_type -> familytree.UpdatePersonNameResponse
-	21, // 52: familytree.FamilyTreeService.DeletePersonInTree:output_type -> familytree.DeletePersonInTreeResponse
-	23, // 53: familytree.FamilyTreeService.CreatePerson:output_type -> familytree.CreatePersonResponse
-	25, // 54: familytree.FamilyTreeService.GetPerson:output_type -> familytree.GetPersonResponse
-	27, // 55: familytree.FamilyTreeService.GetPersonInTree:output_type -> familytree.GetPersonInTreeResponse
-	29, // 56: familytree.FamilyTreeService.ListPersonsByTree:output_type -> familytree.ListPersonsByTreeResponse
-	31, // 57: familytree.FamilyTreeService.UpdatePerson:output_type -> familytree.UpdatePersonResponse
-	33, // 58: familytree.FamilyTreeService.DeletePerson:output_type -> familytree.DeletePersonResponse
-	35, // 59: familytree.FamilyTreeService.AddRelationship:output_type -> familytree.AddRelationshipResponse
-	37, // 60: familytree.FamilyTreeService.RemoveRelationship:output_type -> familytree.RemoveRelationshipResponse
-	39, // 61: familytree.FamilyTreeService.GetRelatives:output_type -> familytree.GetRelativesResponse
-	41, // 62: familytree.FamilyTreeService.GetTree:output_type -> familytree.GetTreeResponse
-	43, // 63: familytree.FamilyTreeService.ValidatePersonsInTree:output_type -> familytree.ValidatePersonsInTreeResponse
-	46, // [46:64] is the sub-list for method output_type
-	28, // [28:46] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	8,  // 25: familytree.GetRelativesResponse.relatives:type_name -> familytree.Relative
+	6,  // 26: familytree.GetTreeResponse.persons:type_name -> familytree.Person
+	7,  // 27: familytree.GetTreeResponse.relationships:type_name -> familytree.Relationship
+	2,  // 28: familytree.UpdatePartnerRelationshipStatusRequest.status:type_name -> familytree.PartnerRelationshipStatus
+	9,  // 29: familytree.FamilyTreeService.CreateTree:input_type -> familytree.CreateTreeRequest
+	11, // 30: familytree.FamilyTreeService.ListTreesByCreator:input_type -> familytree.ListTreesByCreatorRequest
+	13, // 31: familytree.FamilyTreeService.AddParent:input_type -> familytree.AddParentRequest
+	15, // 32: familytree.FamilyTreeService.AddChild:input_type -> familytree.AddChildRequest
+	17, // 33: familytree.FamilyTreeService.AddPartner:input_type -> familytree.AddPartnerRequest
+	19, // 34: familytree.FamilyTreeService.UpdatePersonName:input_type -> familytree.UpdatePersonNameRequest
+	21, // 35: familytree.FamilyTreeService.DeletePersonInTree:input_type -> familytree.DeletePersonInTreeRequest
+	23, // 36: familytree.FamilyTreeService.CreatePerson:input_type -> familytree.CreatePersonRequest
+	25, // 37: familytree.FamilyTreeService.GetPerson:input_type -> familytree.GetPersonRequest
+	27, // 38: familytree.FamilyTreeService.GetPersonInTree:input_type -> familytree.GetPersonInTreeRequest
+	29, // 39: familytree.FamilyTreeService.ListPersonsByTree:input_type -> familytree.ListPersonsByTreeRequest
+	31, // 40: familytree.FamilyTreeService.UpdatePerson:input_type -> familytree.UpdatePersonRequest
+	33, // 41: familytree.FamilyTreeService.DeletePerson:input_type -> familytree.DeletePersonRequest
+	35, // 42: familytree.FamilyTreeService.AddRelationship:input_type -> familytree.AddRelationshipRequest
+	37, // 43: familytree.FamilyTreeService.RemoveRelationship:input_type -> familytree.RemoveRelationshipRequest
+	39, // 44: familytree.FamilyTreeService.GetRelatives:input_type -> familytree.GetRelativesRequest
+	41, // 45: familytree.FamilyTreeService.GetTree:input_type -> familytree.GetTreeRequest
+	43, // 46: familytree.FamilyTreeService.ValidatePersonsInTree:input_type -> familytree.ValidatePersonsInTreeRequest
+	45, // 47: familytree.FamilyTreeService.UpdatePartnerRelationshipStatus:input_type -> familytree.UpdatePartnerRelationshipStatusRequest
+	10, // 48: familytree.FamilyTreeService.CreateTree:output_type -> familytree.CreateTreeResponse
+	12, // 49: familytree.FamilyTreeService.ListTreesByCreator:output_type -> familytree.ListTreesByCreatorResponse
+	14, // 50: familytree.FamilyTreeService.AddParent:output_type -> familytree.AddParentResponse
+	16, // 51: familytree.FamilyTreeService.AddChild:output_type -> familytree.AddChildResponse
+	18, // 52: familytree.FamilyTreeService.AddPartner:output_type -> familytree.AddPartnerResponse
+	20, // 53: familytree.FamilyTreeService.UpdatePersonName:output_type -> familytree.UpdatePersonNameResponse
+	22, // 54: familytree.FamilyTreeService.DeletePersonInTree:output_type -> familytree.DeletePersonInTreeResponse
+	24, // 55: familytree.FamilyTreeService.CreatePerson:output_type -> familytree.CreatePersonResponse
+	26, // 56: familytree.FamilyTreeService.GetPerson:output_type -> familytree.GetPersonResponse
+	28, // 57: familytree.FamilyTreeService.GetPersonInTree:output_type -> familytree.GetPersonInTreeResponse
+	30, // 58: familytree.FamilyTreeService.ListPersonsByTree:output_type -> familytree.ListPersonsByTreeResponse
+	32, // 59: familytree.FamilyTreeService.UpdatePerson:output_type -> familytree.UpdatePersonResponse
+	34, // 60: familytree.FamilyTreeService.DeletePerson:output_type -> familytree.DeletePersonResponse
+	36, // 61: familytree.FamilyTreeService.AddRelationship:output_type -> familytree.AddRelationshipResponse
+	38, // 62: familytree.FamilyTreeService.RemoveRelationship:output_type -> familytree.RemoveRelationshipResponse
+	40, // 63: familytree.FamilyTreeService.GetRelatives:output_type -> familytree.GetRelativesResponse
+	42, // 64: familytree.FamilyTreeService.GetTree:output_type -> familytree.GetTreeResponse
+	44, // 65: familytree.FamilyTreeService.ValidatePersonsInTree:output_type -> familytree.ValidatePersonsInTreeResponse
+	46, // 66: familytree.FamilyTreeService.UpdatePartnerRelationshipStatus:output_type -> familytree.UpdatePartnerRelationshipStatusResponse
+	48, // [48:67] is the sub-list for method output_type
+	29, // [29:48] is the sub-list for method input_type
+	29, // [29:29] is the sub-list for extension type_name
+	29, // [29:29] is the sub-list for extension extendee
+	0,  // [0:29] is the sub-list for field type_name
 }
 
 func init() { file_familytree_familytree_proto_init() }
@@ -2750,8 +2947,8 @@ func file_familytree_familytree_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_familytree_familytree_proto_rawDesc), len(file_familytree_familytree_proto_rawDesc)),
-			NumEnums:      4,
-			NumMessages:   40,
+			NumEnums:      5,
+			NumMessages:   42,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
