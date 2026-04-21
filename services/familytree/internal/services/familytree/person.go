@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	eventspb "github.com/Bad-Utya/myforebears-backend/gen/go/events"
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/domain/models"
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/storage"
 	"github.com/google/uuid"
@@ -39,13 +40,19 @@ type Service struct {
 	log             *slog.Logger
 	personStorage   storage.PersonStorage
 	relationStorage storage.RelationshipStorage
+	eventsClient    eventsClient
 }
 
-func New(log *slog.Logger, personStorage storage.PersonStorage, relationStorage storage.RelationshipStorage) *Service {
+type eventsClient interface {
+	CreateEvent(ctx context.Context, req *eventspb.CreateEventRequest) (*eventspb.CreateEventResponse, error)
+}
+
+func New(log *slog.Logger, personStorage storage.PersonStorage, relationStorage storage.RelationshipStorage, eventsClient eventsClient) *Service {
 	return &Service{
 		log:             log,
 		personStorage:   personStorage,
 		relationStorage: relationStorage,
+		eventsClient:    eventsClient,
 	}
 }
 
@@ -72,21 +79,16 @@ func (s *Service) CreatePerson(
 		return models.Person{}, fmt.Errorf("%s: %w", op, ErrInvalidGender)
 	}
 
-	person := models.Person{
-		ID:         uuid.New(),
-		TreeID:     parsedTreeID,
-		FirstName:  firstName,
-		LastName:   lastName,
-		Patronymic: patronymic,
-		Gender:     gender,
-	}
-
-	if err := s.personStorage.CreatePerson(ctx, person); err != nil {
+	tree, err := s.personStorage.GetTree(ctx, parsedTreeID)
+	if err != nil {
+		if errors.Is(err, storage.ErrTreeNotFound) {
+			return models.Person{}, fmt.Errorf("%s: %w", op, ErrTreeNotFound)
+		}
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.relationStorage.EnsurePersonNode(ctx, person.ID, person.TreeID); err != nil {
-		s.log.Error("failed to create neo4j node", slog.String("error", err.Error()), slog.String("person_id", person.ID.String()))
+	person, err := s.createPersonRecord(ctx, tree.CreatorID, parsedTreeID, gender, firstName, lastName, patronymic)
+	if err != nil {
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 

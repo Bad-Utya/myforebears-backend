@@ -10,10 +10,11 @@ import (
 )
 
 type Config struct {
-	Env      string         `yaml:"env" env-required:"true"`
-	GRPC     GRPCConfig     `yaml:"grpc" env-required:"true"`
-	Postgres PostgresConfig `yaml:"postgres" env-required:"true"`
-	Neo4j    Neo4jConfig    `yaml:"neo4j" env-required:"true"`
+	Env      string             `yaml:"env" env-required:"true"`
+	GRPC     GRPCConfig         `yaml:"grpc" env-required:"true"`
+	Postgres PostgresConfig     `yaml:"postgres" env-required:"true"`
+	Neo4j    Neo4jConfig        `yaml:"neo4j" env-required:"true"`
+	Events   EventsClientConfig `yaml:"events" env-required:"true"`
 }
 
 type GRPCConfig struct {
@@ -33,6 +34,12 @@ type Neo4jConfig struct {
 	URI      string `yaml:"uri" env-required:"true"`
 	Username string `yaml:"username" env:"NEO4J_USER" env-required:"true"`
 	Password string `yaml:"password" env:"NEO4J_PASSWORD" env-required:"true"`
+}
+
+type EventsClientConfig struct {
+	Address      string        `yaml:"address" env-required:"true"`
+	Timeout      time.Duration `yaml:"timeout" env-required:"true"`
+	RetriesCount int           `yaml:"retries_count" env-required:"true"`
 }
 
 func MustLoad() *Config {
