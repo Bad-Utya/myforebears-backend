@@ -13,6 +13,7 @@ type PhotosService interface {
 	UploadUserAvatar(ctx context.Context, requestUserID int, fileName string, mimeType string, content []byte) (models.Photo, error)
 	GetUserAvatar(ctx context.Context, requestUserID int) (models.Photo, []byte, error)
 	UploadPersonAvatar(ctx context.Context, requestUserID int, personID string, fileName string, mimeType string, content []byte) (models.Photo, error)
+	GetPersonAvatar(ctx context.Context, requestUserID int, personID string) (models.Photo, []byte, error)
 	UploadPersonPhoto(ctx context.Context, requestUserID int, personID string, fileName string, mimeType string, content []byte) (models.Photo, error)
 	ListPersonPhotos(ctx context.Context, requestUserID int, personID string) ([]models.Photo, error)
 	UploadEventPhoto(ctx context.Context, requestUserID int, eventID string, fileName string, mimeType string, content []byte) (models.Photo, error)
@@ -72,6 +73,15 @@ func (h *Handler) UploadPersonAvatar(ctx context.Context, req *photospb.UploadPe
 	}
 
 	return &photospb.UploadPersonAvatarResponse{Photo: toProtoPhoto(photo)}, nil
+}
+
+func (h *Handler) GetPersonAvatar(ctx context.Context, req *photospb.GetPersonAvatarRequest) (*photospb.GetPhotoContentResponse, error) {
+	photo, content, err := h.service.GetPersonAvatar(ctx, int(req.GetRequestUserId()), req.GetPersonId())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &photospb.GetPhotoContentResponse{Photo: toProtoPhoto(photo), Content: content}, nil
 }
 
 func (h *Handler) UploadPersonPhoto(ctx context.Context, req *photospb.UploadPersonPhotoRequest) (*photospb.UploadPersonPhotoResponse, error) {

@@ -168,6 +168,30 @@ func (s *Service) UploadPersonAvatar(ctx context.Context, requestUserID int, per
 	return photo, nil
 }
 
+func (s *Service) GetPersonAvatar(ctx context.Context, requestUserID int, personID string) (models.Photo, []byte, error) {
+	const op = "service.photos.GetPersonAvatar"
+
+	parsedPersonID, err := uuid.Parse(personID)
+	if err != nil {
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	photo, err := s.meta.GetPersonAvatar(ctx, parsedPersonID)
+	if err != nil {
+		if errors.Is(err, storage.ErrPhotoNotFound) {
+			return models.Photo{}, nil, fmt.Errorf("%s: %w", op, ErrPhotoNotFound)
+		}
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	data, err := s.objects.GetObject(ctx, photo.ObjectKey)
+	if err != nil {
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return photo, data, nil
+}
+
 func (s *Service) UploadPersonPhoto(ctx context.Context, requestUserID int, personID string, fileName string, mimeType string, content []byte) (models.Photo, error) {
 	const op = "service.photos.UploadPersonPhoto"
 
