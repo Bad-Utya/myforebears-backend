@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package photos;
+
+option go_package = "github.com/Bad-Utya/myforebears-backend/gen/go/photos;photospb";
+
+message Photo {
+    string id = 1;
+    int32 owner_user_id = 2;
+    string person_id = 3;
+    string event_id = 4;
+    bool is_user_avatar = 5;
+    bool is_person_avatar = 6;
+    string file_name = 7;
+    string mime_type = 8;
+    int64 size_bytes = 9;
+    int64 created_at_unix = 10;
+    string tree_id = 11;
+}
+
+service PhotosService {
+    rpc UploadUserAvatar (UploadUserAvatarRequest) returns (UploadUserAvatarResponse);
+    rpc GetUserAvatar (GetUserAvatarRequest) returns (GetPhotoContentResponse);
+
+    rpc UploadPersonAvatar (UploadPersonAvatarRequest) returns (UploadPersonAvatarResponse);
+    rpc GetPersonAvatar (GetPersonAvatarRequest) returns (GetPhotoContentResponse);
+    rpc UploadPersonPhoto (UploadPersonPhotoRequest) returns (UploadPersonPhotoResponse);
+    rpc ListPersonPhotos (ListPersonPhotosRequest) returns (ListPersonPhotosResponse);
+
+    rpc UploadEventPhoto (UploadEventPhotoRequest) returns (UploadEventPhotoResponse);
+    rpc ListEventPhotos (ListEventPhotosRequest) returns (ListEventPhotosResponse);
+
+    rpc GetPhotoByID (GetPhotoByIDRequest) returns (GetPhotoContentResponse);
+    rpc DeletePhotoByID (DeletePhotoByIDRequest) returns (DeletePhotoByIDResponse);
+}
+
+message UploadUserAvatarRequest {
+    int32 request_user_id = 1;
+    string file_name = 2;
+    string mime_type = 3;
+    bytes content = 4;
+}
+
+message UploadUserAvatarResponse {
+    Photo photo = 1;
+}
+
+message GetUserAvatarRequest {
+    int32 request_user_id = 1;
+}
+
+message UploadPersonAvatarRequest {
+    int32 request_user_id = 1;
+    string person_id = 2;
+    string file_name = 3;
+    string mime_type = 4;
+    bytes content = 5;
+}
+
+message UploadPersonAvatarResponse {
+    Photo photo = 1;
+}
+
+message GetPersonAvatarRequest {
+    int32 request_user_id = 1;
+    string person_id = 2;
+}
+
+message UploadPersonPhotoRequest {
+    int32 request_user_id = 1;
+    string person_id = 2;
+    string file_name = 3;
+    string mime_type = 4;
+    bytes content = 5;
+}
+
+message UploadPersonPhotoResponse {
+    Photo photo = 1;
+}
+
+message ListPersonPhotosRequest {
+    int32 request_user_id = 1;
+    string person_id = 2;
+}
+
+message ListPersonPhotosResponse {
+    repeated Photo photos = 1;
+}
+
+message UploadEventPhotoRequest {
+    int32 request_user_id = 1;
+    string event_id = 2;
+    string file_name = 3;
+    string mime_type = 4;
+    bytes content = 5;
+}
+
+message UploadEventPhotoResponse {
+    Photo photo = 1;
+}
+
+message ListEventPhotosRequest {
+    int32 request_user_id = 1;
+    string event_id = 2;
+}
+
+message ListEventPhotosResponse {
+    repeated Photo photos = 1;
+}
+
+message GetPhotoByIDRequest {
+    int32 request_user_id = 1;
+    string photo_id = 2;
+}
+
+message GetPhotoContentResponse {
+    Photo photo = 1;
+    bytes content = 2;
+}
+
+message DeletePhotoByIDRequest {
+    int32 request_user_id = 1;
+    string photo_id = 2;
+}
+
+message DeletePhotoByIDResponse {}

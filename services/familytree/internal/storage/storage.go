@@ -22,6 +22,7 @@ type PersonStorage interface {
 	CreatePerson(ctx context.Context, person models.Person) error
 	GetPerson(ctx context.Context, personID uuid.UUID) (models.Person, error)
 	UpdatePerson(ctx context.Context, person models.Person) error
+	UpdatePersonAvatarPhoto(ctx context.Context, personID uuid.UUID, avatarPhotoID *uuid.UUID) error
 	DeletePerson(ctx context.Context, personID uuid.UUID) error
 	GetPersonsByTree(ctx context.Context, treeID uuid.UUID) ([]models.Person, error)
 	Close()

@@ -147,6 +147,20 @@ func (h *Handler) UpdatePersonName(ctx context.Context, req *familytreepb.Update
 	return &familytreepb.UpdatePersonNameResponse{Person: toProtoPerson(person)}, nil
 }
 
+func (h *Handler) UpdatePersonAvatarPhoto(ctx context.Context, req *familytreepb.UpdatePersonAvatarPhotoRequest) (*familytreepb.UpdatePersonAvatarPhotoResponse, error) {
+	person, err := h.service.UpdatePersonAvatarPhoto(
+		ctx,
+		int(req.GetRequestUserId()),
+		req.GetPersonId(),
+		req.GetAvatarPhotoId(),
+	)
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &familytreepb.UpdatePersonAvatarPhotoResponse{Person: toProtoPerson(person)}, nil
+}
+
 func (h *Handler) DeletePersonInTree(ctx context.Context, req *familytreepb.DeletePersonInTreeRequest) (*familytreepb.DeletePersonInTreeResponse, error) {
 	if err := h.service.DeletePersonInTree(ctx, int(req.GetRequestUserId()), req.GetTreeId(), req.GetPersonId()); err != nil {
 		return nil, grpcerr.Map(err)

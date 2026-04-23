@@ -7,6 +7,7 @@ import (
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/domain/models"
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/lib/grpcerr"
 	personsvc "github.com/Bad-Utya/myforebears-backend/services/familytree/internal/services/familytree"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 )
 
@@ -20,6 +21,7 @@ type FamilyTreeService interface {
 	AddChild(ctx context.Context, requestUserID int, treeID string, parent1ID string, parent2ID string, firstName string, lastName string, patronymic string, gender models.Gender) (models.Person, *models.Person, error)
 	AddPartner(ctx context.Context, requestUserID int, treeID string, personID string, firstName string, lastName string, patronymic string) (models.Person, error)
 	UpdatePersonName(ctx context.Context, requestUserID int, treeID string, personID string, firstName string, lastName string, patronymic string) (models.Person, error)
+	UpdatePersonAvatarPhoto(ctx context.Context, requestUserID int, personID string, avatarPhotoID string) (models.Person, error)
 	DeletePersonInTree(ctx context.Context, requestUserID int, treeID string, personID string) error
 
 	CreatePerson(ctx context.Context, treeID string, firstName string, lastName string, patronymic string, gender models.Gender) (models.Person, error)
@@ -99,13 +101,22 @@ func (h *Handler) DeletePerson(ctx context.Context, req *familytreepb.DeletePers
 
 func toProtoPerson(person models.Person) *familytreepb.Person {
 	return &familytreepb.Person{
-		Id:         person.ID.String(),
-		TreeId:     person.TreeID.String(),
-		FirstName:  person.FirstName,
-		LastName:   person.LastName,
-		Patronymic: person.Patronymic,
-		Gender:     toProtoGender(person.Gender),
+		Id:            person.ID.String(),
+		TreeId:        person.TreeID.String(),
+		FirstName:     person.FirstName,
+		LastName:      person.LastName,
+		Patronymic:    person.Patronymic,
+		Gender:        toProtoGender(person.Gender),
+		AvatarPhotoId: toProtoAvatarPhotoID(person.AvatarPhotoID),
 	}
+}
+
+func toProtoAvatarPhotoID(avatarPhotoID *uuid.UUID) string {
+	if avatarPhotoID == nil {
+		return ""
+	}
+
+	return avatarPhotoID.String()
 }
 
 func toProtoGender(gender models.Gender) familytreepb.Gender {

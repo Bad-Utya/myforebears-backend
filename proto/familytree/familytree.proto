@@ -51,6 +51,7 @@ message Person {
     string last_name = 4;
     string patronymic = 5;
     Gender gender = 6;
+    string avatar_photo_id = 7;
 }
 
 message Relationship {
@@ -73,6 +74,7 @@ service FamilyTreeService {
     rpc AddChild (AddChildRequest) returns (AddChildResponse);
     rpc AddPartner (AddPartnerRequest) returns (AddPartnerResponse);
     rpc UpdatePersonName (UpdatePersonNameRequest) returns (UpdatePersonNameResponse);
+    rpc UpdatePersonAvatarPhoto (UpdatePersonAvatarPhotoRequest) returns (UpdatePersonAvatarPhotoResponse);
     rpc DeletePersonInTree (DeletePersonInTreeRequest) returns (DeletePersonInTreeResponse);
 
     rpc CreatePerson (CreatePersonRequest) returns (CreatePersonResponse);
@@ -161,6 +163,16 @@ message UpdatePersonNameRequest {
 }
 
 message UpdatePersonNameResponse {
+    Person person = 1;
+}
+
+message UpdatePersonAvatarPhotoRequest {
+    int32 request_user_id = 1;
+    string person_id = 2;
+    string avatar_photo_id = 3;
+}
+
+message UpdatePersonAvatarPhotoResponse {
     Person person = 1;
 }
 

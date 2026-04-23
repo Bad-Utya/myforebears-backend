@@ -19,5 +19,6 @@ COPY --from=builder /out/migrator /usr/local/bin/migrator
 COPY services/auth/migrations /migrations/auth
 COPY services/events/migrations /migrations/events
 COPY services/familytree/migrations /migrations/familytree
+COPY services/photos/migrations /migrations/photos
 
 ENTRYPOINT ["/usr/local/bin/migrator"]

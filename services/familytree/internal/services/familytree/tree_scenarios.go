@@ -536,6 +536,60 @@ func (s *Service) UpdatePersonName(
 	return person, nil
 }
 
+func (s *Service) UpdatePersonAvatarPhoto(
+	ctx context.Context,
+	requestUserID int,
+	personID string,
+	avatarPhotoID string,
+) (models.Person, error) {
+	const op = "service.familytree.UpdatePersonAvatarPhoto"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("updating person avatar photo", slog.Int("request_user_id", requestUserID), slog.String("person_id", personID))
+
+	parsedPersonID, err := uuid.Parse(personID)
+	if err != nil {
+		log.Info("invalid person id", slog.String("person_id", personID))
+		return models.Person{}, fmt.Errorf("%s: %w", op, ErrInvalidPersonID)
+	}
+
+	person, err := s.personStorage.GetPerson(ctx, parsedPersonID)
+	if err != nil {
+		if errors.Is(err, storage.ErrPersonNotFound) {
+			log.Info("person not found", slog.String("person_id", parsedPersonID.String()))
+			return models.Person{}, fmt.Errorf("%s: %w", op, ErrPersonNotFound)
+		}
+		log.Error("failed to load person", slog.String("error", err.Error()))
+		return models.Person{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var parsedAvatarPhotoID *uuid.UUID
+	trimmedAvatar := strings.TrimSpace(avatarPhotoID)
+	if trimmedAvatar != "" {
+		avatarID, err := uuid.Parse(trimmedAvatar)
+		if err != nil {
+			log.Info("invalid avatar photo id", slog.String("avatar_photo_id", trimmedAvatar))
+			return models.Person{}, fmt.Errorf("%s: %w", op, ErrInvalidPersonID)
+		}
+		parsedAvatarPhotoID = &avatarID
+	}
+
+	if err := s.personStorage.UpdatePersonAvatarPhoto(ctx, parsedPersonID, parsedAvatarPhotoID); err != nil {
+		if errors.Is(err, storage.ErrPersonNotFound) {
+			log.Info("person not found during avatar update", slog.String("person_id", parsedPersonID.String()))
+			return models.Person{}, fmt.Errorf("%s: %w", op, ErrPersonNotFound)
+		}
+		log.Error("failed to update person avatar photo", slog.String("error", err.Error()))
+		return models.Person{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	person.AvatarPhotoID = parsedAvatarPhotoID
+
+	log.Info("person avatar photo updated", slog.String("person_id", person.ID.String()))
+
+	return person, nil
+}
+
 func (s *Service) DeletePersonInTree(ctx context.Context, requestUserID int, treeID string, personID string) error {
 	const op = "service.familytree.DeletePersonInTree"
 	log := s.log.With(slog.String("op", op))

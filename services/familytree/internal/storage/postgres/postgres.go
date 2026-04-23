@@ -45,14 +45,15 @@ func (s *Storage) CreatePerson(ctx context.Context, person models.Person) error 
 
 	_, err := s.pool.Exec(
 		ctx,
-		`INSERT INTO persons (id, tree_id, first_name, last_name, patronymic, gender)
-		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		`INSERT INTO persons (id, tree_id, first_name, last_name, patronymic, gender, avatar_photo_id)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		person.ID,
 		person.TreeID,
 		person.FirstName,
 		person.LastName,
 		person.Patronymic,
 		person.Gender,
+		person.AvatarPhotoID,
 	)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -136,7 +137,7 @@ func (s *Storage) GetPerson(ctx context.Context, personID uuid.UUID) (models.Per
 	var person models.Person
 	err := s.pool.QueryRow(
 		ctx,
-		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender
+		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender, avatar_photo_id
 		 FROM persons WHERE id = $1`,
 		personID,
 	).Scan(
@@ -146,6 +147,7 @@ func (s *Storage) GetPerson(ctx context.Context, personID uuid.UUID) (models.Per
 		&person.LastName,
 		&person.Patronymic,
 		&person.Gender,
+		&person.AvatarPhotoID,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -186,6 +188,29 @@ func (s *Storage) UpdatePerson(ctx context.Context, person models.Person) error 
 	return nil
 }
 
+func (s *Storage) UpdatePersonAvatarPhoto(ctx context.Context, personID uuid.UUID, avatarPhotoID *uuid.UUID) error {
+	const op = "storage.postgres.UpdatePersonAvatarPhoto"
+
+	cmdTag, err := s.pool.Exec(
+		ctx,
+		`UPDATE persons
+		 SET avatar_photo_id = $1,
+		     updated_at = NOW()
+		 WHERE id = $2`,
+		avatarPhotoID,
+		personID,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrPersonNotFound)
+	}
+
+	return nil
+}
+
 func (s *Storage) DeletePerson(ctx context.Context, personID uuid.UUID) error {
 	const op = "storage.postgres.DeletePerson"
 
@@ -206,7 +231,7 @@ func (s *Storage) GetPersonsByTree(ctx context.Context, treeID uuid.UUID) ([]mod
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender
+		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender, avatar_photo_id
 		 FROM persons WHERE tree_id = $1`,
 		treeID,
 	)
@@ -225,6 +250,7 @@ func (s *Storage) GetPersonsByTree(ctx context.Context, treeID uuid.UUID) ([]mod
 			&person.LastName,
 			&person.Patronymic,
 			&person.Gender,
+			&person.AvatarPhotoID,
 		); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}

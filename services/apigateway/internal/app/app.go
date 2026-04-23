@@ -13,11 +13,13 @@ import (
 	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
 	eventsclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/events"
 	familytreeclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/familytree"
+	photosclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/photos"
 	redisclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/redis"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/config"
 	authhandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/auth"
 	eventshandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/events"
 	familytreehandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/familytree"
+	photoshandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/photos"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/middleware"
 )
 
@@ -27,6 +29,7 @@ type App struct {
 	authClient       *authclient.Client
 	familyTreeClient *familytreeclient.Client
 	eventsClient     *eventsclient.Client
+	photosClient     *photosclient.Client
 	redisClient      *redisclient.Client
 }
 
@@ -67,6 +70,17 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		panic(fmt.Sprintf("failed to connect to events service: %v", err))
 	}
 
+	photosGRPC, err := photosclient.New(
+		ctx,
+		log,
+		cfg.Clients.Photos.Address,
+		cfg.Clients.Photos.Timeout,
+		cfg.Clients.Photos.RetriesCount,
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to photos service: %v", err))
+	}
+
 	// Build HTTP router.
 	router := chi.NewRouter()
 
@@ -100,6 +114,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	authHandler := authhandler.New(log, authGRPC)
 	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC)
 	eventsHandler := eventshandler.New(log, eventsGRPC)
+	photosHandler := photoshandler.New(log, photosGRPC)
 
 	router.Route("/api/auth", func(r chi.Router) {
 		// Public routes.
@@ -159,6 +174,26 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		})
 	})
 
+	router.Route("/api/photos", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(tokenChecker.Middleware)
+
+			r.Post("/user/avatar", photosHandler.UploadUserAvatar)
+			r.Get("/user/avatar", photosHandler.GetUserAvatar)
+
+			r.Post("/persons/{person_id}/avatar", photosHandler.UploadPersonAvatar)
+			r.Get("/persons/{person_id}/avatar", photosHandler.GetPersonAvatar)
+			r.Post("/persons/{person_id}", photosHandler.UploadPersonPhoto)
+			r.Get("/persons/{person_id}", photosHandler.ListPersonPhotos)
+
+			r.Post("/events/{event_id}", photosHandler.UploadEventPhoto)
+			r.Get("/events/{event_id}", photosHandler.ListEventPhotos)
+
+			r.Get("/{photo_id}", photosHandler.GetPhotoByID)
+			r.Delete("/{photo_id}", photosHandler.DeletePhotoByID)
+		})
+	})
+
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.HTTP.Port),
 		Handler:      router,
@@ -173,6 +208,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		authClient:       authGRPC,
 		familyTreeClient: familyTreeGRPC,
 		eventsClient:     eventsGRPC,
+		photosClient:     photosGRPC,
 		redisClient:      redisClient,
 	}
 }
@@ -214,6 +250,10 @@ func (a *App) Stop(ctx context.Context) {
 
 	if err := a.eventsClient.Close(); err != nil {
 		a.log.Error("failed to close events grpc connection", slog.String("op", op), slog.String("error", err.Error()))
+	}
+
+	if err := a.photosClient.Close(); err != nil {
+		a.log.Error("failed to close photos grpc connection", slog.String("op", op), slog.String("error", err.Error()))
 	}
 
 	if err := a.redisClient.Close(); err != nil {

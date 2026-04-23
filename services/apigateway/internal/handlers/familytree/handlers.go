@@ -394,12 +394,13 @@ func toPersonJSON(p *familytreepb.Person) map[string]any {
 	}
 
 	return map[string]any{
-		"id":         p.GetId(),
-		"tree_id":    p.GetTreeId(),
-		"first_name": p.GetFirstName(),
-		"last_name":  p.GetLastName(),
-		"patronymic": p.GetPatronymic(),
-		"gender":     p.GetGender().String(),
+		"id":              p.GetId(),
+		"tree_id":         p.GetTreeId(),
+		"first_name":      p.GetFirstName(),
+		"last_name":       p.GetLastName(),
+		"patronymic":      p.GetPatronymic(),
+		"gender":          p.GetGender().String(),
+		"avatar_photo_id": p.GetAvatarPhotoId(),
 	}
 }
 

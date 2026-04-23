@@ -26,7 +26,14 @@ type ClientsConfig struct {
 	Auth         AuthClientConfig       `yaml:"auth" env-required:"true"`
 	FamilyTree   FamilyTreeClientConfig `yaml:"familytree" env-required:"true"`
 	Events       EventsClientConfig     `yaml:"events" env-required:"true"`
+	Photos       PhotosClientConfig     `yaml:"photos" env-required:"true"`
 	TokenStorage TokenStorageConfig     `yaml:"token_storage" env-required:"true"`
+}
+
+type PhotosClientConfig struct {
+	Address      string        `yaml:"address" env-required:"true"`
+	Timeout      time.Duration `yaml:"timeout" env-required:"true"`
+	RetriesCount int           `yaml:"retries_count" env-required:"true"`
 }
 
 type EventsClientConfig struct {
