@@ -42,6 +42,8 @@ message Tree {
     string id = 1;
     int32 creator_id = 2;
     int64 created_at_unix = 3;
+    bool is_view_restricted = 4;
+    bool is_public_on_main_page = 5;
 }
 
 message Person {
@@ -88,8 +90,10 @@ service FamilyTreeService {
     rpc RemoveRelationship (RemoveRelationshipRequest) returns (RemoveRelationshipResponse);
     rpc GetRelatives (GetRelativesRequest) returns (GetRelativesResponse);
     rpc GetTree (GetTreeRequest) returns (GetTreeResponse);
+    rpc GetTreeContent (GetTreeContentRequest) returns (GetTreeContentResponse);
     rpc ValidatePersonsInTree (ValidatePersonsInTreeRequest) returns (ValidatePersonsInTreeResponse);
     rpc UpdatePartnerRelationshipStatus (UpdatePartnerRelationshipStatusRequest) returns (UpdatePartnerRelationshipStatusResponse);
+    rpc UpdateTreeSettings (UpdateTreeSettingsRequest) returns (UpdateTreeSettingsResponse);
 }
 
 message CreateTreeRequest {
@@ -271,6 +275,15 @@ message GetTreeRequest {
 }
 
 message GetTreeResponse {
+    Tree tree = 1;
+}
+
+message GetTreeContentRequest {
+    string tree_id = 1;
+    int32 request_user_id = 2;
+}
+
+message GetTreeContentResponse {
     repeated Person persons = 1;
     repeated Relationship relationships = 2;
 }
@@ -292,3 +305,14 @@ message UpdatePartnerRelationshipStatusRequest {
 }
 
 message UpdatePartnerRelationshipStatusResponse {}
+
+message UpdateTreeSettingsRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    bool is_view_restricted = 3;
+    bool is_public_on_main_page = 4;
+}
+
+message UpdateTreeSettingsResponse {
+    Tree tree = 1;
+}

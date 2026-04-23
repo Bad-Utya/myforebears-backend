@@ -14,7 +14,9 @@ import (
 type FamilyTreeService interface {
 	CreateTree(ctx context.Context, requestUserID int) (models.Tree, models.Person, error)
 	ListTreesByCreator(ctx context.Context, requestUserID int) ([]models.Tree, error)
-	GetTreeForUser(ctx context.Context, requestUserID int, treeID string) ([]models.Person, []models.Relationship, error)
+	GetTreeForUser(ctx context.Context, requestUserID int, treeID string) (models.Tree, error)
+	GetTreeContentForUser(ctx context.Context, requestUserID int, treeID string) ([]models.Person, []models.Relationship, error)
+	UpdateTreeSettings(ctx context.Context, requestUserID int, treeID string, isViewRestricted bool, isPublicOnMainPage bool) (models.Tree, error)
 	ListPersonsByTree(ctx context.Context, requestUserID int, treeID string) ([]models.Person, error)
 	GetPersonInTree(ctx context.Context, requestUserID int, treeID string, personID string) (models.Person, error)
 	AddParent(ctx context.Context, requestUserID int, treeID string, childID string, role personsvc.ParentRole, firstName string, lastName string, patronymic string) (models.Person, *models.Person, error)

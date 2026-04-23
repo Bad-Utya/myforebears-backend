@@ -53,6 +53,11 @@ type updatePersonNameRequest struct {
 	Patronymic string `json:"patronymic"`
 }
 
+type updateTreeSettingsRequest struct {
+	IsViewRestricted   bool `json:"is_view_restricted"`
+	IsPublicOnMainPage bool `json:"is_public_on_main_page"`
+}
+
 func (h *Handler) CreateTree(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
@@ -118,6 +123,30 @@ func (h *Handler) GetTree(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response.OK(w, map[string]any{"tree": toTreeJSON(resp.GetTree())})
+}
+
+func (h *Handler) GetTreeContent(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.UserIDFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
+		return
+	}
+
+	resp, err := h.client.GetTreeContent(r.Context(), userID, treeID)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("get tree content failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
 	persons := make([]map[string]any, 0, len(resp.GetPersons()))
 	for _, p := range resp.GetPersons() {
 		persons = append(persons, toPersonJSON(p))
@@ -133,6 +162,29 @@ func (h *Handler) GetTree(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, map[string]any{"persons": persons, "relationships": relationships})
+}
+
+func (h *Handler) UpdateTreeSettings(w http.ResponseWriter, r *http.Request) {
+	userID, treeID, ok := h.requireUserAndTree(w, r)
+	if !ok {
+		return
+	}
+
+	var req updateTreeSettingsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid request body")
+		return
+	}
+
+	resp, err := h.client.UpdateTreeSettings(r.Context(), userID, treeID, req.IsViewRestricted, req.IsPublicOnMainPage)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("update tree settings failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"tree": toTreeJSON(resp.GetTree())})
 }
 
 func (h *Handler) ListPersons(w http.ResponseWriter, r *http.Request) {
@@ -410,8 +462,10 @@ func toTreeJSON(t *familytreepb.Tree) map[string]any {
 	}
 
 	return map[string]any{
-		"id":              t.GetId(),
-		"creator_id":      t.GetCreatorId(),
-		"created_at_unix": t.GetCreatedAtUnix(),
+		"id":                     t.GetId(),
+		"creator_id":             t.GetCreatorId(),
+		"created_at_unix":        t.GetCreatedAtUnix(),
+		"is_view_restricted":     t.GetIsViewRestricted(),
+		"is_public_on_main_page": t.GetIsPublicOnMainPage(),
 	}
 }

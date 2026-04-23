@@ -141,6 +141,8 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 			r.Post("/", familyTreeHandler.CreateTree)
 			r.Get("/", familyTreeHandler.ListTrees)
 			r.Get("/{tree_id}", familyTreeHandler.GetTree)
+			r.Patch("/{tree_id}", familyTreeHandler.UpdateTreeSettings)
+			r.Get("/{tree_id}/content", familyTreeHandler.GetTreeContent)
 
 			r.Post("/{tree_id}/parents", familyTreeHandler.AddParent)
 			r.Post("/{tree_id}/children", familyTreeHandler.AddChild)

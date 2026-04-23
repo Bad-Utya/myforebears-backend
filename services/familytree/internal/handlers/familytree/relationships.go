@@ -45,7 +45,16 @@ func (h *Handler) GetRelatives(ctx context.Context, req *familytreepb.GetRelativ
 }
 
 func (h *Handler) GetTree(ctx context.Context, req *familytreepb.GetTreeRequest) (*familytreepb.GetTreeResponse, error) {
-	persons, relationships, err := h.service.GetTreeForUser(ctx, int(req.GetRequestUserId()), req.GetTreeId())
+	tree, err := h.service.GetTreeForUser(ctx, int(req.GetRequestUserId()), req.GetTreeId())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &familytreepb.GetTreeResponse{Tree: toProtoTree(tree)}, nil
+}
+
+func (h *Handler) GetTreeContent(ctx context.Context, req *familytreepb.GetTreeContentRequest) (*familytreepb.GetTreeContentResponse, error) {
+	persons, relationships, err := h.service.GetTreeContentForUser(ctx, int(req.GetRequestUserId()), req.GetTreeId())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -64,7 +73,7 @@ func (h *Handler) GetTree(ctx context.Context, req *familytreepb.GetTreeRequest)
 		})
 	}
 
-	return &familytreepb.GetTreeResponse{Persons: protoPersons, Relationships: protoRelationships}, nil
+	return &familytreepb.GetTreeContentResponse{Persons: protoPersons, Relationships: protoRelationships}, nil
 }
 
 func (h *Handler) UpdatePartnerRelationshipStatus(ctx context.Context, req *familytreepb.UpdatePartnerRelationshipStatusRequest) (*familytreepb.UpdatePartnerRelationshipStatusResponse, error) {
@@ -81,6 +90,21 @@ func (h *Handler) UpdatePartnerRelationshipStatus(ctx context.Context, req *fami
 	}
 
 	return &familytreepb.UpdatePartnerRelationshipStatusResponse{}, nil
+}
+
+func (h *Handler) UpdateTreeSettings(ctx context.Context, req *familytreepb.UpdateTreeSettingsRequest) (*familytreepb.UpdateTreeSettingsResponse, error) {
+	tree, err := h.service.UpdateTreeSettings(
+		ctx,
+		int(req.GetRequestUserId()),
+		req.GetTreeId(),
+		req.GetIsViewRestricted(),
+		req.GetIsPublicOnMainPage(),
+	)
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &familytreepb.UpdateTreeSettingsResponse{Tree: toProtoTree(tree)}, nil
 }
 
 func toModelRelationshipType(relType familytreepb.RelationshipType) models.RelationshipType {

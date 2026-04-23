@@ -34,9 +34,11 @@ func (s *Service) CreateTree(ctx context.Context, requestUserID int) (models.Tre
 	}
 
 	tree := models.Tree{
-		ID:        uuid.New(),
-		CreatorID: requestUserID,
-		CreatedAt: time.Now(),
+		ID:                 uuid.New(),
+		CreatorID:          requestUserID,
+		CreatedAt:          time.Now(),
+		IsViewRestricted:   true,
+		IsPublicOnMainPage: false,
 	}
 
 	if err := s.personStorage.CreateTree(ctx, tree); err != nil {
@@ -76,13 +78,30 @@ func (s *Service) ListTreesByCreator(ctx context.Context, requestUserID int) ([]
 	return trees, nil
 }
 
-func (s *Service) GetTreeForUser(ctx context.Context, requestUserID int, treeID string) ([]models.Person, []models.Relationship, error) {
+func (s *Service) GetTreeForUser(ctx context.Context, requestUserID int, treeID string) (models.Tree, error) {
 	const op = "service.familytree.GetTreeForUser"
 	log := s.log.With(slog.String("op", op))
 
 	log.Info("getting tree for user", slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID))
 
-	parsedTreeID, err := s.authorizeTree(ctx, requestUserID, treeID)
+	_, tree, err := s.authorizeTreeForRead(ctx, requestUserID, treeID)
+	if err != nil {
+		log.Error("failed to authorize tree", slog.String("error", err.Error()))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("tree loaded", slog.String("tree_id", tree.ID.String()))
+
+	return tree, nil
+}
+
+func (s *Service) GetTreeContentForUser(ctx context.Context, requestUserID int, treeID string) ([]models.Person, []models.Relationship, error) {
+	const op = "service.familytree.GetTreeContentForUser"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("getting tree content for user", slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID))
+
+	parsedTreeID, _, err := s.authorizeTreeForRead(ctx, requestUserID, treeID)
 	if err != nil {
 		log.Error("failed to authorize tree", slog.String("error", err.Error()))
 		return nil, nil, fmt.Errorf("%s: %w", op, err)
@@ -100,9 +119,49 @@ func (s *Service) GetTreeForUser(ctx context.Context, requestUserID int, treeID 
 		return nil, nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	log.Info("tree loaded", slog.Int("persons_count", len(persons)), slog.Int("relationships_count", len(relationships)))
+	log.Info("tree content loaded", slog.Int("persons_count", len(persons)), slog.Int("relationships_count", len(relationships)))
 
 	return persons, relationships, nil
+}
+
+func (s *Service) UpdateTreeSettings(ctx context.Context, requestUserID int, treeID string, isViewRestricted bool, isPublicOnMainPage bool) (models.Tree, error) {
+	const op = "service.familytree.UpdateTreeSettings"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info(
+		"updating tree settings",
+		slog.Int("request_user_id", requestUserID),
+		slog.String("tree_id", treeID),
+		slog.Bool("is_view_restricted", isViewRestricted),
+		slog.Bool("is_public_on_main_page", isPublicOnMainPage),
+	)
+
+	parsedTreeID, err := s.authorizeTree(ctx, requestUserID, treeID)
+	if err != nil {
+		log.Error("failed to authorize tree", slog.String("error", err.Error()))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if err := s.personStorage.UpdateTreeSettings(ctx, parsedTreeID, isViewRestricted, isPublicOnMainPage); err != nil {
+		if errors.Is(err, storage.ErrTreeNotFound) {
+			log.Info("tree not found", slog.String("tree_id", parsedTreeID.String()))
+			return models.Tree{}, fmt.Errorf("%s: %w", op, ErrTreeNotFound)
+		}
+		log.Error("failed to update tree settings", slog.String("error", err.Error()))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	tree, err := s.personStorage.GetTree(ctx, parsedTreeID)
+	if err != nil {
+		if errors.Is(err, storage.ErrTreeNotFound) {
+			log.Info("tree not found", slog.String("tree_id", parsedTreeID.String()))
+			return models.Tree{}, fmt.Errorf("%s: %w", op, ErrTreeNotFound)
+		}
+		log.Error("failed to load updated tree", slog.String("error", err.Error()))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return tree, nil
 }
 
 func (s *Service) ListPersonsByTree(ctx context.Context, requestUserID int, treeID string) ([]models.Person, error) {
@@ -724,6 +783,44 @@ func (s *Service) authorizeTree(ctx context.Context, requestUserID int, treeID s
 	}
 
 	return parsedTreeID, nil
+}
+
+func (s *Service) authorizeTreeForRead(ctx context.Context, requestUserID int, treeID string) (uuid.UUID, models.Tree, error) {
+	const op = "service.familytree.authorizeTreeForRead"
+	log := s.log.With(slog.String("op", op))
+
+	if requestUserID <= 0 {
+		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
+		return uuid.Nil, models.Tree{}, ErrInvalidUserID
+	}
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		log.Info("invalid tree id", slog.String("tree_id", treeID))
+		return uuid.Nil, models.Tree{}, ErrInvalidTreeID
+	}
+
+	tree, err := s.personStorage.GetTree(ctx, parsedTreeID)
+	if err != nil {
+		if errors.Is(err, storage.ErrTreeNotFound) {
+			log.Info("tree not found", slog.String("tree_id", parsedTreeID.String()))
+			return uuid.Nil, models.Tree{}, ErrTreeNotFound
+		}
+		log.Error("failed to load tree", slog.String("error", err.Error()))
+		return uuid.Nil, models.Tree{}, err
+	}
+
+	if tree.CreatorID != requestUserID && tree.IsViewRestricted {
+		log.Info(
+			"forbidden tree read access",
+			slog.Int("tree_creator_id", tree.CreatorID),
+			slog.Int("request_user_id", requestUserID),
+			slog.Bool("is_view_restricted", tree.IsViewRestricted),
+		)
+		return uuid.Nil, models.Tree{}, ErrForbidden
+	}
+
+	return parsedTreeID, tree, nil
 }
 
 func (s *Service) fetchIncomingParents(ctx context.Context, childID uuid.UUID) ([]models.Person, error) {

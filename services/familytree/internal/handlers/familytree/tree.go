@@ -182,8 +182,10 @@ func toModelParentRole(role familytreepb.ParentRole) personsvc.ParentRole {
 
 func toProtoTree(tree models.Tree) *familytreepb.Tree {
 	return &familytreepb.Tree{
-		Id:            tree.ID.String(),
-		CreatorId:     int32(tree.CreatorID),
-		CreatedAtUnix: tree.CreatedAt.Unix(),
+		Id:                 tree.ID.String(),
+		CreatorId:          int32(tree.CreatorID),
+		CreatedAtUnix:      tree.CreatedAt.Unix(),
+		IsViewRestricted:   tree.IsViewRestricted,
+		IsPublicOnMainPage: tree.IsPublicOnMainPage,
 	}
 }

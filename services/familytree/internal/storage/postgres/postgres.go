@@ -67,10 +67,12 @@ func (s *Storage) CreateTree(ctx context.Context, tree models.Tree) error {
 
 	_, err := s.pool.Exec(
 		ctx,
-		`INSERT INTO trees (id, creator_id)
-		 VALUES ($1, $2)`,
+		`INSERT INTO trees (id, creator_id, is_view_restricted, is_public_on_main_page)
+		 VALUES ($1, $2, $3, $4)`,
 		tree.ID,
 		tree.CreatorID,
+		tree.IsViewRestricted,
+		tree.IsPublicOnMainPage,
 	)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -85,10 +87,10 @@ func (s *Storage) GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, e
 	var tree models.Tree
 	err := s.pool.QueryRow(
 		ctx,
-		`SELECT id, creator_id, created_at
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page
 		 FROM trees WHERE id = $1`,
 		treeID,
-	).Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt)
+	).Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.Tree{}, fmt.Errorf("%s: %w", op, storage.ErrTreeNotFound)
@@ -99,12 +101,36 @@ func (s *Storage) GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, e
 	return tree, nil
 }
 
+func (s *Storage) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool) error {
+	const op = "storage.postgres.UpdateTreeSettings"
+
+	cmdTag, err := s.pool.Exec(
+		ctx,
+		`UPDATE trees
+		 SET is_view_restricted = $1,
+		     is_public_on_main_page = $2
+		 WHERE id = $3`,
+		isViewRestricted,
+		isPublicOnMainPage,
+		treeID,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrTreeNotFound)
+	}
+
+	return nil
+}
+
 func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error) {
 	const op = "storage.postgres.GetTreesByCreator"
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, creator_id, created_at
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page
 		 FROM trees
 		 WHERE creator_id = $1
 		 ORDER BY created_at DESC`,
@@ -118,7 +144,7 @@ func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]model
 	trees := make([]models.Tree, 0)
 	for rows.Next() {
 		var tree models.Tree
-		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt); err != nil {
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		trees = append(trees, tree)

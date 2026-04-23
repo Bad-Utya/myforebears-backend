@@ -18,6 +18,7 @@ var (
 type PersonStorage interface {
 	CreateTree(ctx context.Context, tree models.Tree) error
 	GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, error)
+	UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool) error
 	GetTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error)
 	CreatePerson(ctx context.Context, person models.Person) error
 	GetPerson(ctx context.Context, personID uuid.UUID) (models.Person, error)

@@ -37,8 +37,10 @@ const (
 	FamilyTreeService_RemoveRelationship_FullMethodName              = "/familytree.FamilyTreeService/RemoveRelationship"
 	FamilyTreeService_GetRelatives_FullMethodName                    = "/familytree.FamilyTreeService/GetRelatives"
 	FamilyTreeService_GetTree_FullMethodName                         = "/familytree.FamilyTreeService/GetTree"
+	FamilyTreeService_GetTreeContent_FullMethodName                  = "/familytree.FamilyTreeService/GetTreeContent"
 	FamilyTreeService_ValidatePersonsInTree_FullMethodName           = "/familytree.FamilyTreeService/ValidatePersonsInTree"
 	FamilyTreeService_UpdatePartnerRelationshipStatus_FullMethodName = "/familytree.FamilyTreeService/UpdatePartnerRelationshipStatus"
+	FamilyTreeService_UpdateTreeSettings_FullMethodName              = "/familytree.FamilyTreeService/UpdateTreeSettings"
 )
 
 // FamilyTreeServiceClient is the client API for FamilyTreeService service.
@@ -63,8 +65,10 @@ type FamilyTreeServiceClient interface {
 	RemoveRelationship(ctx context.Context, in *RemoveRelationshipRequest, opts ...grpc.CallOption) (*RemoveRelationshipResponse, error)
 	GetRelatives(ctx context.Context, in *GetRelativesRequest, opts ...grpc.CallOption) (*GetRelativesResponse, error)
 	GetTree(ctx context.Context, in *GetTreeRequest, opts ...grpc.CallOption) (*GetTreeResponse, error)
+	GetTreeContent(ctx context.Context, in *GetTreeContentRequest, opts ...grpc.CallOption) (*GetTreeContentResponse, error)
 	ValidatePersonsInTree(ctx context.Context, in *ValidatePersonsInTreeRequest, opts ...grpc.CallOption) (*ValidatePersonsInTreeResponse, error)
 	UpdatePartnerRelationshipStatus(ctx context.Context, in *UpdatePartnerRelationshipStatusRequest, opts ...grpc.CallOption) (*UpdatePartnerRelationshipStatusResponse, error)
+	UpdateTreeSettings(ctx context.Context, in *UpdateTreeSettingsRequest, opts ...grpc.CallOption) (*UpdateTreeSettingsResponse, error)
 }
 
 type familyTreeServiceClient struct {
@@ -255,6 +259,16 @@ func (c *familyTreeServiceClient) GetTree(ctx context.Context, in *GetTreeReques
 	return out, nil
 }
 
+func (c *familyTreeServiceClient) GetTreeContent(ctx context.Context, in *GetTreeContentRequest, opts ...grpc.CallOption) (*GetTreeContentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTreeContentResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_GetTreeContent_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *familyTreeServiceClient) ValidatePersonsInTree(ctx context.Context, in *ValidatePersonsInTreeRequest, opts ...grpc.CallOption) (*ValidatePersonsInTreeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ValidatePersonsInTreeResponse)
@@ -269,6 +283,16 @@ func (c *familyTreeServiceClient) UpdatePartnerRelationshipStatus(ctx context.Co
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdatePartnerRelationshipStatusResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_UpdatePartnerRelationshipStatus_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *familyTreeServiceClient) UpdateTreeSettings(ctx context.Context, in *UpdateTreeSettingsRequest, opts ...grpc.CallOption) (*UpdateTreeSettingsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateTreeSettingsResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_UpdateTreeSettings_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -297,8 +321,10 @@ type FamilyTreeServiceServer interface {
 	RemoveRelationship(context.Context, *RemoveRelationshipRequest) (*RemoveRelationshipResponse, error)
 	GetRelatives(context.Context, *GetRelativesRequest) (*GetRelativesResponse, error)
 	GetTree(context.Context, *GetTreeRequest) (*GetTreeResponse, error)
+	GetTreeContent(context.Context, *GetTreeContentRequest) (*GetTreeContentResponse, error)
 	ValidatePersonsInTree(context.Context, *ValidatePersonsInTreeRequest) (*ValidatePersonsInTreeResponse, error)
 	UpdatePartnerRelationshipStatus(context.Context, *UpdatePartnerRelationshipStatusRequest) (*UpdatePartnerRelationshipStatusResponse, error)
+	UpdateTreeSettings(context.Context, *UpdateTreeSettingsRequest) (*UpdateTreeSettingsResponse, error)
 	mustEmbedUnimplementedFamilyTreeServiceServer()
 }
 
@@ -363,11 +389,17 @@ func (UnimplementedFamilyTreeServiceServer) GetRelatives(context.Context, *GetRe
 func (UnimplementedFamilyTreeServiceServer) GetTree(context.Context, *GetTreeRequest) (*GetTreeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTree not implemented")
 }
+func (UnimplementedFamilyTreeServiceServer) GetTreeContent(context.Context, *GetTreeContentRequest) (*GetTreeContentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTreeContent not implemented")
+}
 func (UnimplementedFamilyTreeServiceServer) ValidatePersonsInTree(context.Context, *ValidatePersonsInTreeRequest) (*ValidatePersonsInTreeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatePersonsInTree not implemented")
 }
 func (UnimplementedFamilyTreeServiceServer) UpdatePartnerRelationshipStatus(context.Context, *UpdatePartnerRelationshipStatusRequest) (*UpdatePartnerRelationshipStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatePartnerRelationshipStatus not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) UpdateTreeSettings(context.Context, *UpdateTreeSettingsRequest) (*UpdateTreeSettingsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTreeSettings not implemented")
 }
 func (UnimplementedFamilyTreeServiceServer) mustEmbedUnimplementedFamilyTreeServiceServer() {}
 func (UnimplementedFamilyTreeServiceServer) testEmbeddedByValue()                           {}
@@ -714,6 +746,24 @@ func _FamilyTreeService_GetTree_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FamilyTreeService_GetTreeContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTreeContentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).GetTreeContent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_GetTreeContent_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).GetTreeContent(ctx, req.(*GetTreeContentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _FamilyTreeService_ValidatePersonsInTree_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ValidatePersonsInTreeRequest)
 	if err := dec(in); err != nil {
@@ -746,6 +796,24 @@ func _FamilyTreeService_UpdatePartnerRelationshipStatus_Handler(srv interface{},
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FamilyTreeServiceServer).UpdatePartnerRelationshipStatus(ctx, req.(*UpdatePartnerRelationshipStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FamilyTreeService_UpdateTreeSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTreeSettingsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).UpdateTreeSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_UpdateTreeSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).UpdateTreeSettings(ctx, req.(*UpdateTreeSettingsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -830,12 +898,20 @@ var FamilyTreeService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _FamilyTreeService_GetTree_Handler,
 		},
 		{
+			MethodName: "GetTreeContent",
+			Handler:    _FamilyTreeService_GetTreeContent_Handler,
+		},
+		{
 			MethodName: "ValidatePersonsInTree",
 			Handler:    _FamilyTreeService_ValidatePersonsInTree_Handler,
 		},
 		{
 			MethodName: "UpdatePartnerRelationshipStatus",
 			Handler:    _FamilyTreeService_UpdatePartnerRelationshipStatus_Handler,
+		},
+		{
+			MethodName: "UpdateTreeSettings",
+			Handler:    _FamilyTreeService_UpdateTreeSettings_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

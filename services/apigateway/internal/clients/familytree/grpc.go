@@ -72,6 +72,33 @@ func (c *Client) GetTree(ctx context.Context, requestUserID int, treeID string) 
 	return resp, nil
 }
 
+func (c *Client) GetTreeContent(ctx context.Context, requestUserID int, treeID string) (*familytreepb.GetTreeContentResponse, error) {
+	const op = "clients.familytree.GetTreeContent"
+
+	resp, err := c.api.GetTreeContent(ctx, &familytreepb.GetTreeContentRequest{TreeId: treeID, RequestUserId: int32(requestUserID)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) UpdateTreeSettings(ctx context.Context, requestUserID int, treeID string, isViewRestricted bool, isPublicOnMainPage bool) (*familytreepb.UpdateTreeSettingsResponse, error) {
+	const op = "clients.familytree.UpdateTreeSettings"
+
+	resp, err := c.api.UpdateTreeSettings(ctx, &familytreepb.UpdateTreeSettingsRequest{
+		RequestUserId:      int32(requestUserID),
+		TreeId:             treeID,
+		IsViewRestricted:   isViewRestricted,
+		IsPublicOnMainPage: isPublicOnMainPage,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) ListPersonsByTree(ctx context.Context, requestUserID int, treeID string) (*familytreepb.ListPersonsByTreeResponse, error) {
 	const op = "clients.familytree.ListPersonsByTree"
 
