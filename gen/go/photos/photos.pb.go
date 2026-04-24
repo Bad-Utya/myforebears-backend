@@ -303,7 +303,7 @@ func (x *GetUserAvatarRequest) GetRequestUserId() int32 {
 
 type UploadPersonAvatarRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RequestUserId int32                  `protobuf:"varint,1,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
 	PersonId      string                 `protobuf:"bytes,2,opt,name=person_id,json=personId,proto3" json:"person_id,omitempty"`
 	FileName      string                 `protobuf:"bytes,3,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
 	MimeType      string                 `protobuf:"bytes,4,opt,name=mime_type,json=mimeType,proto3" json:"mime_type,omitempty"`
@@ -342,11 +342,11 @@ func (*UploadPersonAvatarRequest) Descriptor() ([]byte, []int) {
 	return file_photos_photos_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *UploadPersonAvatarRequest) GetRequestUserId() int32 {
+func (x *UploadPersonAvatarRequest) GetTreeId() string {
 	if x != nil {
-		return x.RequestUserId
+		return x.TreeId
 	}
-	return 0
+	return ""
 }
 
 func (x *UploadPersonAvatarRequest) GetPersonId() string {
@@ -423,7 +423,7 @@ func (x *UploadPersonAvatarResponse) GetPhoto() *Photo {
 
 type GetPersonAvatarRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RequestUserId int32                  `protobuf:"varint,1,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
 	PersonId      string                 `protobuf:"bytes,2,opt,name=person_id,json=personId,proto3" json:"person_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -459,11 +459,11 @@ func (*GetPersonAvatarRequest) Descriptor() ([]byte, []int) {
 	return file_photos_photos_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *GetPersonAvatarRequest) GetRequestUserId() int32 {
+func (x *GetPersonAvatarRequest) GetTreeId() string {
 	if x != nil {
-		return x.RequestUserId
+		return x.TreeId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetPersonAvatarRequest) GetPersonId() string {
@@ -475,7 +475,7 @@ func (x *GetPersonAvatarRequest) GetPersonId() string {
 
 type UploadPersonPhotoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RequestUserId int32                  `protobuf:"varint,1,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
 	PersonId      string                 `protobuf:"bytes,2,opt,name=person_id,json=personId,proto3" json:"person_id,omitempty"`
 	FileName      string                 `protobuf:"bytes,3,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
 	MimeType      string                 `protobuf:"bytes,4,opt,name=mime_type,json=mimeType,proto3" json:"mime_type,omitempty"`
@@ -514,11 +514,11 @@ func (*UploadPersonPhotoRequest) Descriptor() ([]byte, []int) {
 	return file_photos_photos_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *UploadPersonPhotoRequest) GetRequestUserId() int32 {
+func (x *UploadPersonPhotoRequest) GetTreeId() string {
 	if x != nil {
-		return x.RequestUserId
+		return x.TreeId
 	}
-	return 0
+	return ""
 }
 
 func (x *UploadPersonPhotoRequest) GetPersonId() string {
@@ -595,7 +595,7 @@ func (x *UploadPersonPhotoResponse) GetPhoto() *Photo {
 
 type ListPersonPhotosRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RequestUserId int32                  `protobuf:"varint,1,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
 	PersonId      string                 `protobuf:"bytes,2,opt,name=person_id,json=personId,proto3" json:"person_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -631,11 +631,11 @@ func (*ListPersonPhotosRequest) Descriptor() ([]byte, []int) {
 	return file_photos_photos_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *ListPersonPhotosRequest) GetRequestUserId() int32 {
+func (x *ListPersonPhotosRequest) GetTreeId() string {
 	if x != nil {
-		return x.RequestUserId
+		return x.TreeId
 	}
-	return 0
+	return ""
 }
 
 func (x *ListPersonPhotosRequest) GetPersonId() string {
@@ -691,7 +691,7 @@ func (x *ListPersonPhotosResponse) GetPhotos() []*Photo {
 
 type UploadEventPhotoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RequestUserId int32                  `protobuf:"varint,1,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
 	EventId       string                 `protobuf:"bytes,2,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
 	FileName      string                 `protobuf:"bytes,3,opt,name=file_name,json=fileName,proto3" json:"file_name,omitempty"`
 	MimeType      string                 `protobuf:"bytes,4,opt,name=mime_type,json=mimeType,proto3" json:"mime_type,omitempty"`
@@ -730,11 +730,11 @@ func (*UploadEventPhotoRequest) Descriptor() ([]byte, []int) {
 	return file_photos_photos_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *UploadEventPhotoRequest) GetRequestUserId() int32 {
+func (x *UploadEventPhotoRequest) GetTreeId() string {
 	if x != nil {
-		return x.RequestUserId
+		return x.TreeId
 	}
-	return 0
+	return ""
 }
 
 func (x *UploadEventPhotoRequest) GetEventId() string {
@@ -811,7 +811,7 @@ func (x *UploadEventPhotoResponse) GetPhoto() *Photo {
 
 type ListEventPhotosRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RequestUserId int32                  `protobuf:"varint,1,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
 	EventId       string                 `protobuf:"bytes,2,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -847,11 +847,11 @@ func (*ListEventPhotosRequest) Descriptor() ([]byte, []int) {
 	return file_photos_photos_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *ListEventPhotosRequest) GetRequestUserId() int32 {
+func (x *ListEventPhotosRequest) GetTreeId() string {
 	if x != nil {
-		return x.RequestUserId
+		return x.TreeId
 	}
-	return 0
+	return ""
 }
 
 func (x *ListEventPhotosRequest) GetEventId() string {
@@ -907,7 +907,7 @@ func (x *ListEventPhotosResponse) GetPhotos() []*Photo {
 
 type GetPhotoByIDRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RequestUserId int32                  `protobuf:"varint,1,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
 	PhotoId       string                 `protobuf:"bytes,2,opt,name=photo_id,json=photoId,proto3" json:"photo_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -943,11 +943,11 @@ func (*GetPhotoByIDRequest) Descriptor() ([]byte, []int) {
 	return file_photos_photos_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *GetPhotoByIDRequest) GetRequestUserId() int32 {
+func (x *GetPhotoByIDRequest) GetTreeId() string {
 	if x != nil {
-		return x.RequestUserId
+		return x.TreeId
 	}
-	return 0
+	return ""
 }
 
 func (x *GetPhotoByIDRequest) GetPhotoId() string {
@@ -1011,7 +1011,7 @@ func (x *GetPhotoContentResponse) GetContent() []byte {
 
 type DeletePhotoByIDRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RequestUserId int32                  `protobuf:"varint,1,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
 	PhotoId       string                 `protobuf:"bytes,2,opt,name=photo_id,json=photoId,proto3" json:"photo_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1047,11 +1047,11 @@ func (*DeletePhotoByIDRequest) Descriptor() ([]byte, []int) {
 	return file_photos_photos_proto_rawDescGZIP(), []int{17}
 }
 
-func (x *DeletePhotoByIDRequest) GetRequestUserId() int32 {
+func (x *DeletePhotoByIDRequest) GetTreeId() string {
 	if x != nil {
-		return x.RequestUserId
+		return x.TreeId
 	}
-	return 0
+	return ""
 }
 
 func (x *DeletePhotoByIDRequest) GetPhotoId() string {
@@ -1124,52 +1124,52 @@ const file_photos_photos_proto_rawDesc = "" +
 	"\x18UploadUserAvatarResponse\x12#\n" +
 	"\x05photo\x18\x01 \x01(\v2\r.photos.PhotoR\x05photo\">\n" +
 	"\x14GetUserAvatarRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\"\xb4\x01\n" +
-	"\x19UploadPersonAvatarRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\x12\x1b\n" +
+	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\"\xa5\x01\n" +
+	"\x19UploadPersonAvatarRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
 	"\tperson_id\x18\x02 \x01(\tR\bpersonId\x12\x1b\n" +
 	"\tfile_name\x18\x03 \x01(\tR\bfileName\x12\x1b\n" +
 	"\tmime_type\x18\x04 \x01(\tR\bmimeType\x12\x18\n" +
 	"\acontent\x18\x05 \x01(\fR\acontent\"A\n" +
 	"\x1aUploadPersonAvatarResponse\x12#\n" +
-	"\x05photo\x18\x01 \x01(\v2\r.photos.PhotoR\x05photo\"]\n" +
-	"\x16GetPersonAvatarRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\x12\x1b\n" +
-	"\tperson_id\x18\x02 \x01(\tR\bpersonId\"\xb3\x01\n" +
-	"\x18UploadPersonPhotoRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\x12\x1b\n" +
+	"\x05photo\x18\x01 \x01(\v2\r.photos.PhotoR\x05photo\"N\n" +
+	"\x16GetPersonAvatarRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
+	"\tperson_id\x18\x02 \x01(\tR\bpersonId\"\xa4\x01\n" +
+	"\x18UploadPersonPhotoRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
 	"\tperson_id\x18\x02 \x01(\tR\bpersonId\x12\x1b\n" +
 	"\tfile_name\x18\x03 \x01(\tR\bfileName\x12\x1b\n" +
 	"\tmime_type\x18\x04 \x01(\tR\bmimeType\x12\x18\n" +
 	"\acontent\x18\x05 \x01(\fR\acontent\"@\n" +
 	"\x19UploadPersonPhotoResponse\x12#\n" +
-	"\x05photo\x18\x01 \x01(\v2\r.photos.PhotoR\x05photo\"^\n" +
-	"\x17ListPersonPhotosRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\x12\x1b\n" +
+	"\x05photo\x18\x01 \x01(\v2\r.photos.PhotoR\x05photo\"O\n" +
+	"\x17ListPersonPhotosRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
 	"\tperson_id\x18\x02 \x01(\tR\bpersonId\"A\n" +
 	"\x18ListPersonPhotosResponse\x12%\n" +
-	"\x06photos\x18\x01 \x03(\v2\r.photos.PhotoR\x06photos\"\xb0\x01\n" +
-	"\x17UploadEventPhotoRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\x12\x19\n" +
+	"\x06photos\x18\x01 \x03(\v2\r.photos.PhotoR\x06photos\"\xa1\x01\n" +
+	"\x17UploadEventPhotoRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x19\n" +
 	"\bevent_id\x18\x02 \x01(\tR\aeventId\x12\x1b\n" +
 	"\tfile_name\x18\x03 \x01(\tR\bfileName\x12\x1b\n" +
 	"\tmime_type\x18\x04 \x01(\tR\bmimeType\x12\x18\n" +
 	"\acontent\x18\x05 \x01(\fR\acontent\"?\n" +
 	"\x18UploadEventPhotoResponse\x12#\n" +
-	"\x05photo\x18\x01 \x01(\v2\r.photos.PhotoR\x05photo\"[\n" +
-	"\x16ListEventPhotosRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\x12\x19\n" +
+	"\x05photo\x18\x01 \x01(\v2\r.photos.PhotoR\x05photo\"L\n" +
+	"\x16ListEventPhotosRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x19\n" +
 	"\bevent_id\x18\x02 \x01(\tR\aeventId\"@\n" +
 	"\x17ListEventPhotosResponse\x12%\n" +
-	"\x06photos\x18\x01 \x03(\v2\r.photos.PhotoR\x06photos\"X\n" +
-	"\x13GetPhotoByIDRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\x12\x19\n" +
+	"\x06photos\x18\x01 \x03(\v2\r.photos.PhotoR\x06photos\"I\n" +
+	"\x13GetPhotoByIDRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x19\n" +
 	"\bphoto_id\x18\x02 \x01(\tR\aphotoId\"X\n" +
 	"\x17GetPhotoContentResponse\x12#\n" +
 	"\x05photo\x18\x01 \x01(\v2\r.photos.PhotoR\x05photo\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\fR\acontent\"[\n" +
-	"\x16DeletePhotoByIDRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\x12\x19\n" +
+	"\acontent\x18\x02 \x01(\fR\acontent\"L\n" +
+	"\x16DeletePhotoByIDRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x19\n" +
 	"\bphoto_id\x18\x02 \x01(\tR\aphotoId\"\x19\n" +
 	"\x17DeletePhotoByIDResponse2\xe5\x06\n" +
 	"\rPhotosService\x12U\n" +

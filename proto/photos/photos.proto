@@ -50,7 +50,7 @@ message GetUserAvatarRequest {
 }
 
 message UploadPersonAvatarRequest {
-    int32 request_user_id = 1;
+    string tree_id = 1;
     string person_id = 2;
     string file_name = 3;
     string mime_type = 4;
@@ -62,12 +62,12 @@ message UploadPersonAvatarResponse {
 }
 
 message GetPersonAvatarRequest {
-    int32 request_user_id = 1;
+    string tree_id = 1;
     string person_id = 2;
 }
 
 message UploadPersonPhotoRequest {
-    int32 request_user_id = 1;
+    string tree_id = 1;
     string person_id = 2;
     string file_name = 3;
     string mime_type = 4;
@@ -79,7 +79,7 @@ message UploadPersonPhotoResponse {
 }
 
 message ListPersonPhotosRequest {
-    int32 request_user_id = 1;
+    string tree_id = 1;
     string person_id = 2;
 }
 
@@ -88,7 +88,7 @@ message ListPersonPhotosResponse {
 }
 
 message UploadEventPhotoRequest {
-    int32 request_user_id = 1;
+    string tree_id = 1;
     string event_id = 2;
     string file_name = 3;
     string mime_type = 4;
@@ -100,7 +100,7 @@ message UploadEventPhotoResponse {
 }
 
 message ListEventPhotosRequest {
-    int32 request_user_id = 1;
+    string tree_id = 1;
     string event_id = 2;
 }
 
@@ -109,7 +109,7 @@ message ListEventPhotosResponse {
 }
 
 message GetPhotoByIDRequest {
-    int32 request_user_id = 1;
+    string tree_id = 1;
     string photo_id = 2;
 }
 
@@ -119,7 +119,7 @@ message GetPhotoContentResponse {
 }
 
 message DeletePhotoByIDRequest {
-    int32 request_user_id = 1;
+    string tree_id = 1;
     string photo_id = 2;
 }
 
