@@ -147,12 +147,6 @@ func (h *Handler) DeleteEventType(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.UserIDFromContext(r.Context())
-	if err != nil {
-		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
-		return
-	}
-
 	var req upsertEventRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.Error(w, http.StatusBadRequest, "bad_request", "invalid request body")
@@ -166,7 +160,6 @@ func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.client.CreateEvent(r.Context(), &eventspb.CreateEventRequest{
-		RequestUserId:       int32(userID),
 		TreeId:              treeID,
 		EventTypeId:         req.EventTypeID,
 		PrimaryPersonIds:    req.PrimaryPersonIDs,
@@ -187,12 +180,6 @@ func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.UserIDFromContext(r.Context())
-	if err != nil {
-		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
-		return
-	}
-
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
@@ -206,8 +193,8 @@ func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.client.GetEvent(r.Context(), &eventspb.GetEventRequest{
-		RequestUserId: int32(userID),
-		EventId:       eventID,
+		TreeId:  treeID,
+		EventId: eventID,
 	})
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
@@ -220,12 +207,6 @@ func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListEventsByTree(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.UserIDFromContext(r.Context())
-	if err != nil {
-		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
-		return
-	}
-
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
@@ -233,8 +214,7 @@ func (h *Handler) ListEventsByTree(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.client.ListEventsByTree(r.Context(), &eventspb.ListEventsByTreeRequest{
-		RequestUserId: int32(userID),
-		TreeId:        treeID,
+		TreeId: treeID,
 	})
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
@@ -252,12 +232,6 @@ func (h *Handler) ListEventsByTree(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.UserIDFromContext(r.Context())
-	if err != nil {
-		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
-		return
-	}
-
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
@@ -277,7 +251,7 @@ func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.client.UpdateEvent(r.Context(), &eventspb.UpdateEventRequest{
-		RequestUserId:       int32(userID),
+		TreeId:              treeID,
 		EventId:             eventID,
 		EventTypeId:         req.EventTypeID,
 		PrimaryPersonIds:    req.PrimaryPersonIDs,
@@ -298,12 +272,6 @@ func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.UserIDFromContext(r.Context())
-	if err != nil {
-		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
-		return
-	}
-
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
@@ -316,9 +284,9 @@ func (h *Handler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.client.DeleteEvent(r.Context(), &eventspb.DeleteEventRequest{
-		RequestUserId: int32(userID),
-		EventId:       eventID,
+	err := h.client.DeleteEvent(r.Context(), &eventspb.DeleteEventRequest{
+		TreeId:  treeID,
+		EventId: eventID,
 	})
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)

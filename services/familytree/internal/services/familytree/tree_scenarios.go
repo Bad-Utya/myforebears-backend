@@ -46,7 +46,7 @@ func (s *Service) CreateTree(ctx context.Context, requestUserID int) (models.Tre
 		return models.Tree{}, models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	root, err := s.createPersonRecord(ctx, requestUserID, tree.ID, models.GenderMale, "", "", "")
+	root, err := s.createPersonRecord(ctx, tree.ID, models.GenderMale, "", "", "")
 	if err != nil {
 		log.Error("failed to create root person", slog.String("error", err.Error()))
 		return models.Tree{}, models.Person{}, fmt.Errorf("%s: %w", op, err)
@@ -214,12 +214,6 @@ func (s *Service) AddParent(
 		return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	tree, err := s.personStorage.GetTree(ctx, parsedTreeID)
-	if err != nil {
-		log.Error("failed to load tree", slog.String("error", err.Error()))
-		return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
-	}
-
 	parsedChildID, err := uuid.Parse(childID)
 	if err != nil {
 		log.Info("invalid child id", slog.String("child_id", childID))
@@ -264,7 +258,7 @@ func (s *Service) AddParent(
 		}
 	}
 
-	newParent, err := s.createPersonRecord(ctx, tree.CreatorID, parsedTreeID, targetGender, firstName, lastName, patronymic)
+	newParent, err := s.createPersonRecord(ctx, parsedTreeID, targetGender, firstName, lastName, patronymic)
 	if err != nil {
 		log.Error("failed to create new parent", slog.String("error", err.Error()))
 		return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
@@ -295,7 +289,7 @@ func (s *Service) AddParent(
 		return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	autoParent, err := s.createPersonRecord(ctx, tree.CreatorID, parsedTreeID, autoGender, "", "", "")
+	autoParent, err := s.createPersonRecord(ctx, parsedTreeID, autoGender, "", "", "")
 	if err != nil {
 		log.Error("failed to create auto parent", slog.String("error", err.Error()))
 		return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
@@ -342,12 +336,6 @@ func (s *Service) AddChild(
 		return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	tree, err := s.personStorage.GetTree(ctx, parsedTreeID)
-	if err != nil {
-		log.Error("failed to load tree", slog.String("error", err.Error()))
-		return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
-	}
-
 	if strings.TrimSpace(parent1ID) == "" && strings.TrimSpace(parent2ID) == "" {
 		log.Info("at least one parent id is required")
 		return models.Person{}, nil, fmt.Errorf("%s: %w", op, ErrAtLeastOneParent)
@@ -381,7 +369,7 @@ func (s *Service) AddChild(
 			log.Info("failed to derive opposite gender", slog.String("gender", string(parent1.Gender)))
 			return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
 		}
-		auto, err := s.createPersonRecord(ctx, tree.CreatorID, parsedTreeID, opposite, "", "", "")
+		auto, err := s.createPersonRecord(ctx, parsedTreeID, opposite, "", "", "")
 		if err != nil {
 			log.Error("failed to create auto parent", slog.String("error", err.Error()))
 			return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
@@ -396,7 +384,7 @@ func (s *Service) AddChild(
 			log.Info("failed to derive opposite gender", slog.String("gender", string(parent2.Gender)))
 			return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
 		}
-		auto, err := s.createPersonRecord(ctx, tree.CreatorID, parsedTreeID, opposite, "", "", "")
+		auto, err := s.createPersonRecord(ctx, parsedTreeID, opposite, "", "", "")
 		if err != nil {
 			log.Error("failed to create auto parent", slog.String("error", err.Error()))
 			return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
@@ -406,7 +394,7 @@ func (s *Service) AddChild(
 		autoCreatedParent = &auto
 	}
 
-	child, err := s.createPersonRecord(ctx, tree.CreatorID, parsedTreeID, gender, firstName, lastName, patronymic)
+	child, err := s.createPersonRecord(ctx, parsedTreeID, gender, firstName, lastName, patronymic)
 	if err != nil {
 		log.Error("failed to create child record", slog.String("error", err.Error()))
 		return models.Person{}, nil, fmt.Errorf("%s: %w", op, err)
@@ -493,7 +481,7 @@ func (s *Service) AddPartner(
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	partner, err := s.createPersonRecord(ctx, tree.CreatorID, parsedTreeID, partnerGender, firstName, lastName, patronymic)
+	partner, err := s.createPersonRecord(ctx, parsedTreeID, partnerGender, firstName, lastName, patronymic)
 	if err != nil {
 		log.Error("failed to create partner", slog.String("error", err.Error()))
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
@@ -816,7 +804,6 @@ func (s *Service) resolveOptionalParent(ctx context.Context, treeID uuid.UUID, p
 
 func (s *Service) createPersonRecord(
 	ctx context.Context,
-	requestUserID int,
 	treeID uuid.UUID,
 	gender models.Gender,
 	firstName string,
@@ -824,7 +811,7 @@ func (s *Service) createPersonRecord(
 	patronymic string,
 ) (models.Person, error) {
 	const op = "service.familytree.createPersonRecord"
-	log := s.log.With(slog.String("op", op), slog.String("tree_id", treeID.String()), slog.Int("request_user_id", requestUserID))
+	log := s.log.With(slog.String("op", op), slog.String("tree_id", treeID.String()))
 
 	if !isValidGender(gender) {
 		log.Info("invalid gender", slog.String("gender", string(gender)))
@@ -849,7 +836,7 @@ func (s *Service) createPersonRecord(
 		return models.Person{}, err
 	}
 
-	if err := s.createAutogeneratedBirthEvent(ctx, requestUserID, treeID, person.ID); err != nil {
+	if err := s.createAutogeneratedBirthEvent(ctx, treeID, person.ID); err != nil {
 		log.Error("failed to create autogenerated birth event", slog.String("person_id", person.ID.String()), slog.String("error", err.Error()))
 		return models.Person{}, err
 	}
@@ -880,9 +867,9 @@ func (s *Service) ensureRelationship(ctx context.Context, fromID uuid.UUID, toID
 	return true, nil
 }
 
-func (s *Service) createAutogeneratedBirthEvent(ctx context.Context, requestUserID int, treeID uuid.UUID, personID uuid.UUID) error {
+func (s *Service) createAutogeneratedBirthEvent(ctx context.Context, treeID uuid.UUID, personID uuid.UUID) error {
 	const op = "service.familytree.createAutogeneratedBirthEvent"
-	log := s.log.With(slog.String("op", op), slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID.String()), slog.String("person_id", personID.String()))
+	log := s.log.With(slog.String("op", op), slog.String("tree_id", treeID.String()), slog.String("person_id", personID.String()))
 
 	if s.eventsClient == nil {
 		log.Info("events client is not configured, skip autogenerated birth event")
@@ -890,7 +877,6 @@ func (s *Service) createAutogeneratedBirthEvent(ctx context.Context, requestUser
 	}
 
 	_, err := s.eventsClient.CreateEvent(ctx, &eventspb.CreateEventRequest{
-		RequestUserId:       int32(requestUserID),
 		TreeId:              treeID.String(),
 		EventTypeId:         birthEventTypeID,
 		PrimaryPersonIds:    []string{personID.String()},
@@ -925,7 +911,6 @@ func (s *Service) createAutogeneratedMarriageEvent(ctx context.Context, requestU
 	}
 
 	_, err := s.eventsClient.CreateEvent(ctx, &eventspb.CreateEventRequest{
-		RequestUserId:       int32(requestUserID),
 		TreeId:              treeID.String(),
 		EventTypeId:         marriageEventTypeID,
 		PrimaryPersonIds:    primary,

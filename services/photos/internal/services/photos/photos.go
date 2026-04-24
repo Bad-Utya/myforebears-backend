@@ -36,7 +36,7 @@ type FamilyTreeClient interface {
 }
 
 type EventsClient interface {
-	GetEventTreeID(ctx context.Context, requestUserID int, eventID string) (string, error)
+	IsEventFromTree(ctx context.Context, treeID string, eventID string) error
 }
 
 type Service struct {
@@ -269,13 +269,15 @@ func (s *Service) UploadEventPhoto(ctx context.Context, requestUserID int, event
 		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidEventID)
 	}
 
-	treeID, err := s.events.GetEventTreeID(ctx, requestUserID, parsedEventID.String())
-	if err != nil {
-		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
-	}
+	treeID := "" // TODO: change
 	parsedTreeID, err := uuid.Parse(treeID)
 	if err != nil {
 		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	err = s.events.IsEventFromTree(ctx, treeID, eventID)
+	if err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	photo := models.Photo{

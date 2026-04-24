@@ -88,7 +88,7 @@ func (s *Service) CreatePerson(
 		return models.Person{}, fmt.Errorf("%s: %w", op, ErrInvalidGender)
 	}
 
-	tree, err := s.personStorage.GetTree(ctx, parsedTreeID)
+	_, err = s.personStorage.GetTree(ctx, parsedTreeID)
 	if err != nil {
 		if errors.Is(err, storage.ErrTreeNotFound) {
 			log.Info("tree not found", slog.String("tree_id", parsedTreeID.String()))
@@ -98,7 +98,7 @@ func (s *Service) CreatePerson(
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	person, err := s.createPersonRecord(ctx, tree.CreatorID, parsedTreeID, gender, firstName, lastName, patronymic)
+	person, err := s.createPersonRecord(ctx, parsedTreeID, gender, firstName, lastName, patronymic)
 	if err != nil {
 		log.Error("failed to create person", slog.String("error", err.Error()))
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)

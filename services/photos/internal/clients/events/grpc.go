@@ -35,18 +35,18 @@ func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int)
 	}, nil
 }
 
-func (c *Client) GetEventTreeID(ctx context.Context, requestUserID int, eventID string) (string, error) {
+func (c *Client) IsEventFromTree(ctx context.Context, treeID string, eventID string) error {
 	const op = "clients.events.GetEventTreeID"
 
-	resp, err := c.api.GetEvent(ctx, &eventspb.GetEventRequest{
-		RequestUserId: int32(requestUserID),
-		EventId:       eventID,
+	_, err := c.api.GetEvent(ctx, &eventspb.GetEventRequest{
+		TreeId:  treeID,
+		EventId: eventID,
 	})
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	return resp.GetEvent().GetTreeId(), nil
+	return nil
 }
 
 func (c *Client) Close() error {
