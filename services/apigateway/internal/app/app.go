@@ -187,10 +187,11 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	})
 
 	router.Route("/api/photos", func(r chi.Router) {
+		r.Get("/user/avatar", photosHandler.GetUserAvatar)
+
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
 			r.Post("/user/avatar", photosHandler.UploadUserAvatar)
-			r.Get("/user/avatar", photosHandler.GetUserAvatar)
 		})
 
 		r.Group(func(r chi.Router) {

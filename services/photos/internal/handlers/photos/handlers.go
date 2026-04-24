@@ -12,14 +12,14 @@ import (
 type PhotosService interface {
 	UploadUserAvatar(ctx context.Context, requestUserID int, fileName string, mimeType string, content []byte) (models.Photo, error)
 	GetUserAvatar(ctx context.Context, requestUserID int) (models.Photo, []byte, error)
-	UploadPersonAvatar(ctx context.Context, requestUserID int, personID string, fileName string, mimeType string, content []byte) (models.Photo, error)
-	GetPersonAvatar(ctx context.Context, requestUserID int, personID string) (models.Photo, []byte, error)
-	UploadPersonPhoto(ctx context.Context, requestUserID int, personID string, fileName string, mimeType string, content []byte) (models.Photo, error)
-	ListPersonPhotos(ctx context.Context, requestUserID int, personID string) ([]models.Photo, error)
-	UploadEventPhoto(ctx context.Context, requestUserID int, eventID string, fileName string, mimeType string, content []byte) (models.Photo, error)
-	ListEventPhotos(ctx context.Context, requestUserID int, eventID string) ([]models.Photo, error)
-	GetPhotoByID(ctx context.Context, requestUserID int, photoID string) (models.Photo, []byte, error)
-	DeletePhotoByID(ctx context.Context, requestUserID int, photoID string) error
+	UploadPersonAvatar(ctx context.Context, treeID string, personID string, fileName string, mimeType string, content []byte) (models.Photo, error)
+	GetPersonAvatar(ctx context.Context, treeID string, personID string) (models.Photo, []byte, error)
+	UploadPersonPhoto(ctx context.Context, treeID string, personID string, fileName string, mimeType string, content []byte) (models.Photo, error)
+	ListPersonPhotos(ctx context.Context, treeID string, personID string) ([]models.Photo, error)
+	UploadEventPhoto(ctx context.Context, treeID string, eventID string, fileName string, mimeType string, content []byte) (models.Photo, error)
+	ListEventPhotos(ctx context.Context, treeID string, eventID string) ([]models.Photo, error)
+	GetPhotoByID(ctx context.Context, treeID string, photoID string) (models.Photo, []byte, error)
+	DeletePhotoByID(ctx context.Context, treeID string, photoID string) error
 }
 
 type Handler struct {
@@ -62,7 +62,7 @@ func (h *Handler) GetUserAvatar(ctx context.Context, req *photospb.GetUserAvatar
 func (h *Handler) UploadPersonAvatar(ctx context.Context, req *photospb.UploadPersonAvatarRequest) (*photospb.UploadPersonAvatarResponse, error) {
 	photo, err := h.service.UploadPersonAvatar(
 		ctx,
-		int(req.GetRequestUserId()),
+		req.GetTreeId(),
 		req.GetPersonId(),
 		req.GetFileName(),
 		req.GetMimeType(),
@@ -76,7 +76,7 @@ func (h *Handler) UploadPersonAvatar(ctx context.Context, req *photospb.UploadPe
 }
 
 func (h *Handler) GetPersonAvatar(ctx context.Context, req *photospb.GetPersonAvatarRequest) (*photospb.GetPhotoContentResponse, error) {
-	photo, content, err := h.service.GetPersonAvatar(ctx, int(req.GetRequestUserId()), req.GetPersonId())
+	photo, content, err := h.service.GetPersonAvatar(ctx, req.GetTreeId(), req.GetPersonId())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -87,7 +87,7 @@ func (h *Handler) GetPersonAvatar(ctx context.Context, req *photospb.GetPersonAv
 func (h *Handler) UploadPersonPhoto(ctx context.Context, req *photospb.UploadPersonPhotoRequest) (*photospb.UploadPersonPhotoResponse, error) {
 	photo, err := h.service.UploadPersonPhoto(
 		ctx,
-		int(req.GetRequestUserId()),
+		req.GetTreeId(),
 		req.GetPersonId(),
 		req.GetFileName(),
 		req.GetMimeType(),
@@ -103,7 +103,7 @@ func (h *Handler) UploadPersonPhoto(ctx context.Context, req *photospb.UploadPer
 func (h *Handler) ListPersonPhotos(ctx context.Context, req *photospb.ListPersonPhotosRequest) (*photospb.ListPersonPhotosResponse, error) {
 	photos, err := h.service.ListPersonPhotos(
 		ctx,
-		int(req.GetRequestUserId()),
+		req.GetTreeId(),
 		req.GetPersonId(),
 	)
 	if err != nil {
@@ -121,7 +121,7 @@ func (h *Handler) ListPersonPhotos(ctx context.Context, req *photospb.ListPerson
 func (h *Handler) UploadEventPhoto(ctx context.Context, req *photospb.UploadEventPhotoRequest) (*photospb.UploadEventPhotoResponse, error) {
 	photo, err := h.service.UploadEventPhoto(
 		ctx,
-		int(req.GetRequestUserId()),
+		req.GetTreeId(),
 		req.GetEventId(),
 		req.GetFileName(),
 		req.GetMimeType(),
@@ -137,7 +137,7 @@ func (h *Handler) UploadEventPhoto(ctx context.Context, req *photospb.UploadEven
 func (h *Handler) ListEventPhotos(ctx context.Context, req *photospb.ListEventPhotosRequest) (*photospb.ListEventPhotosResponse, error) {
 	photos, err := h.service.ListEventPhotos(
 		ctx,
-		int(req.GetRequestUserId()),
+		req.GetTreeId(),
 		req.GetEventId(),
 	)
 	if err != nil {
@@ -153,7 +153,7 @@ func (h *Handler) ListEventPhotos(ctx context.Context, req *photospb.ListEventPh
 }
 
 func (h *Handler) GetPhotoByID(ctx context.Context, req *photospb.GetPhotoByIDRequest) (*photospb.GetPhotoContentResponse, error) {
-	photo, content, err := h.service.GetPhotoByID(ctx, int(req.GetRequestUserId()), req.GetPhotoId())
+	photo, content, err := h.service.GetPhotoByID(ctx, req.GetTreeId(), req.GetPhotoId())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -162,7 +162,7 @@ func (h *Handler) GetPhotoByID(ctx context.Context, req *photospb.GetPhotoByIDRe
 }
 
 func (h *Handler) DeletePhotoByID(ctx context.Context, req *photospb.DeletePhotoByIDRequest) (*photospb.DeletePhotoByIDResponse, error) {
-	err := h.service.DeletePhotoByID(ctx, int(req.GetRequestUserId()), req.GetPhotoId())
+	err := h.service.DeletePhotoByID(ctx, req.GetTreeId(), req.GetPhotoId())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}

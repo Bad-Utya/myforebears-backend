@@ -33,6 +33,7 @@ var (
 type FamilyTreeClient interface {
 	GetPerson(ctx context.Context, treeID string, personID string) error
 	UpdatePersonAvatarPhoto(ctx context.Context, personID string, avatarPhotoID string) error
+	GetTreeCreatorID(ctx context.Context, treeID string) (int, error)
 }
 
 type EventsClient interface {
@@ -55,7 +56,11 @@ func (s *Service) UploadUserAvatar(ctx context.Context, requestUserID int, fileN
 	const op = "service.photos.UploadUserAvatar"
 	log := s.log.With(slog.String("op", op), slog.Int("request_user_id", requestUserID))
 
-	if err := validateFileInput(requestUserID, fileName, mimeType, content); err != nil {
+	if requestUserID <= 0 {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
+	}
+
+	if err := validateFileInput(fileName, mimeType, content); err != nil {
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -119,21 +124,29 @@ func (s *Service) GetUserAvatar(ctx context.Context, requestUserID int) (models.
 	return photo, data, nil
 }
 
-func (s *Service) UploadPersonAvatar(ctx context.Context, requestUserID int, personID string, fileName string, mimeType string, content []byte) (models.Photo, error) {
+func (s *Service) UploadPersonAvatar(ctx context.Context, treeID string, personID string, fileName string, mimeType string, content []byte) (models.Photo, error) {
 	const op = "service.photos.UploadPersonAvatar"
 
-	if err := validateFileInput(requestUserID, fileName, mimeType, content); err != nil {
+	if err := validateFileInput(fileName, mimeType, content); err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	ownerUserID, err := s.familyTree.GetTreeCreatorID(ctx, parsedTreeID.String())
+	if err != nil {
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	parsedPersonID, err := uuid.Parse(personID)
 	if err != nil {
-		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidPersonID)
 	}
 
-	tree_id := "" // TODO: change
-
-	if err := s.familyTree.GetPerson(ctx, tree_id, parsedPersonID.String()); err != nil {
+	if err := s.familyTree.GetPerson(ctx, parsedTreeID.String(), parsedPersonID.String()); err != nil {
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -143,7 +156,8 @@ func (s *Service) UploadPersonAvatar(ctx context.Context, requestUserID int, per
 
 	photo := models.Photo{
 		ID:             uuid.New(),
-		OwnerUserID:    requestUserID,
+		OwnerUserID:    ownerUserID,
+		TreeID:         &parsedTreeID,
 		PersonID:       &parsedPersonID,
 		IsPersonAvatar: true,
 		FileName:       normalizeFileName(fileName),
@@ -170,11 +184,20 @@ func (s *Service) UploadPersonAvatar(ctx context.Context, requestUserID int, per
 	return photo, nil
 }
 
-func (s *Service) GetPersonAvatar(ctx context.Context, requestUserID int, personID string) (models.Photo, []byte, error) {
+func (s *Service) GetPersonAvatar(ctx context.Context, treeID string, personID string) (models.Photo, []byte, error) {
 	const op = "service.photos.GetPersonAvatar"
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
 
 	parsedPersonID, err := uuid.Parse(personID)
 	if err != nil {
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, ErrInvalidPersonID)
+	}
+
+	if err := s.familyTree.GetPerson(ctx, parsedTreeID.String(), parsedPersonID.String()); err != nil {
 		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -194,27 +217,36 @@ func (s *Service) GetPersonAvatar(ctx context.Context, requestUserID int, person
 	return photo, data, nil
 }
 
-func (s *Service) UploadPersonPhoto(ctx context.Context, requestUserID int, personID string, fileName string, mimeType string, content []byte) (models.Photo, error) {
+func (s *Service) UploadPersonPhoto(ctx context.Context, treeID string, personID string, fileName string, mimeType string, content []byte) (models.Photo, error) {
 	const op = "service.photos.UploadPersonPhoto"
 
-	if err := validateFileInput(requestUserID, fileName, mimeType, content); err != nil {
+	if err := validateFileInput(fileName, mimeType, content); err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	ownerUserID, err := s.familyTree.GetTreeCreatorID(ctx, parsedTreeID.String())
+	if err != nil {
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	parsedPersonID, err := uuid.Parse(personID)
 	if err != nil {
-		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidPersonID)
 	}
 
-	tree_id := "" // TODO: change
-
-	if err := s.familyTree.GetPerson(ctx, tree_id, parsedPersonID.String()); err != nil {
+	if err := s.familyTree.GetPerson(ctx, parsedTreeID.String(), parsedPersonID.String()); err != nil {
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	photo := models.Photo{
 		ID:             uuid.New(),
-		OwnerUserID:    requestUserID,
+		OwnerUserID:    ownerUserID,
+		TreeID:         &parsedTreeID,
 		PersonID:       &parsedPersonID,
 		IsPersonAvatar: false,
 		FileName:       normalizeFileName(fileName),
@@ -235,17 +267,20 @@ func (s *Service) UploadPersonPhoto(ctx context.Context, requestUserID int, pers
 	return photo, nil
 }
 
-func (s *Service) ListPersonPhotos(ctx context.Context, requestUserID int, personID string) ([]models.Photo, error) {
+func (s *Service) ListPersonPhotos(ctx context.Context, treeID string, personID string) ([]models.Photo, error) {
 	const op = "service.photos.ListPersonPhotos"
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
 
 	parsedPersonID, err := uuid.Parse(personID)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidPersonID)
 	}
 
-	tree_id := "" // TODO: change
-
-	if err := s.familyTree.GetPerson(ctx, tree_id, parsedPersonID.String()); err != nil {
+	if err := s.familyTree.GetPerson(ctx, parsedTreeID.String(), parsedPersonID.String()); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -257,10 +292,20 @@ func (s *Service) ListPersonPhotos(ctx context.Context, requestUserID int, perso
 	return photos, nil
 }
 
-func (s *Service) UploadEventPhoto(ctx context.Context, requestUserID int, eventID string, fileName string, mimeType string, content []byte) (models.Photo, error) {
+func (s *Service) UploadEventPhoto(ctx context.Context, treeID string, eventID string, fileName string, mimeType string, content []byte) (models.Photo, error) {
 	const op = "service.photos.UploadEventPhoto"
 
-	if err := validateFileInput(requestUserID, fileName, mimeType, content); err != nil {
+	if err := validateFileInput(fileName, mimeType, content); err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	ownerUserID, err := s.familyTree.GetTreeCreatorID(ctx, parsedTreeID.String())
+	if err != nil {
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -269,20 +314,14 @@ func (s *Service) UploadEventPhoto(ctx context.Context, requestUserID int, event
 		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidEventID)
 	}
 
-	treeID := "" // TODO: change
-	parsedTreeID, err := uuid.Parse(treeID)
-	if err != nil {
-		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
-	}
-
-	err = s.events.IsEventFromTree(ctx, treeID, eventID)
+	err = s.events.IsEventFromTree(ctx, parsedTreeID.String(), eventID)
 	if err != nil {
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	photo := models.Photo{
 		ID:          uuid.New(),
-		OwnerUserID: requestUserID,
+		OwnerUserID: ownerUserID,
 		TreeID:      &parsedTreeID,
 		EventID:     &parsedEventID,
 		FileName:    normalizeFileName(fileName),
@@ -303,15 +342,21 @@ func (s *Service) UploadEventPhoto(ctx context.Context, requestUserID int, event
 	return photo, nil
 }
 
-func (s *Service) ListEventPhotos(ctx context.Context, requestUserID int, eventID string) ([]models.Photo, error) {
+func (s *Service) ListEventPhotos(ctx context.Context, treeID string, eventID string) ([]models.Photo, error) {
 	const op = "service.photos.ListEventPhotos"
 
-	if requestUserID <= 0 {
-		return nil, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
 	}
+
 	parsedEventID, err := uuid.Parse(eventID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, ErrInvalidEventID)
+	}
+
+	if err := s.events.IsEventFromTree(ctx, parsedTreeID.String(), parsedEventID.String()); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	photos, err := s.meta.ListEventPhotos(ctx, parsedEventID)
@@ -322,10 +367,15 @@ func (s *Service) ListEventPhotos(ctx context.Context, requestUserID int, eventI
 	return photos, nil
 }
 
-func (s *Service) GetPhotoByID(ctx context.Context, requestUserID int, photoID string) (models.Photo, []byte, error) {
+func (s *Service) GetPhotoByID(ctx context.Context, treeID string, photoID string) (models.Photo, []byte, error) {
 	const op = "service.photos.GetPhotoByID"
 
-	parsedPhotoID, err := validateAndParsePhotoID(requestUserID, photoID)
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	parsedPhotoID, err := validateAndParsePhotoID(photoID)
 	if err != nil {
 		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -338,6 +388,10 @@ func (s *Service) GetPhotoByID(ctx context.Context, requestUserID int, photoID s
 		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
 	}
 
+	if photo.IsUserAvatar || photo.TreeID == nil || *photo.TreeID != parsedTreeID {
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, ErrForbidden)
+	}
+
 	data, err := s.objects.GetObject(ctx, photo.ObjectKey)
 	if err != nil {
 		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
@@ -346,20 +400,29 @@ func (s *Service) GetPhotoByID(ctx context.Context, requestUserID int, photoID s
 	return photo, data, nil
 }
 
-func (s *Service) DeletePhotoByID(ctx context.Context, requestUserID int, photoID string) error {
+func (s *Service) DeletePhotoByID(ctx context.Context, treeID string, photoID string) error {
 	const op = "service.photos.DeletePhotoByID"
 
-	parsedPhotoID, err := validateAndParsePhotoID(requestUserID, photoID)
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	parsedPhotoID, err := validateAndParsePhotoID(photoID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	_, err = s.meta.GetPhotoByID(ctx, parsedPhotoID)
+	photo, err := s.meta.GetPhotoByID(ctx, parsedPhotoID)
 	if err != nil {
 		if errors.Is(err, storage.ErrPhotoNotFound) {
 			return fmt.Errorf("%s: %w", op, ErrPhotoNotFound)
 		}
 		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if photo.IsUserAvatar || photo.TreeID == nil || *photo.TreeID != parsedTreeID {
+		return fmt.Errorf("%s: %w", op, ErrForbidden)
 	}
 
 	deleted, err := s.meta.DeletePhotoByID(ctx, parsedPhotoID)
@@ -383,11 +446,7 @@ func (s *Service) DeletePhotoByID(ctx context.Context, requestUserID int, photoI
 	return nil
 }
 
-func validateAndParsePhotoID(requestUserID int, photoID string) (uuid.UUID, error) {
-	if requestUserID <= 0 {
-		return uuid.Nil, ErrInvalidUserID
-	}
-
+func validateAndParsePhotoID(photoID string) (uuid.UUID, error) {
 	parsedPhotoID, err := uuid.Parse(photoID)
 	if err != nil {
 		return uuid.Nil, ErrInvalidPhotoID
@@ -396,10 +455,7 @@ func validateAndParsePhotoID(requestUserID int, photoID string) (uuid.UUID, erro
 	return parsedPhotoID, nil
 }
 
-func validateFileInput(requestUserID int, fileName string, mimeType string, content []byte) error {
-	if requestUserID <= 0 {
-		return ErrInvalidUserID
-	}
+func validateFileInput(fileName string, mimeType string, content []byte) error {
 	if strings.TrimSpace(fileName) == "" {
 		return ErrInvalidFileName
 	}

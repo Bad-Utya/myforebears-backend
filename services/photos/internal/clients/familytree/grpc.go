@@ -63,6 +63,22 @@ func (c *Client) UpdatePersonAvatarPhoto(ctx context.Context, personID string, a
 	return nil
 }
 
+func (c *Client) GetTreeCreatorID(ctx context.Context, treeID string) (int, error) {
+	const op = "clients.familytree.GetTreeCreatorID"
+
+	resp, err := c.api.GetTreeAccessInfo(ctx, &familytreepb.GetTreeAccessInfoRequest{TreeId: treeID})
+	if err != nil {
+		return 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	tree := resp.GetTree()
+	if tree == nil || tree.GetCreatorId() <= 0 {
+		return 0, fmt.Errorf("%s: invalid tree access info", op)
+	}
+
+	return int(tree.GetCreatorId()), nil
+}
+
 func (c *Client) Close() error {
 	return c.conn.Close()
 }
