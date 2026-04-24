@@ -39,7 +39,7 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) ValidatePersonsInTree(ctx context.Context, requestUserID int, treeID string, personIDs []string) error {
+func (c *Client) ValidatePersonsInTree(ctx context.Context, treeID string, personIDs []string) error {
 	const op = "clients.familytree.ValidatePersonsInTree"
 
 	_, err := c.api.ValidatePersonsInTree(ctx, &familytreepb.ValidatePersonsInTreeRequest{
@@ -53,7 +53,7 @@ func (c *Client) ValidatePersonsInTree(ctx context.Context, requestUserID int, t
 	return nil
 }
 
-func (c *Client) UpdatePartnerRelationshipStatus(ctx context.Context, requestUserID int, treeID string, personID1 string, personID2 string, status familytreepb.PartnerRelationshipStatus) error {
+func (c *Client) UpdatePartnerRelationshipStatus(ctx context.Context, treeID string, personID1 string, personID2 string, status familytreepb.PartnerRelationshipStatus) error {
 	const op = "clients.familytree.UpdatePartnerRelationshipStatus"
 
 	_, err := c.api.UpdatePartnerRelationshipStatus(ctx, &familytreepb.UpdatePartnerRelationshipStatusRequest{

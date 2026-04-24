@@ -41,8 +41,8 @@ var (
 )
 
 type FamilyTreeValidator interface {
-	ValidatePersonsInTree(ctx context.Context, requestUserID int, treeID string, personIDs []string) error
-	UpdatePartnerRelationshipStatus(ctx context.Context, requestUserID int, treeID string, personID1 string, personID2 string, status familytreepb.PartnerRelationshipStatus) error
+	ValidatePersonsInTree(ctx context.Context, treeID string, personIDs []string) error
+	UpdatePartnerRelationshipStatus(ctx context.Context, treeID string, personID1 string, personID2 string, status familytreepb.PartnerRelationshipStatus) error
 }
 
 type Service struct {
@@ -189,7 +189,7 @@ func (s *Service) GetEventType(ctx context.Context, requestUserID int, eventType
 		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrInvalidEventTypeID)
 	}
 
-	eventType, err := s.loadAndAuthorizeEventType(ctx, op, requestUserID, parsedEventTypeID)
+	eventType, err := s.loadAndAuthorizeEventType(ctx, op, parsedEventTypeID)
 	if err != nil {
 		log.Error("failed to get event type", slog.String("error", err.Error()))
 		return models.EventType{}, err
@@ -224,7 +224,6 @@ func (s *Service) ListEventTypes(ctx context.Context, requestUserID int) ([]mode
 
 func (s *Service) CreateEvent(
 	ctx context.Context,
-	requestUserID int,
 	treeID string,
 	eventTypeID string,
 	primaryPersonIDs []string,
@@ -238,12 +237,11 @@ func (s *Service) CreateEvent(
 	const op = "service.events.CreateEvent"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("creating event", slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID), slog.String("event_type_id", eventTypeID))
+	log.Info("creating event", slog.String("tree_id", treeID), slog.String("event_type_id", eventTypeID))
 
 	parsedTreeID, parsedEventTypeID, parsedDate, err := s.parseAndValidateBaseInput(
 		log,
 		op,
-		requestUserID,
 		treeID,
 		eventTypeID,
 		dateISO,
@@ -255,7 +253,7 @@ func (s *Service) CreateEvent(
 		return models.Event{}, err
 	}
 
-	eventType, err := s.loadAndAuthorizeEventType(ctx, op, requestUserID, parsedEventTypeID)
+	eventType, err := s.loadAndAuthorizeEventType(ctx, op, parsedEventTypeID)
 	if err != nil {
 		log.Error("failed to authorize event type", slog.String("error", err.Error()))
 		return models.Event{}, err
@@ -267,7 +265,7 @@ func (s *Service) CreateEvent(
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, parsedTreeID.String(), participantIDs); err != nil {
+	if err := s.familyTree.ValidatePersonsInTree(ctx, parsedTreeID.String(), participantIDs); err != nil {
 		log.Error("failed to validate participants in tree", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -294,7 +292,7 @@ func (s *Service) CreateEvent(
 	}
 
 	if shouldSyncPartnerStatus(event.EventTypeID, event.PrimaryPersonIDs, event.AdditionalPersonIDs) {
-		if err := s.syncPartnerRelationshipStatusForPair(ctx, requestUserID, event.TreeID, event.PrimaryPersonIDs[0], event.PrimaryPersonIDs[1]); err != nil {
+		if err := s.syncPartnerRelationshipStatusForPair(ctx, event.TreeID, event.PrimaryPersonIDs[0], event.PrimaryPersonIDs[1]); err != nil {
 			log.Error("failed to sync partner relationship status", slog.String("error", err.Error()))
 			return models.Event{}, fmt.Errorf("%s: %w", op, err)
 		}
@@ -307,7 +305,7 @@ func (s *Service) CreateEvent(
 
 func (s *Service) UpdateEvent(
 	ctx context.Context,
-	requestUserID int,
+	treeID string,
 	eventID string,
 	eventTypeID string,
 	primaryPersonIDs []string,
@@ -320,12 +318,7 @@ func (s *Service) UpdateEvent(
 	const op = "service.events.UpdateEvent"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("updating event", slog.Int("request_user_id", requestUserID), slog.String("event_id", eventID), slog.String("event_type_id", eventTypeID))
-
-	if requestUserID <= 0 {
-		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
-		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
-	}
+	log.Info("updating event", slog.String("tree_id", treeID), slog.String("event_id", eventID), slog.String("event_type_id", eventTypeID))
 
 	parsedEventID, err := uuid.Parse(eventID)
 	if err != nil {
@@ -343,18 +336,23 @@ func (s *Service) UpdateEvent(
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
 
+	if treeID != "" && treeID != existing.TreeID.String() {
+		log.Info("event tree mismatch", slog.String("requested_tree_id", treeID), slog.String("event_tree_id", existing.TreeID.String()))
+		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
 	parsedEventTypeID, err := uuid.Parse(eventTypeID)
 	if err != nil {
 		log.Info("invalid event type id", slog.String("event_type_id", eventTypeID))
 		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidEventTypeID)
 	}
 
-	_, _, parsedDate, err := s.parseAndValidateBaseInput(log, op, requestUserID, existing.TreeID.String(), eventTypeID, dateISO, datePrecision, dateBound, dateUnknown)
+	_, _, parsedDate, err := s.parseAndValidateBaseInput(log, op, existing.TreeID.String(), eventTypeID, dateISO, datePrecision, dateBound, dateUnknown)
 	if err != nil {
 		return models.Event{}, err
 	}
 
-	eventType, err := s.loadAndAuthorizeEventType(ctx, op, requestUserID, parsedEventTypeID)
+	eventType, err := s.loadAndAuthorizeEventType(ctx, op, parsedEventTypeID)
 	if err != nil {
 		log.Error("failed to authorize event type", slog.String("error", err.Error()))
 		return models.Event{}, err
@@ -371,7 +369,7 @@ func (s *Service) UpdateEvent(
 		return models.Event{}, fmt.Errorf("%s: %w", op, ErrCannotModifyAutogeneratedPrimaryPersons)
 	}
 
-	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, existing.TreeID.String(), participantIDs); err != nil {
+	if err := s.familyTree.ValidatePersonsInTree(ctx, existing.TreeID.String(), participantIDs); err != nil {
 		log.Error("failed to validate participants in tree", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -399,16 +397,11 @@ func (s *Service) UpdateEvent(
 	return existing, nil
 }
 
-func (s *Service) DeleteEvent(ctx context.Context, requestUserID int, eventID string) error {
+func (s *Service) DeleteEvent(ctx context.Context, treeID string, eventID string) error {
 	const op = "service.events.DeleteEvent"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("deleting event", slog.Int("request_user_id", requestUserID), slog.String("event_id", eventID))
-
-	if requestUserID <= 0 {
-		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
-		return fmt.Errorf("%s: %w", op, ErrInvalidUserID)
-	}
+	log.Info("deleting event", slog.String("tree_id", treeID), slog.String("event_id", eventID))
 
 	parsedEventID, err := uuid.Parse(eventID)
 	if err != nil {
@@ -426,7 +419,12 @@ func (s *Service) DeleteEvent(ctx context.Context, requestUserID int, eventID st
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, event.TreeID.String(), nil); err != nil {
+	if treeID != "" && treeID != event.TreeID.String() {
+		log.Info("event tree mismatch", slog.String("requested_tree_id", treeID), slog.String("event_tree_id", event.TreeID.String()))
+		return fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	if err := s.familyTree.ValidatePersonsInTree(ctx, event.TreeID.String(), nil); err != nil {
 		log.Error("failed to validate tree access", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -446,7 +444,7 @@ func (s *Service) DeleteEvent(ctx context.Context, requestUserID int, eventID st
 	}
 
 	if shouldSyncPartnerStatus(event.EventTypeID, event.PrimaryPersonIDs, event.AdditionalPersonIDs) {
-		if err := s.syncPartnerRelationshipStatusForPair(ctx, requestUserID, event.TreeID, event.PrimaryPersonIDs[0], event.PrimaryPersonIDs[1]); err != nil {
+		if err := s.syncPartnerRelationshipStatusForPair(ctx, event.TreeID, event.PrimaryPersonIDs[0], event.PrimaryPersonIDs[1]); err != nil {
 			log.Error("failed to sync partner relationship status", slog.String("error", err.Error()))
 			return fmt.Errorf("%s: %w", op, err)
 		}
@@ -457,16 +455,11 @@ func (s *Service) DeleteEvent(ctx context.Context, requestUserID int, eventID st
 	return nil
 }
 
-func (s *Service) GetEvent(ctx context.Context, requestUserID int, eventID string) (models.Event, error) {
+func (s *Service) GetEvent(ctx context.Context, treeID string, eventID string) (models.Event, error) {
 	const op = "service.events.GetEvent"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("getting event", slog.Int("request_user_id", requestUserID), slog.String("event_id", eventID))
-
-	if requestUserID <= 0 {
-		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
-		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
-	}
+	log.Info("getting event", slog.String("tree_id", treeID), slog.String("event_id", eventID))
 
 	parsedEventID, err := uuid.Parse(eventID)
 	if err != nil {
@@ -484,7 +477,12 @@ func (s *Service) GetEvent(ctx context.Context, requestUserID int, eventID strin
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, event.TreeID.String(), nil); err != nil {
+	if treeID != "" && treeID != event.TreeID.String() {
+		log.Info("event tree mismatch", slog.String("requested_tree_id", treeID), slog.String("event_tree_id", event.TreeID.String()))
+		return models.Event{}, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	if err := s.familyTree.ValidatePersonsInTree(ctx, event.TreeID.String(), nil); err != nil {
 		log.Error("failed to validate tree access", slog.String("error", err.Error()))
 		return models.Event{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -494,16 +492,11 @@ func (s *Service) GetEvent(ctx context.Context, requestUserID int, eventID strin
 	return event, nil
 }
 
-func (s *Service) ListEventsByTree(ctx context.Context, requestUserID int, treeID string) ([]models.Event, error) {
+func (s *Service) ListEventsByTree(ctx context.Context, treeID string) ([]models.Event, error) {
 	const op = "service.events.ListEventsByTree"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("listing events by tree", slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID))
-
-	if requestUserID <= 0 {
-		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
-		return nil, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
-	}
+	log.Info("listing events by tree", slog.String("tree_id", treeID))
 
 	parsedTreeID, err := uuid.Parse(treeID)
 	if err != nil {
@@ -511,7 +504,7 @@ func (s *Service) ListEventsByTree(ctx context.Context, requestUserID int, treeI
 		return nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
 	}
 
-	if err := s.familyTree.ValidatePersonsInTree(ctx, requestUserID, parsedTreeID.String(), nil); err != nil {
+	if err := s.familyTree.ValidatePersonsInTree(ctx, parsedTreeID.String(), nil); err != nil {
 		log.Error("failed to validate tree access", slog.String("error", err.Error()))
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -530,7 +523,6 @@ func (s *Service) ListEventsByTree(ctx context.Context, requestUserID int, treeI
 func (s *Service) parseAndValidateBaseInput(
 	log *slog.Logger,
 	op string,
-	requestUserID int,
 	treeID string,
 	eventTypeID string,
 	dateISO string,
@@ -538,11 +530,6 @@ func (s *Service) parseAndValidateBaseInput(
 	dateBound models.EventDateBound,
 	dateUnknown bool,
 ) (uuid.UUID, uuid.UUID, *time.Time, error) {
-	if requestUserID <= 0 {
-		log.Info("invalid request user id", slog.Int("request_user_id", requestUserID))
-		return uuid.Nil, uuid.Nil, nil, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
-	}
-
 	parsedTreeID, err := uuid.Parse(treeID)
 	if err != nil {
 		log.Info("invalid tree id", slog.String("tree_id", treeID))
@@ -591,7 +578,7 @@ func equalUUIDSlices(left []uuid.UUID, right []uuid.UUID) bool {
 	return true
 }
 
-func (s *Service) loadAndAuthorizeEventType(ctx context.Context, op string, requestUserID int, eventTypeID uuid.UUID) (models.EventType, error) {
+func (s *Service) loadAndAuthorizeEventType(ctx context.Context, op string, eventTypeID uuid.UUID) (models.EventType, error) {
 	log := s.log.With(slog.String("op", op))
 
 	eventType, err := s.storage.GetEventType(ctx, eventTypeID)
@@ -602,11 +589,6 @@ func (s *Service) loadAndAuthorizeEventType(ctx context.Context, op string, requ
 		}
 		log.Error("failed to load event type", slog.String("error", err.Error()))
 		return models.EventType{}, fmt.Errorf("%s: %w", op, err)
-	}
-
-	if !eventType.IsSystem && eventType.OwnerUserID != requestUserID {
-		log.Info("forbidden event type access", slog.Int("owner_user_id", eventType.OwnerUserID), slog.Int("request_user_id", requestUserID))
-		return models.EventType{}, fmt.Errorf("%s: %w", op, ErrForbidden)
 	}
 
 	return eventType, nil
@@ -688,7 +670,7 @@ func shouldSyncPartnerStatus(eventTypeID uuid.UUID, primaryPersonIDs []uuid.UUID
 	return eventType == marriageEventTypeID || eventType == divorceEventTypeID
 }
 
-func (s *Service) syncPartnerRelationshipStatusForPair(ctx context.Context, requestUserID int, treeID uuid.UUID, personID1 uuid.UUID, personID2 uuid.UUID) error {
+func (s *Service) syncPartnerRelationshipStatusForPair(ctx context.Context, treeID uuid.UUID, personID1 uuid.UUID, personID2 uuid.UUID) error {
 	events, err := s.storage.ListEventsByTree(ctx, treeID)
 	if err != nil {
 		return err
@@ -707,7 +689,6 @@ func (s *Service) syncPartnerRelationshipStatusForPair(ctx context.Context, requ
 
 	return s.familyTree.UpdatePartnerRelationshipStatus(
 		ctx,
-		requestUserID,
 		treeID.String(),
 		personID1.String(),
 		personID2.String(),
