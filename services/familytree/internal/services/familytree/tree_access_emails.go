@@ -65,15 +65,15 @@ func (s *Service) IsTreeAccessEmailAllowed(ctx context.Context, treeID string, e
 	return allowed, nil
 }
 
-func (s *Service) AddTreeAccessEmail(ctx context.Context, requestUserID int, treeID string, email string) error {
+func (s *Service) AddTreeAccessEmail(ctx context.Context, treeID string, email string) error {
 	const op = "service.familytree.AddTreeAccessEmail"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("adding tree access email", slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID))
+	log.Info("adding tree access email", slog.String("tree_id", treeID))
 
-	parsedTreeID, err := s.authorizeTree(ctx, requestUserID, treeID)
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
 	if err != nil {
-		log.Error("failed to authorize tree", slog.String("error", err.Error()))
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -95,15 +95,15 @@ func (s *Service) AddTreeAccessEmail(ctx context.Context, requestUserID int, tre
 	return nil
 }
 
-func (s *Service) ListTreeAccessEmails(ctx context.Context, requestUserID int, treeID string) ([]string, error) {
+func (s *Service) ListTreeAccessEmails(ctx context.Context, treeID string) ([]string, error) {
 	const op = "service.familytree.ListTreeAccessEmails"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("listing tree access emails", slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID))
+	log.Info("listing tree access emails", slog.String("tree_id", treeID))
 
-	parsedTreeID, err := s.authorizeTree(ctx, requestUserID, treeID)
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
 	if err != nil {
-		log.Error("failed to authorize tree", slog.String("error", err.Error()))
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -116,15 +116,15 @@ func (s *Service) ListTreeAccessEmails(ctx context.Context, requestUserID int, t
 	return emails, nil
 }
 
-func (s *Service) DeleteTreeAccessEmail(ctx context.Context, requestUserID int, treeID string, email string) error {
+func (s *Service) DeleteTreeAccessEmail(ctx context.Context, treeID string, email string) error {
 	const op = "service.familytree.DeleteTreeAccessEmail"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("deleting tree access email", slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID))
+	log.Info("deleting tree access email", slog.String("tree_id", treeID))
 
-	parsedTreeID, err := s.authorizeTree(ctx, requestUserID, treeID)
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
 	if err != nil {
-		log.Error("failed to authorize tree", slog.String("error", err.Error()))
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
 

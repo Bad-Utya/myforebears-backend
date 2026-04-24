@@ -8,7 +8,7 @@ import (
 )
 
 func (h *Handler) AddTreeAccessEmail(ctx context.Context, req *familytreepb.AddTreeAccessEmailRequest) (*familytreepb.AddTreeAccessEmailResponse, error) {
-	err := h.service.AddTreeAccessEmail(ctx, int(req.GetRequestUserId()), req.GetTreeId(), req.GetEmail())
+	err := h.service.AddTreeAccessEmail(ctx, req.GetTreeId(), req.GetEmail())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -17,7 +17,7 @@ func (h *Handler) AddTreeAccessEmail(ctx context.Context, req *familytreepb.AddT
 }
 
 func (h *Handler) ListTreeAccessEmails(ctx context.Context, req *familytreepb.ListTreeAccessEmailsRequest) (*familytreepb.ListTreeAccessEmailsResponse, error) {
-	emails, err := h.service.ListTreeAccessEmails(ctx, int(req.GetRequestUserId()), req.GetTreeId())
+	emails, err := h.service.ListTreeAccessEmails(ctx, req.GetTreeId())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -26,7 +26,7 @@ func (h *Handler) ListTreeAccessEmails(ctx context.Context, req *familytreepb.Li
 }
 
 func (h *Handler) DeleteTreeAccessEmail(ctx context.Context, req *familytreepb.DeleteTreeAccessEmailRequest) (*familytreepb.DeleteTreeAccessEmailResponse, error) {
-	err := h.service.DeleteTreeAccessEmail(ctx, int(req.GetRequestUserId()), req.GetTreeId(), req.GetEmail())
+	err := h.service.DeleteTreeAccessEmail(ctx, req.GetTreeId(), req.GetEmail())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}

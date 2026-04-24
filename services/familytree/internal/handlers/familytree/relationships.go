@@ -9,7 +9,7 @@ import (
 )
 
 func (h *Handler) AddRelationship(ctx context.Context, req *familytreepb.AddRelationshipRequest) (*familytreepb.AddRelationshipResponse, error) {
-	err := h.service.AddRelationship(ctx, req.GetPersonIdFrom(), req.GetPersonIdTo(), toModelRelationshipType(req.GetType()))
+	err := h.service.AddRelationship(ctx, req.GetTreeId(), req.GetPersonIdFrom(), req.GetPersonIdTo(), toModelRelationshipType(req.GetType()))
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -18,7 +18,7 @@ func (h *Handler) AddRelationship(ctx context.Context, req *familytreepb.AddRela
 }
 
 func (h *Handler) RemoveRelationship(ctx context.Context, req *familytreepb.RemoveRelationshipRequest) (*familytreepb.RemoveRelationshipResponse, error) {
-	err := h.service.RemoveRelationship(ctx, req.GetPersonIdFrom(), req.GetPersonIdTo(), toModelRelationshipType(req.GetType()))
+	err := h.service.RemoveRelationship(ctx, req.GetTreeId(), req.GetPersonIdFrom(), req.GetPersonIdTo(), toModelRelationshipType(req.GetType()))
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -27,7 +27,7 @@ func (h *Handler) RemoveRelationship(ctx context.Context, req *familytreepb.Remo
 }
 
 func (h *Handler) GetRelatives(ctx context.Context, req *familytreepb.GetRelativesRequest) (*familytreepb.GetRelativesResponse, error) {
-	relatives, err := h.service.GetRelatives(ctx, req.GetPersonId())
+	relatives, err := h.service.GetRelatives(ctx, req.GetTreeId(), req.GetPersonId())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -45,7 +45,7 @@ func (h *Handler) GetRelatives(ctx context.Context, req *familytreepb.GetRelativ
 }
 
 func (h *Handler) GetTree(ctx context.Context, req *familytreepb.GetTreeRequest) (*familytreepb.GetTreeResponse, error) {
-	tree, err := h.service.GetTreeForUser(ctx, int(req.GetRequestUserId()), req.GetTreeId())
+	tree, err := h.service.GetTree(ctx, req.GetTreeId())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -54,7 +54,7 @@ func (h *Handler) GetTree(ctx context.Context, req *familytreepb.GetTreeRequest)
 }
 
 func (h *Handler) GetTreeContent(ctx context.Context, req *familytreepb.GetTreeContentRequest) (*familytreepb.GetTreeContentResponse, error) {
-	persons, relationships, err := h.service.GetTreeContentForUser(ctx, int(req.GetRequestUserId()), req.GetTreeId())
+	persons, relationships, err := h.service.GetTreeContent(ctx, req.GetTreeId())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -79,7 +79,6 @@ func (h *Handler) GetTreeContent(ctx context.Context, req *familytreepb.GetTreeC
 func (h *Handler) UpdatePartnerRelationshipStatus(ctx context.Context, req *familytreepb.UpdatePartnerRelationshipStatusRequest) (*familytreepb.UpdatePartnerRelationshipStatusResponse, error) {
 	err := h.service.UpdatePartnerRelationshipStatus(
 		ctx,
-		int(req.GetRequestUserId()),
 		req.GetTreeId(),
 		req.GetPersonId1(),
 		req.GetPersonId2(),
@@ -95,7 +94,6 @@ func (h *Handler) UpdatePartnerRelationshipStatus(ctx context.Context, req *fami
 func (h *Handler) UpdateTreeSettings(ctx context.Context, req *familytreepb.UpdateTreeSettingsRequest) (*familytreepb.UpdateTreeSettingsResponse, error) {
 	tree, err := h.service.UpdateTreeSettings(
 		ctx,
-		int(req.GetRequestUserId()),
 		req.GetTreeId(),
 		req.GetIsViewRestricted(),
 		req.GetIsPublicOnMainPage(),

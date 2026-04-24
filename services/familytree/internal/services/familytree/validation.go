@@ -10,15 +10,15 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Service) ValidatePersonsInTree(ctx context.Context, requestUserID int, treeID string, personIDs []string) error {
+func (s *Service) ValidatePersonsInTree(ctx context.Context, treeID string, personIDs []string) error {
 	const op = "service.familytree.ValidatePersonsInTree"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("validating persons in tree", slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID), slog.Int("person_ids_count", len(personIDs)))
+	log.Info("validating persons in tree", slog.String("tree_id", treeID), slog.Int("person_ids_count", len(personIDs)))
 
-	parsedTreeID, err := s.authorizeTree(ctx, requestUserID, treeID)
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
 	if err != nil {
-		log.Error("failed to authorize tree", slog.String("error", err.Error()))
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
 	}
 

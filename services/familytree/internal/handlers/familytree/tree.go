@@ -36,7 +36,7 @@ func (h *Handler) ListTreesByCreator(ctx context.Context, req *familytreepb.List
 }
 
 func (h *Handler) ListPersonsByTree(ctx context.Context, req *familytreepb.ListPersonsByTreeRequest) (*familytreepb.ListPersonsByTreeResponse, error) {
-	persons, err := h.service.ListPersonsByTree(ctx, int(req.GetRequestUserId()), req.GetTreeId())
+	persons, err := h.service.ListPersonsByTree(ctx, req.GetTreeId())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -49,19 +49,9 @@ func (h *Handler) ListPersonsByTree(ctx context.Context, req *familytreepb.ListP
 	return &familytreepb.ListPersonsByTreeResponse{Persons: out}, nil
 }
 
-func (h *Handler) GetPersonInTree(ctx context.Context, req *familytreepb.GetPersonInTreeRequest) (*familytreepb.GetPersonInTreeResponse, error) {
-	person, err := h.service.GetPersonInTree(ctx, int(req.GetRequestUserId()), req.GetTreeId(), req.GetPersonId())
-	if err != nil {
-		return nil, grpcerr.Map(err)
-	}
-
-	return &familytreepb.GetPersonInTreeResponse{Person: toProtoPerson(person)}, nil
-}
-
 func (h *Handler) AddParent(ctx context.Context, req *familytreepb.AddParentRequest) (*familytreepb.AddParentResponse, error) {
 	parent, autoParent, err := h.service.AddParent(
 		ctx,
-		int(req.GetRequestUserId()),
 		req.GetTreeId(),
 		req.GetChildId(),
 		toModelParentRole(req.GetRole()),
@@ -84,7 +74,6 @@ func (h *Handler) AddParent(ctx context.Context, req *familytreepb.AddParentRequ
 func (h *Handler) AddChild(ctx context.Context, req *familytreepb.AddChildRequest) (*familytreepb.AddChildResponse, error) {
 	child, autoParent, err := h.service.AddChild(
 		ctx,
-		int(req.GetRequestUserId()),
 		req.GetTreeId(),
 		req.GetParent1Id(),
 		req.GetParent2Id(),
@@ -108,7 +97,6 @@ func (h *Handler) AddChild(ctx context.Context, req *familytreepb.AddChildReques
 func (h *Handler) AddPartner(ctx context.Context, req *familytreepb.AddPartnerRequest) (*familytreepb.AddPartnerResponse, error) {
 	partner, err := h.service.AddPartner(
 		ctx,
-		int(req.GetRequestUserId()),
 		req.GetTreeId(),
 		req.GetPersonId(),
 		req.GetFirstName(),
@@ -123,7 +111,7 @@ func (h *Handler) AddPartner(ctx context.Context, req *familytreepb.AddPartnerRe
 }
 
 func (h *Handler) ValidatePersonsInTree(ctx context.Context, req *familytreepb.ValidatePersonsInTreeRequest) (*familytreepb.ValidatePersonsInTreeResponse, error) {
-	err := h.service.ValidatePersonsInTree(ctx, int(req.GetRequestUserId()), req.GetTreeId(), req.GetPersonIds())
+	err := h.service.ValidatePersonsInTree(ctx, req.GetTreeId(), req.GetPersonIds())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -133,7 +121,6 @@ func (h *Handler) ValidatePersonsInTree(ctx context.Context, req *familytreepb.V
 func (h *Handler) UpdatePersonName(ctx context.Context, req *familytreepb.UpdatePersonNameRequest) (*familytreepb.UpdatePersonNameResponse, error) {
 	person, err := h.service.UpdatePersonName(
 		ctx,
-		int(req.GetRequestUserId()),
 		req.GetTreeId(),
 		req.GetPersonId(),
 		req.GetFirstName(),
@@ -150,7 +137,6 @@ func (h *Handler) UpdatePersonName(ctx context.Context, req *familytreepb.Update
 func (h *Handler) UpdatePersonAvatarPhoto(ctx context.Context, req *familytreepb.UpdatePersonAvatarPhotoRequest) (*familytreepb.UpdatePersonAvatarPhotoResponse, error) {
 	person, err := h.service.UpdatePersonAvatarPhoto(
 		ctx,
-		int(req.GetRequestUserId()),
 		req.GetPersonId(),
 		req.GetAvatarPhotoId(),
 	)
@@ -162,7 +148,7 @@ func (h *Handler) UpdatePersonAvatarPhoto(ctx context.Context, req *familytreepb
 }
 
 func (h *Handler) DeletePersonInTree(ctx context.Context, req *familytreepb.DeletePersonInTreeRequest) (*familytreepb.DeletePersonInTreeResponse, error) {
-	if err := h.service.DeletePersonInTree(ctx, int(req.GetRequestUserId()), req.GetTreeId(), req.GetPersonId()); err != nil {
+	if err := h.service.DeletePersonInTree(ctx, req.GetTreeId(), req.GetPersonId()); err != nil {
 		return nil, grpcerr.Map(err)
 	}
 
