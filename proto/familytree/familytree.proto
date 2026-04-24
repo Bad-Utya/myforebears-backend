@@ -91,6 +91,8 @@ service FamilyTreeService {
     rpc GetRelatives (GetRelativesRequest) returns (GetRelativesResponse);
     rpc GetTree (GetTreeRequest) returns (GetTreeResponse);
     rpc GetTreeContent (GetTreeContentRequest) returns (GetTreeContentResponse);
+    rpc GetTreeAccessInfo (GetTreeAccessInfoRequest) returns (GetTreeAccessInfoResponse);
+    rpc IsTreeAccessEmailAllowed (IsTreeAccessEmailAllowedRequest) returns (IsTreeAccessEmailAllowedResponse);
     rpc AddTreeAccessEmail (AddTreeAccessEmailRequest) returns (AddTreeAccessEmailResponse);
     rpc ListTreeAccessEmails (ListTreeAccessEmailsRequest) returns (ListTreeAccessEmailsResponse);
     rpc DeleteTreeAccessEmail (DeleteTreeAccessEmailRequest) returns (DeleteTreeAccessEmailResponse);
@@ -289,6 +291,23 @@ message GetTreeContentRequest {
 message GetTreeContentResponse {
     repeated Person persons = 1;
     repeated Relationship relationships = 2;
+}
+
+message GetTreeAccessInfoRequest {
+    string tree_id = 1;
+}
+
+message GetTreeAccessInfoResponse {
+    Tree tree = 1;
+}
+
+message IsTreeAccessEmailAllowedRequest {
+    string tree_id = 1;
+    string email = 2;
+}
+
+message IsTreeAccessEmailAllowedResponse {
+    bool allowed = 1;
 }
 
 message AddTreeAccessEmailRequest {

@@ -159,9 +159,15 @@ func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
+		return
+	}
+
 	resp, err := h.client.CreateEvent(r.Context(), &eventspb.CreateEventRequest{
 		RequestUserId:       int32(userID),
-		TreeId:              req.TreeID,
+		TreeId:              treeID,
 		EventTypeId:         req.EventTypeID,
 		PrimaryPersonIds:    req.PrimaryPersonIDs,
 		AdditionalPersonIds: req.AdditionalPersonIDs,
@@ -184,6 +190,12 @@ func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
 		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -214,8 +226,8 @@ func (h *Handler) ListEventsByTree(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	treeID := strings.TrimSpace(r.URL.Query().Get("tree_id"))
-	if treeID == "" {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
@@ -243,6 +255,12 @@ func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
 		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -283,6 +301,12 @@ func (h *Handler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
 		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 

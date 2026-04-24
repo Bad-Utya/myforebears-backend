@@ -71,6 +71,10 @@ func (h *Handler) UploadPersonAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, ok := h.requireTreeID(w, r); !ok {
+		return
+	}
+
 	personID := chi.URLParam(r, "person_id")
 	if strings.TrimSpace(personID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id and person_id are required")
@@ -101,6 +105,10 @@ func (h *Handler) GetPersonAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, ok := h.requireTreeID(w, r); !ok {
+		return
+	}
+
 	personID := chi.URLParam(r, "person_id")
 	if strings.TrimSpace(personID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id and person_id are required")
@@ -124,6 +132,10 @@ func (h *Handler) GetPersonAvatar(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UploadPersonPhoto(w http.ResponseWriter, r *http.Request) {
 	userID, fileName, mimeType, content, ok := h.extractUploadPayload(w, r)
 	if !ok {
+		return
+	}
+
+	if _, ok := h.requireTreeID(w, r); !ok {
 		return
 	}
 
@@ -154,6 +166,10 @@ func (h *Handler) ListPersonPhotos(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
 		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	if _, ok := h.requireTreeID(w, r); !ok {
 		return
 	}
 
@@ -188,6 +204,10 @@ func (h *Handler) UploadEventPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, ok := h.requireTreeID(w, r); !ok {
+		return
+	}
+
 	eventID := chi.URLParam(r, "event_id")
 	if strings.TrimSpace(eventID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "event_id is required")
@@ -215,6 +235,10 @@ func (h *Handler) ListEventPhotos(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
 		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	if _, ok := h.requireTreeID(w, r); !ok {
 		return
 	}
 
@@ -250,6 +274,10 @@ func (h *Handler) GetPhotoByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if _, ok := h.requireTreeID(w, r); !ok {
+		return
+	}
+
 	photoID := chi.URLParam(r, "photo_id")
 	if strings.TrimSpace(photoID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "photo_id is required")
@@ -274,6 +302,10 @@ func (h *Handler) DeletePhotoByID(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
 		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	if _, ok := h.requireTreeID(w, r); !ok {
 		return
 	}
 
@@ -332,6 +364,16 @@ func (h *Handler) extractUploadPayload(w http.ResponseWriter, r *http.Request) (
 	}
 
 	return userID, header.Filename, mimeType, content, true
+}
+
+func (h *Handler) requireTreeID(w http.ResponseWriter, r *http.Request) (string, bool) {
+	treeID := strings.TrimSpace(chi.URLParam(r, "tree_id"))
+	if treeID == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
+		return "", false
+	}
+
+	return treeID, true
 }
 
 func (h *Handler) writeBinaryPhoto(w http.ResponseWriter, resp *photospb.GetPhotoContentResponse) {

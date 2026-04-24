@@ -109,15 +109,14 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	}
 
 	tokenChecker := middleware.NewTokenChecker(redisClient, cfg.JWTSecret, log)
+	treeAccessChecker := middleware.NewTreeAccessChecker(log, tokenChecker, familyTreeGRPC)
 
-	// Auth routes.
 	authHandler := authhandler.New(log, authGRPC)
 	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC)
 	eventsHandler := eventshandler.New(log, eventsGRPC)
 	photosHandler := photoshandler.New(log, photosGRPC)
 
 	router.Route("/api/auth", func(r chi.Router) {
-		// Public routes.
 		r.Post("/send-code", authHandler.SendCode)
 		r.Post("/register", authHandler.Register)
 		r.Post("/login", authHandler.Login)
@@ -125,7 +124,6 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		r.Post("/reset-password-with-link", authHandler.ResetPasswordWithLink)
 		r.Post("/refresh", authHandler.RefreshTokens)
 
-		// Protected routes.
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
 			r.Post("/reset-password-with-token", authHandler.ResetPasswordWithToken)
@@ -137,22 +135,27 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	router.Route("/api/familytree", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
-
 			r.Post("/", familyTreeHandler.CreateTree)
 			r.Get("/", familyTreeHandler.ListTrees)
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(treeAccessChecker.ReadAccessMiddleware)
 			r.Get("/{tree_id}", familyTreeHandler.GetTree)
-			r.Patch("/{tree_id}", familyTreeHandler.UpdateTreeSettings)
 			r.Get("/{tree_id}/content", familyTreeHandler.GetTreeContent)
+			r.Get("/{tree_id}/persons", familyTreeHandler.ListPersons)
+			r.Get("/{tree_id}/persons/{person_id}", familyTreeHandler.GetPerson)
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(treeAccessChecker.OwnerOnlyMiddleware)
+			r.Patch("/{tree_id}", familyTreeHandler.UpdateTreeSettings)
 			r.Post("/{tree_id}/access-emails", familyTreeHandler.AddTreeAccessEmail)
 			r.Get("/{tree_id}/access-emails", familyTreeHandler.ListTreeAccessEmails)
 			r.Delete("/{tree_id}/access-emails", familyTreeHandler.DeleteTreeAccessEmail)
-
 			r.Post("/{tree_id}/parents", familyTreeHandler.AddParent)
 			r.Post("/{tree_id}/children", familyTreeHandler.AddChild)
 			r.Post("/{tree_id}/partners", familyTreeHandler.AddPartner)
-			r.Get("/{tree_id}/persons", familyTreeHandler.ListPersons)
-			r.Get("/{tree_id}/persons/{person_id}", familyTreeHandler.GetPerson)
-
 			r.Patch("/{tree_id}/persons/{person_id}", familyTreeHandler.UpdatePersonName)
 			r.Delete("/{tree_id}/persons/{person_id}", familyTreeHandler.DeletePerson)
 		})
@@ -171,31 +174,39 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	router.Route("/api/events", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
-			r.Get("/", eventsHandler.ListEventsByTree)
-			r.Get("/{event_id}", eventsHandler.GetEvent)
-			r.Post("/", eventsHandler.CreateEvent)
-			r.Put("/{event_id}", eventsHandler.UpdateEvent)
-			r.Delete("/{event_id}", eventsHandler.DeleteEvent)
+			r.Get("/{tree_id}", eventsHandler.ListEventsByTree)
+			r.Get("/{tree_id}/{event_id}", eventsHandler.GetEvent)
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(treeAccessChecker.OwnerOnlyMiddleware)
+			r.Post("/{tree_id}", eventsHandler.CreateEvent)
+			r.Put("/{tree_id}/{event_id}", eventsHandler.UpdateEvent)
+			r.Delete("/{tree_id}/{event_id}", eventsHandler.DeleteEvent)
 		})
 	})
 
 	router.Route("/api/photos", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
-
 			r.Post("/user/avatar", photosHandler.UploadUserAvatar)
 			r.Get("/user/avatar", photosHandler.GetUserAvatar)
+		})
 
-			r.Post("/persons/{person_id}/avatar", photosHandler.UploadPersonAvatar)
-			r.Get("/persons/{person_id}/avatar", photosHandler.GetPersonAvatar)
-			r.Post("/persons/{person_id}", photosHandler.UploadPersonPhoto)
-			r.Get("/persons/{person_id}", photosHandler.ListPersonPhotos)
+		r.Group(func(r chi.Router) {
+			r.Use(treeAccessChecker.ReadAccessMiddleware)
+			r.Get("/{tree_id}/persons/{person_id}/avatar", photosHandler.GetPersonAvatar)
+			r.Get("/{tree_id}/persons/{person_id}", photosHandler.ListPersonPhotos)
+			r.Get("/{tree_id}/events/{event_id}", photosHandler.ListEventPhotos)
+			r.Get("/{tree_id}/{photo_id}", photosHandler.GetPhotoByID)
+		})
 
-			r.Post("/events/{event_id}", photosHandler.UploadEventPhoto)
-			r.Get("/events/{event_id}", photosHandler.ListEventPhotos)
-
-			r.Get("/{photo_id}", photosHandler.GetPhotoByID)
-			r.Delete("/{photo_id}", photosHandler.DeletePhotoByID)
+		r.Group(func(r chi.Router) {
+			r.Use(treeAccessChecker.OwnerOnlyMiddleware)
+			r.Post("/{tree_id}/persons/{person_id}/avatar", photosHandler.UploadPersonAvatar)
+			r.Post("/{tree_id}/persons/{person_id}", photosHandler.UploadPersonPhoto)
+			r.Post("/{tree_id}/events/{event_id}", photosHandler.UploadEventPhoto)
+			r.Delete("/{tree_id}/{photo_id}", photosHandler.DeletePhotoByID)
 		})
 	})
 

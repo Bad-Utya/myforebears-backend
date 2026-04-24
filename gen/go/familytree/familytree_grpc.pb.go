@@ -38,6 +38,8 @@ const (
 	FamilyTreeService_GetRelatives_FullMethodName                    = "/familytree.FamilyTreeService/GetRelatives"
 	FamilyTreeService_GetTree_FullMethodName                         = "/familytree.FamilyTreeService/GetTree"
 	FamilyTreeService_GetTreeContent_FullMethodName                  = "/familytree.FamilyTreeService/GetTreeContent"
+	FamilyTreeService_GetTreeAccessInfo_FullMethodName               = "/familytree.FamilyTreeService/GetTreeAccessInfo"
+	FamilyTreeService_IsTreeAccessEmailAllowed_FullMethodName        = "/familytree.FamilyTreeService/IsTreeAccessEmailAllowed"
 	FamilyTreeService_AddTreeAccessEmail_FullMethodName              = "/familytree.FamilyTreeService/AddTreeAccessEmail"
 	FamilyTreeService_ListTreeAccessEmails_FullMethodName            = "/familytree.FamilyTreeService/ListTreeAccessEmails"
 	FamilyTreeService_DeleteTreeAccessEmail_FullMethodName           = "/familytree.FamilyTreeService/DeleteTreeAccessEmail"
@@ -69,6 +71,8 @@ type FamilyTreeServiceClient interface {
 	GetRelatives(ctx context.Context, in *GetRelativesRequest, opts ...grpc.CallOption) (*GetRelativesResponse, error)
 	GetTree(ctx context.Context, in *GetTreeRequest, opts ...grpc.CallOption) (*GetTreeResponse, error)
 	GetTreeContent(ctx context.Context, in *GetTreeContentRequest, opts ...grpc.CallOption) (*GetTreeContentResponse, error)
+	GetTreeAccessInfo(ctx context.Context, in *GetTreeAccessInfoRequest, opts ...grpc.CallOption) (*GetTreeAccessInfoResponse, error)
+	IsTreeAccessEmailAllowed(ctx context.Context, in *IsTreeAccessEmailAllowedRequest, opts ...grpc.CallOption) (*IsTreeAccessEmailAllowedResponse, error)
 	AddTreeAccessEmail(ctx context.Context, in *AddTreeAccessEmailRequest, opts ...grpc.CallOption) (*AddTreeAccessEmailResponse, error)
 	ListTreeAccessEmails(ctx context.Context, in *ListTreeAccessEmailsRequest, opts ...grpc.CallOption) (*ListTreeAccessEmailsResponse, error)
 	DeleteTreeAccessEmail(ctx context.Context, in *DeleteTreeAccessEmailRequest, opts ...grpc.CallOption) (*DeleteTreeAccessEmailResponse, error)
@@ -275,6 +279,26 @@ func (c *familyTreeServiceClient) GetTreeContent(ctx context.Context, in *GetTre
 	return out, nil
 }
 
+func (c *familyTreeServiceClient) GetTreeAccessInfo(ctx context.Context, in *GetTreeAccessInfoRequest, opts ...grpc.CallOption) (*GetTreeAccessInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTreeAccessInfoResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_GetTreeAccessInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *familyTreeServiceClient) IsTreeAccessEmailAllowed(ctx context.Context, in *IsTreeAccessEmailAllowedRequest, opts ...grpc.CallOption) (*IsTreeAccessEmailAllowedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IsTreeAccessEmailAllowedResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_IsTreeAccessEmailAllowed_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *familyTreeServiceClient) AddTreeAccessEmail(ctx context.Context, in *AddTreeAccessEmailRequest, opts ...grpc.CallOption) (*AddTreeAccessEmailResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddTreeAccessEmailResponse)
@@ -358,6 +382,8 @@ type FamilyTreeServiceServer interface {
 	GetRelatives(context.Context, *GetRelativesRequest) (*GetRelativesResponse, error)
 	GetTree(context.Context, *GetTreeRequest) (*GetTreeResponse, error)
 	GetTreeContent(context.Context, *GetTreeContentRequest) (*GetTreeContentResponse, error)
+	GetTreeAccessInfo(context.Context, *GetTreeAccessInfoRequest) (*GetTreeAccessInfoResponse, error)
+	IsTreeAccessEmailAllowed(context.Context, *IsTreeAccessEmailAllowedRequest) (*IsTreeAccessEmailAllowedResponse, error)
 	AddTreeAccessEmail(context.Context, *AddTreeAccessEmailRequest) (*AddTreeAccessEmailResponse, error)
 	ListTreeAccessEmails(context.Context, *ListTreeAccessEmailsRequest) (*ListTreeAccessEmailsResponse, error)
 	DeleteTreeAccessEmail(context.Context, *DeleteTreeAccessEmailRequest) (*DeleteTreeAccessEmailResponse, error)
@@ -430,6 +456,12 @@ func (UnimplementedFamilyTreeServiceServer) GetTree(context.Context, *GetTreeReq
 }
 func (UnimplementedFamilyTreeServiceServer) GetTreeContent(context.Context, *GetTreeContentRequest) (*GetTreeContentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTreeContent not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) GetTreeAccessInfo(context.Context, *GetTreeAccessInfoRequest) (*GetTreeAccessInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTreeAccessInfo not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) IsTreeAccessEmailAllowed(context.Context, *IsTreeAccessEmailAllowedRequest) (*IsTreeAccessEmailAllowedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsTreeAccessEmailAllowed not implemented")
 }
 func (UnimplementedFamilyTreeServiceServer) AddTreeAccessEmail(context.Context, *AddTreeAccessEmailRequest) (*AddTreeAccessEmailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTreeAccessEmail not implemented")
@@ -812,6 +844,42 @@ func _FamilyTreeService_GetTreeContent_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FamilyTreeService_GetTreeAccessInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTreeAccessInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).GetTreeAccessInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_GetTreeAccessInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).GetTreeAccessInfo(ctx, req.(*GetTreeAccessInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FamilyTreeService_IsTreeAccessEmailAllowed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsTreeAccessEmailAllowedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).IsTreeAccessEmailAllowed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_IsTreeAccessEmailAllowed_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).IsTreeAccessEmailAllowed(ctx, req.(*IsTreeAccessEmailAllowedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _FamilyTreeService_AddTreeAccessEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddTreeAccessEmailRequest)
 	if err := dec(in); err != nil {
@@ -1002,6 +1070,14 @@ var FamilyTreeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTreeContent",
 			Handler:    _FamilyTreeService_GetTreeContent_Handler,
+		},
+		{
+			MethodName: "GetTreeAccessInfo",
+			Handler:    _FamilyTreeService_GetTreeAccessInfo_Handler,
+		},
+		{
+			MethodName: "IsTreeAccessEmailAllowed",
+			Handler:    _FamilyTreeService_IsTreeAccessEmailAllowed_Handler,
 		},
 		{
 			MethodName: "AddTreeAccessEmail",

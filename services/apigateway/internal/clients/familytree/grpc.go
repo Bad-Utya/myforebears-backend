@@ -83,6 +83,28 @@ func (c *Client) GetTreeContent(ctx context.Context, requestUserID int, treeID s
 	return resp, nil
 }
 
+func (c *Client) GetTreeAccessInfo(ctx context.Context, treeID string) (*familytreepb.GetTreeAccessInfoResponse, error) {
+	const op = "clients.familytree.GetTreeAccessInfo"
+
+	resp, err := c.api.GetTreeAccessInfo(ctx, &familytreepb.GetTreeAccessInfoRequest{TreeId: treeID})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) IsTreeAccessEmailAllowed(ctx context.Context, treeID string, email string) (bool, error) {
+	const op = "clients.familytree.IsTreeAccessEmailAllowed"
+
+	resp, err := c.api.IsTreeAccessEmailAllowed(ctx, &familytreepb.IsTreeAccessEmailAllowedRequest{TreeId: treeID, Email: email})
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp.GetAllowed(), nil
+}
+
 func (c *Client) AddTreeAccessEmail(ctx context.Context, requestUserID int, treeID string, email string) error {
 	const op = "clients.familytree.AddTreeAccessEmail"
 

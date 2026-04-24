@@ -8,8 +8,62 @@ import (
 	"net/mail"
 	"strings"
 
+	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/domain/models"
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/storage"
+	"github.com/google/uuid"
 )
+
+func (s *Service) GetTreeAccessInfo(ctx context.Context, treeID string) (models.Tree, error) {
+	const op = "service.familytree.GetTreeAccessInfo"
+	log := s.log.With(slog.String("op", op))
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		log.Info("invalid tree id", slog.String("tree_id", treeID))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	tree, err := s.personStorage.GetTree(ctx, parsedTreeID)
+	if err != nil {
+		if errors.Is(err, storage.ErrTreeNotFound) {
+			return models.Tree{}, fmt.Errorf("%s: %w", op, ErrTreeNotFound)
+		}
+		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return tree, nil
+}
+
+func (s *Service) IsTreeAccessEmailAllowed(ctx context.Context, treeID string, email string) (bool, error) {
+	const op = "service.familytree.IsTreeAccessEmailAllowed"
+	log := s.log.With(slog.String("op", op))
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		log.Info("invalid tree id", slog.String("tree_id", treeID))
+		return false, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	normalizedEmail, err := normalizeEmail(email)
+	if err != nil {
+		log.Info("invalid email", slog.String("email", email))
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if _, err := s.personStorage.GetTree(ctx, parsedTreeID); err != nil {
+		if errors.Is(err, storage.ErrTreeNotFound) {
+			return false, fmt.Errorf("%s: %w", op, ErrTreeNotFound)
+		}
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	allowed, err := s.personStorage.IsTreeAccessEmailAllowed(ctx, parsedTreeID, normalizedEmail)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return allowed, nil
+}
 
 func (s *Service) AddTreeAccessEmail(ctx context.Context, requestUserID int, treeID string, email string) error {
 	const op = "service.familytree.AddTreeAccessEmail"

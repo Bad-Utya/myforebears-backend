@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -15,6 +16,12 @@ import (
 type contextKey string
 
 const ClainsKey contextKey = "claims"
+
+var ErrMissingAuthorizationHeader = errors.New("missing authorization header")
+var ErrInvalidToken = errors.New("invalid token")
+var ErrInvalidTokenClaims = errors.New("invalid token claims")
+var ErrRevokedToken = errors.New("token has been revoked")
+var ErrAuthInternal = errors.New("auth internal error")
 
 type TokenChecker struct {
 	redis     *redisclient.Client
@@ -32,40 +39,61 @@ func NewTokenChecker(redis *redisclient.Client, jwtSecret string, log *slog.Logg
 
 func (tc *TokenChecker) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := extractBearer(r)
-		if token == "" {
-			response.Error(w, http.StatusUnauthorized, "unauthorized", "missing authorization header")
-			return
-		}
-
-		claims, err := jwt.ParseToken(token, tc.jwtSecret)
+		claims, err := tc.ClaimsFromRequest(r)
 		if err != nil {
-			response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token")
+			if errors.Is(err, ErrMissingAuthorizationHeader) {
+				response.Error(w, http.StatusUnauthorized, "unauthorized", "missing authorization header")
+				return
+			}
+			if errors.Is(err, ErrAuthInternal) {
+				response.Error(w, http.StatusInternalServerError, "internal_error", "internal error")
+				return
+			}
+			response.Error(w, http.StatusUnauthorized, "unauthorized", err.Error())
 			return
 		}
 
-		email, ok := claims["email"].(string)
-		if !ok {
-			response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
-			return
-		}
-
-		createdAt, _ := claims["created_at"].(float64)
-
-		isBlacklisted, err := tc.redis.IsTokenBlacklisted(r.Context(), token, email, int64(createdAt))
-		if err != nil {
-			tc.log.Error("failed to check token blacklist", slog.String("error", err.Error()))
-			response.Error(w, http.StatusInternalServerError, "internal_error", "internal error")
-			return
-		}
-		if isBlacklisted {
-			response.Error(w, http.StatusUnauthorized, "unauthorized", "token has been revoked")
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), ClainsKey, claims)
+		ctx := WithClaims(r.Context(), claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func (tc *TokenChecker) ClaimsFromRequest(r *http.Request) (map[string]interface{}, error) {
+	token := extractBearer(r)
+	if token == "" {
+		return nil, ErrMissingAuthorizationHeader
+	}
+
+	return tc.ClaimsFromToken(r.Context(), token)
+}
+
+func (tc *TokenChecker) ClaimsFromToken(ctx context.Context, token string) (map[string]interface{}, error) {
+	claims, err := jwt.ParseToken(token, tc.jwtSecret)
+	if err != nil {
+		return nil, ErrInvalidToken
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok {
+		return nil, ErrInvalidTokenClaims
+	}
+
+	createdAt, _ := claims["created_at"].(float64)
+
+	isBlacklisted, err := tc.redis.IsTokenBlacklisted(ctx, token, email, int64(createdAt))
+	if err != nil {
+		tc.log.Error("failed to check token blacklist", slog.String("error", err.Error()))
+		return nil, ErrAuthInternal
+	}
+	if isBlacklisted {
+		return nil, ErrRevokedToken
+	}
+
+	return claims, nil
+}
+
+func WithClaims(ctx context.Context, claims map[string]interface{}) context.Context {
+	return context.WithValue(ctx, ClainsKey, claims)
 }
 
 func extractBearer(r *http.Request) string {
@@ -108,4 +136,18 @@ func UserIDFromContext(ctx context.Context) (int, error) {
 	}
 
 	return int(userIDRaw), nil
+}
+
+func EmailFromContext(ctx context.Context) (string, error) {
+	claims, err := ClaimsFromContext(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	emailRaw, ok := claims["email"].(string)
+	if !ok || strings.TrimSpace(emailRaw) == "" {
+		return "", fmt.Errorf("email claim is missing or invalid")
+	}
+
+	return strings.TrimSpace(emailRaw), nil
 }

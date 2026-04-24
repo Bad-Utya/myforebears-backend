@@ -179,6 +179,27 @@ func (s *Storage) ListTreeAccessEmails(ctx context.Context, treeID uuid.UUID) ([
 	return emails, nil
 }
 
+func (s *Storage) IsTreeAccessEmailAllowed(ctx context.Context, treeID uuid.UUID, email string) (bool, error) {
+	const op = "storage.postgres.IsTreeAccessEmailAllowed"
+
+	var allowed bool
+	err := s.pool.QueryRow(
+		ctx,
+		`SELECT EXISTS(
+			SELECT 1
+			FROM tree_access_emails
+			WHERE tree_id = $1 AND email = $2
+		)`,
+		treeID,
+		email,
+	).Scan(&allowed)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return allowed, nil
+}
+
 func (s *Storage) DeleteTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error {
 	const op = "storage.postgres.DeleteTreeAccessEmail"
 
