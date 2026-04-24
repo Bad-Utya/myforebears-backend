@@ -26,6 +26,22 @@ func New(log *slog.Logger, client *photosclient.Client) *Handler {
 	return &Handler{log: log, client: client}
 }
 
+// UploadUserAvatar uploads avatar image for authenticated user.
+// @Summary Upload user avatar
+// @Tags photos
+// @Accept mpfd
+// @Produce json
+// @Security ApiKeyAuth
+// @Param file formData file true "Avatar file"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/user/avatar [post]
 func (h *Handler) UploadUserAvatar(w http.ResponseWriter, r *http.Request) {
 	userID, fileName, mimeType, content, ok := h.extractUploadPayload(w, r)
 	if !ok {
@@ -48,6 +64,18 @@ func (h *Handler) UploadUserAvatar(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"photo": toPhotoJSON(resp.GetPhoto())})
 }
 
+// GetUserAvatar returns user avatar binary by user ID.
+// @Summary Get user avatar
+// @Tags photos
+// @Produce octet-stream
+// @Param user_id query int true "User ID"
+// @Success 200 {file} binary
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/user/avatar [get]
 func (h *Handler) GetUserAvatar(w http.ResponseWriter, r *http.Request) {
 	rawUserID := strings.TrimSpace(r.URL.Query().Get("user_id"))
 	if rawUserID == "" {
@@ -72,6 +100,24 @@ func (h *Handler) GetUserAvatar(w http.ResponseWriter, r *http.Request) {
 	h.writeBinaryPhoto(w, resp)
 }
 
+// UploadPersonAvatar uploads avatar for a person in tree.
+// @Summary Upload person avatar
+// @Tags photos
+// @Accept mpfd
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param person_id path string true "Person ID"
+// @Param file formData file true "Avatar file"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/persons/{person_id}/avatar [post]
 func (h *Handler) UploadPersonAvatar(w http.ResponseWriter, r *http.Request) {
 	_, fileName, mimeType, content, ok := h.extractUploadPayload(w, r)
 	if !ok {
@@ -102,6 +148,22 @@ func (h *Handler) UploadPersonAvatar(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"photo": toPhotoJSON(resp.GetPhoto())})
 }
 
+// GetPersonAvatar returns person avatar binary.
+// @Summary Get person avatar
+// @Tags photos
+// @Produce octet-stream
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param person_id path string true "Person ID"
+// @Success 200 {file} binary
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/persons/{person_id}/avatar [get]
 func (h *Handler) GetPersonAvatar(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	personID := chi.URLParam(r, "person_id")
@@ -124,6 +186,24 @@ func (h *Handler) GetPersonAvatar(w http.ResponseWriter, r *http.Request) {
 	h.writeBinaryPhoto(w, resp)
 }
 
+// UploadPersonPhoto uploads a regular photo linked to person.
+// @Summary Upload person photo
+// @Tags photos
+// @Accept mpfd
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param person_id path string true "Person ID"
+// @Param file formData file true "Photo file"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/persons/{person_id} [post]
 func (h *Handler) UploadPersonPhoto(w http.ResponseWriter, r *http.Request) {
 	_, fileName, mimeType, content, ok := h.extractUploadPayload(w, r)
 	if !ok {
@@ -154,6 +234,23 @@ func (h *Handler) UploadPersonPhoto(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"photo": toPhotoJSON(resp.GetPhoto())})
 }
 
+// ListPersonPhotos lists photos linked to a person.
+// @Summary List person photos
+// @Tags photos
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param person_id path string true "Person ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/persons/{person_id} [get]
 func (h *Handler) ListPersonPhotos(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	personID := chi.URLParam(r, "person_id")
@@ -181,6 +278,24 @@ func (h *Handler) ListPersonPhotos(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"photos": photos})
 }
 
+// UploadEventPhoto uploads a photo linked to event.
+// @Summary Upload event photo
+// @Tags photos
+// @Accept mpfd
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param event_id path string true "Event ID"
+// @Param file formData file true "Photo file"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/events/{event_id} [post]
 func (h *Handler) UploadEventPhoto(w http.ResponseWriter, r *http.Request) {
 	_, fileName, mimeType, content, ok := h.extractUploadPayload(w, r)
 	if !ok {
@@ -211,6 +326,23 @@ func (h *Handler) UploadEventPhoto(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"photo": toPhotoJSON(resp.GetPhoto())})
 }
 
+// ListEventPhotos lists photos linked to event.
+// @Summary List event photos
+// @Tags photos
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param event_id path string true "Event ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/events/{event_id} [get]
 func (h *Handler) ListEventPhotos(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	eventID := chi.URLParam(r, "event_id")
@@ -238,6 +370,22 @@ func (h *Handler) ListEventPhotos(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"photos": photos})
 }
 
+// GetPhotoByID returns photo binary by photo ID.
+// @Summary Get photo by ID
+// @Tags photos
+// @Produce octet-stream
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param photo_id path string true "Photo ID"
+// @Success 200 {file} binary
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/{photo_id} [get]
 func (h *Handler) GetPhotoByID(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	photoID := chi.URLParam(r, "photo_id")
@@ -260,6 +408,23 @@ func (h *Handler) GetPhotoByID(w http.ResponseWriter, r *http.Request) {
 	h.writeBinaryPhoto(w, resp)
 }
 
+// DeletePhotoByID deletes photo by ID.
+// @Summary Delete photo by ID
+// @Tags photos
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param photo_id path string true "Photo ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/{photo_id} [delete]
 func (h *Handler) DeletePhotoByID(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	photoID := chi.URLParam(r, "photo_id")

@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	chimw "github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 
 	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
 	eventsclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/events"
@@ -115,6 +116,10 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC)
 	eventsHandler := eventshandler.New(log, eventsGRPC)
 	photosHandler := photoshandler.New(log, photosGRPC)
+
+	router.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	router.Route("/api/auth", func(r chi.Router) {
 		r.Post("/send-code", authHandler.SendCode)

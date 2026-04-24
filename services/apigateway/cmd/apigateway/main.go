@@ -1,3 +1,12 @@
+// Package main API Gateway for MyForebears.
+// @title MyForebears API Gateway
+// @version 1.0
+// @description HTTP API gateway for auth, family tree, events and photos services.
+// @BasePath /
+// @schemes http https
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 package main
 
 import (
@@ -8,10 +17,13 @@ import (
 	"syscall"
 	"time"
 
+	_ "github.com/Bad-Utya/myforebears-backend/services/apigateway/docs"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/app"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/config"
 	"github.com/Bad-Utya/myforebears-backend/utility/pkg/log"
 )
+
+//go:generate go run github.com/swaggo/swag/cmd/swag@v1.16.4 init -g cmd/apigateway/main.go -d ../.. -o ../../docs --parseInternal
 
 func main() {
 	cfg := config.MustLoad()

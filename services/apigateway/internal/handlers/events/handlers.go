@@ -40,6 +40,22 @@ type upsertEventRequest struct {
 	DateBound           string   `json:"date_bound"`
 }
 
+// CreateEventType creates a custom event type for current user.
+// @Summary Create event type
+// @Tags event-types
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body createEventTypeRequest true "Request body"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/event-types/ [post]
 func (h *Handler) CreateEventType(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
@@ -69,6 +85,22 @@ func (h *Handler) CreateEventType(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"event_type": toEventTypeJSON(resp.GetEventType())})
 }
 
+// GetEventType returns event type by ID.
+// @Summary Get event type
+// @Tags event-types
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param event_type_id path string true "Event type ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/event-types/{event_type_id} [get]
 func (h *Handler) GetEventType(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
@@ -96,6 +128,20 @@ func (h *Handler) GetEventType(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"event_type": toEventTypeJSON(resp.GetEventType())})
 }
 
+// ListEventTypes lists available system and custom event types.
+// @Summary List event types
+// @Tags event-types
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} response.SuccessResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/event-types/ [get]
 func (h *Handler) ListEventTypes(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
@@ -119,6 +165,22 @@ func (h *Handler) ListEventTypes(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"event_types": eventTypes})
 }
 
+// DeleteEventType deletes a custom event type.
+// @Summary Delete event type
+// @Tags event-types
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param event_type_id path string true "Event type ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/event-types/{event_type_id} [delete]
 func (h *Handler) DeleteEventType(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
@@ -146,6 +208,23 @@ func (h *Handler) DeleteEventType(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]string{"status": "ok"})
 }
 
+// CreateEvent creates an event in a tree.
+// @Summary Create event
+// @Tags events
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param request body upsertEventRequest true "Request body"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/events/{tree_id} [post]
 func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	var req upsertEventRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -179,6 +258,23 @@ func (h *Handler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"event": toEventJSON(resp.GetEvent())})
 }
 
+// GetEvent returns event by ID from tree.
+// @Summary Get event
+// @Tags events
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param event_id path string true "Event ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/events/{tree_id}/{event_id} [get]
 func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -206,6 +302,22 @@ func (h *Handler) GetEvent(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"event": toEventJSON(resp.GetEvent())})
 }
 
+// ListEventsByTree returns all events in a tree.
+// @Summary List events by tree
+// @Tags events
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/events/{tree_id} [get]
 func (h *Handler) ListEventsByTree(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -231,6 +343,24 @@ func (h *Handler) ListEventsByTree(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"events": events})
 }
 
+// UpdateEvent updates an existing event.
+// @Summary Update event
+// @Tags events
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param event_id path string true "Event ID"
+// @Param request body upsertEventRequest true "Request body"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/events/{tree_id}/{event_id} [put]
 func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -271,6 +401,23 @@ func (h *Handler) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"event": toEventJSON(resp.GetEvent())})
 }
 
+// DeleteEvent deletes event by ID from tree.
+// @Summary Delete event
+// @Tags events
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param event_id path string true "Event ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/events/{tree_id}/{event_id} [delete]
 func (h *Handler) DeleteEvent(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {

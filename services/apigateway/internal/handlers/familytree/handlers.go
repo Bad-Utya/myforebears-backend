@@ -62,6 +62,20 @@ type treeAccessEmailRequest struct {
 	Email string `json:"email"`
 }
 
+// CreateTree creates a new family tree with root person.
+// @Summary Create tree
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} response.SuccessResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/ [post]
 func (h *Handler) CreateTree(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
@@ -83,6 +97,20 @@ func (h *Handler) CreateTree(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// ListTrees returns trees created by authenticated user.
+// @Summary List trees
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} response.SuccessResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/ [get]
 func (h *Handler) ListTrees(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
@@ -106,6 +134,22 @@ func (h *Handler) ListTrees(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"trees": trees})
 }
 
+// GetTree returns a tree by ID.
+// @Summary Get tree
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id} [get]
 func (h *Handler) GetTree(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -124,6 +168,22 @@ func (h *Handler) GetTree(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"tree": toTreeJSON(resp.GetTree())})
 }
 
+// GetTreeContent returns persons and relationships of a tree.
+// @Summary Get tree content
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/content [get]
 func (h *Handler) GetTreeContent(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -156,6 +216,23 @@ func (h *Handler) GetTreeContent(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"persons": persons, "relationships": relationships})
 }
 
+// UpdateTreeSettings updates visibility settings of a tree.
+// @Summary Update tree settings
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param request body updateTreeSettingsRequest true "Request body"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id} [patch]
 func (h *Handler) UpdateTreeSettings(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -180,6 +257,23 @@ func (h *Handler) UpdateTreeSettings(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"tree": toTreeJSON(resp.GetTree())})
 }
 
+// AddTreeAccessEmail grants read access to email for a tree.
+// @Summary Add tree access email
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param request body treeAccessEmailRequest true "Request body"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/access-emails [post]
 func (h *Handler) AddTreeAccessEmail(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -204,6 +298,22 @@ func (h *Handler) AddTreeAccessEmail(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]string{"status": "ok"})
 }
 
+// ListTreeAccessEmails lists emails with granted tree access.
+// @Summary List tree access emails
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/access-emails [get]
 func (h *Handler) ListTreeAccessEmails(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -222,6 +332,23 @@ func (h *Handler) ListTreeAccessEmails(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"emails": resp.GetEmails()})
 }
 
+// DeleteTreeAccessEmail revokes access for email from a tree.
+// @Summary Delete tree access email
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param request body treeAccessEmailRequest true "Request body"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/access-emails [delete]
 func (h *Handler) DeleteTreeAccessEmail(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -246,6 +373,22 @@ func (h *Handler) DeleteTreeAccessEmail(w http.ResponseWriter, r *http.Request) 
 	response.OK(w, map[string]string{"status": "ok"})
 }
 
+// ListPersons returns all persons in a tree.
+// @Summary List persons
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/persons [get]
 func (h *Handler) ListPersons(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -269,6 +412,23 @@ func (h *Handler) ListPersons(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"persons": persons})
 }
 
+// GetPerson returns person by ID in a tree.
+// @Summary Get person
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param person_id path string true "Person ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/persons/{person_id} [get]
 func (h *Handler) GetPerson(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -293,6 +453,23 @@ func (h *Handler) GetPerson(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"person": toPersonJSON(resp.GetPerson())})
 }
 
+// AddParent adds a parent for a child in the tree.
+// @Summary Add parent
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param request body addParentRequest true "Request body"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/parents [post]
 func (h *Handler) AddParent(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -331,6 +508,23 @@ func (h *Handler) AddParent(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, data)
 }
 
+// AddChild adds a child for parents in the tree.
+// @Summary Add child
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param request body addChildRequest true "Request body"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/children [post]
 func (h *Handler) AddChild(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -370,6 +564,23 @@ func (h *Handler) AddChild(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, data)
 }
 
+// AddPartner adds a partner for a person in the tree.
+// @Summary Add partner
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param request body addPartnerRequest true "Request body"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/partners [post]
 func (h *Handler) AddPartner(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -400,6 +611,24 @@ func (h *Handler) AddPartner(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"partner": toPersonJSON(resp.GetPartner())})
 }
 
+// UpdatePersonName updates person name fields.
+// @Summary Update person name
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param person_id path string true "Person ID"
+// @Param request body updatePersonNameRequest true "Request body"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/persons/{person_id} [patch]
 func (h *Handler) UpdatePersonName(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
@@ -436,6 +665,23 @@ func (h *Handler) UpdatePersonName(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"person": toPersonJSON(resp.GetPerson())})
 }
 
+// DeletePerson deletes a person from tree.
+// @Summary Delete person
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param person_id path string true "Person ID"
+// @Success 200 {object} response.SuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/persons/{person_id} [delete]
 func (h *Handler) DeletePerson(w http.ResponseWriter, r *http.Request) {
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
