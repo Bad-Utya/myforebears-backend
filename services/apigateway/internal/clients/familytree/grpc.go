@@ -83,6 +83,50 @@ func (c *Client) GetTreeContent(ctx context.Context, requestUserID int, treeID s
 	return resp, nil
 }
 
+func (c *Client) AddTreeAccessEmail(ctx context.Context, requestUserID int, treeID string, email string) error {
+	const op = "clients.familytree.AddTreeAccessEmail"
+
+	_, err := c.api.AddTreeAccessEmail(ctx, &familytreepb.AddTreeAccessEmailRequest{
+		RequestUserId: int32(requestUserID),
+		TreeId:        treeID,
+		Email:         email,
+	})
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func (c *Client) ListTreeAccessEmails(ctx context.Context, requestUserID int, treeID string) (*familytreepb.ListTreeAccessEmailsResponse, error) {
+	const op = "clients.familytree.ListTreeAccessEmails"
+
+	resp, err := c.api.ListTreeAccessEmails(ctx, &familytreepb.ListTreeAccessEmailsRequest{
+		RequestUserId: int32(requestUserID),
+		TreeId:        treeID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) DeleteTreeAccessEmail(ctx context.Context, requestUserID int, treeID string, email string) error {
+	const op = "clients.familytree.DeleteTreeAccessEmail"
+
+	_, err := c.api.DeleteTreeAccessEmail(ctx, &familytreepb.DeleteTreeAccessEmailRequest{
+		RequestUserId: int32(requestUserID),
+		TreeId:        treeID,
+		Email:         email,
+	})
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
 func (c *Client) UpdateTreeSettings(ctx context.Context, requestUserID int, treeID string, isViewRestricted bool, isPublicOnMainPage bool) (*familytreepb.UpdateTreeSettingsResponse, error) {
 	const op = "clients.familytree.UpdateTreeSettings"
 

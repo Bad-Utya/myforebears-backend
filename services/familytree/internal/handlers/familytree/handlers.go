@@ -16,6 +16,9 @@ type FamilyTreeService interface {
 	ListTreesByCreator(ctx context.Context, requestUserID int) ([]models.Tree, error)
 	GetTreeForUser(ctx context.Context, requestUserID int, treeID string) (models.Tree, error)
 	GetTreeContentForUser(ctx context.Context, requestUserID int, treeID string) ([]models.Person, []models.Relationship, error)
+	AddTreeAccessEmail(ctx context.Context, requestUserID int, treeID string, email string) error
+	ListTreeAccessEmails(ctx context.Context, requestUserID int, treeID string) ([]string, error)
+	DeleteTreeAccessEmail(ctx context.Context, requestUserID int, treeID string, email string) error
 	UpdateTreeSettings(ctx context.Context, requestUserID int, treeID string, isViewRestricted bool, isPublicOnMainPage bool) (models.Tree, error)
 	ListPersonsByTree(ctx context.Context, requestUserID int, treeID string) ([]models.Person, error)
 	GetPersonInTree(ctx context.Context, requestUserID int, treeID string, personID string) (models.Person, error)

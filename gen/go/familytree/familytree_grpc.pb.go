@@ -38,6 +38,9 @@ const (
 	FamilyTreeService_GetRelatives_FullMethodName                    = "/familytree.FamilyTreeService/GetRelatives"
 	FamilyTreeService_GetTree_FullMethodName                         = "/familytree.FamilyTreeService/GetTree"
 	FamilyTreeService_GetTreeContent_FullMethodName                  = "/familytree.FamilyTreeService/GetTreeContent"
+	FamilyTreeService_AddTreeAccessEmail_FullMethodName              = "/familytree.FamilyTreeService/AddTreeAccessEmail"
+	FamilyTreeService_ListTreeAccessEmails_FullMethodName            = "/familytree.FamilyTreeService/ListTreeAccessEmails"
+	FamilyTreeService_DeleteTreeAccessEmail_FullMethodName           = "/familytree.FamilyTreeService/DeleteTreeAccessEmail"
 	FamilyTreeService_ValidatePersonsInTree_FullMethodName           = "/familytree.FamilyTreeService/ValidatePersonsInTree"
 	FamilyTreeService_UpdatePartnerRelationshipStatus_FullMethodName = "/familytree.FamilyTreeService/UpdatePartnerRelationshipStatus"
 	FamilyTreeService_UpdateTreeSettings_FullMethodName              = "/familytree.FamilyTreeService/UpdateTreeSettings"
@@ -66,6 +69,9 @@ type FamilyTreeServiceClient interface {
 	GetRelatives(ctx context.Context, in *GetRelativesRequest, opts ...grpc.CallOption) (*GetRelativesResponse, error)
 	GetTree(ctx context.Context, in *GetTreeRequest, opts ...grpc.CallOption) (*GetTreeResponse, error)
 	GetTreeContent(ctx context.Context, in *GetTreeContentRequest, opts ...grpc.CallOption) (*GetTreeContentResponse, error)
+	AddTreeAccessEmail(ctx context.Context, in *AddTreeAccessEmailRequest, opts ...grpc.CallOption) (*AddTreeAccessEmailResponse, error)
+	ListTreeAccessEmails(ctx context.Context, in *ListTreeAccessEmailsRequest, opts ...grpc.CallOption) (*ListTreeAccessEmailsResponse, error)
+	DeleteTreeAccessEmail(ctx context.Context, in *DeleteTreeAccessEmailRequest, opts ...grpc.CallOption) (*DeleteTreeAccessEmailResponse, error)
 	ValidatePersonsInTree(ctx context.Context, in *ValidatePersonsInTreeRequest, opts ...grpc.CallOption) (*ValidatePersonsInTreeResponse, error)
 	UpdatePartnerRelationshipStatus(ctx context.Context, in *UpdatePartnerRelationshipStatusRequest, opts ...grpc.CallOption) (*UpdatePartnerRelationshipStatusResponse, error)
 	UpdateTreeSettings(ctx context.Context, in *UpdateTreeSettingsRequest, opts ...grpc.CallOption) (*UpdateTreeSettingsResponse, error)
@@ -269,6 +275,36 @@ func (c *familyTreeServiceClient) GetTreeContent(ctx context.Context, in *GetTre
 	return out, nil
 }
 
+func (c *familyTreeServiceClient) AddTreeAccessEmail(ctx context.Context, in *AddTreeAccessEmailRequest, opts ...grpc.CallOption) (*AddTreeAccessEmailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddTreeAccessEmailResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_AddTreeAccessEmail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *familyTreeServiceClient) ListTreeAccessEmails(ctx context.Context, in *ListTreeAccessEmailsRequest, opts ...grpc.CallOption) (*ListTreeAccessEmailsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListTreeAccessEmailsResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_ListTreeAccessEmails_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *familyTreeServiceClient) DeleteTreeAccessEmail(ctx context.Context, in *DeleteTreeAccessEmailRequest, opts ...grpc.CallOption) (*DeleteTreeAccessEmailResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteTreeAccessEmailResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_DeleteTreeAccessEmail_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *familyTreeServiceClient) ValidatePersonsInTree(ctx context.Context, in *ValidatePersonsInTreeRequest, opts ...grpc.CallOption) (*ValidatePersonsInTreeResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ValidatePersonsInTreeResponse)
@@ -322,6 +358,9 @@ type FamilyTreeServiceServer interface {
 	GetRelatives(context.Context, *GetRelativesRequest) (*GetRelativesResponse, error)
 	GetTree(context.Context, *GetTreeRequest) (*GetTreeResponse, error)
 	GetTreeContent(context.Context, *GetTreeContentRequest) (*GetTreeContentResponse, error)
+	AddTreeAccessEmail(context.Context, *AddTreeAccessEmailRequest) (*AddTreeAccessEmailResponse, error)
+	ListTreeAccessEmails(context.Context, *ListTreeAccessEmailsRequest) (*ListTreeAccessEmailsResponse, error)
+	DeleteTreeAccessEmail(context.Context, *DeleteTreeAccessEmailRequest) (*DeleteTreeAccessEmailResponse, error)
 	ValidatePersonsInTree(context.Context, *ValidatePersonsInTreeRequest) (*ValidatePersonsInTreeResponse, error)
 	UpdatePartnerRelationshipStatus(context.Context, *UpdatePartnerRelationshipStatusRequest) (*UpdatePartnerRelationshipStatusResponse, error)
 	UpdateTreeSettings(context.Context, *UpdateTreeSettingsRequest) (*UpdateTreeSettingsResponse, error)
@@ -391,6 +430,15 @@ func (UnimplementedFamilyTreeServiceServer) GetTree(context.Context, *GetTreeReq
 }
 func (UnimplementedFamilyTreeServiceServer) GetTreeContent(context.Context, *GetTreeContentRequest) (*GetTreeContentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTreeContent not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) AddTreeAccessEmail(context.Context, *AddTreeAccessEmailRequest) (*AddTreeAccessEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddTreeAccessEmail not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) ListTreeAccessEmails(context.Context, *ListTreeAccessEmailsRequest) (*ListTreeAccessEmailsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTreeAccessEmails not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) DeleteTreeAccessEmail(context.Context, *DeleteTreeAccessEmailRequest) (*DeleteTreeAccessEmailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTreeAccessEmail not implemented")
 }
 func (UnimplementedFamilyTreeServiceServer) ValidatePersonsInTree(context.Context, *ValidatePersonsInTreeRequest) (*ValidatePersonsInTreeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatePersonsInTree not implemented")
@@ -764,6 +812,60 @@ func _FamilyTreeService_GetTreeContent_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FamilyTreeService_AddTreeAccessEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddTreeAccessEmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).AddTreeAccessEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_AddTreeAccessEmail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).AddTreeAccessEmail(ctx, req.(*AddTreeAccessEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FamilyTreeService_ListTreeAccessEmails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTreeAccessEmailsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).ListTreeAccessEmails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_ListTreeAccessEmails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).ListTreeAccessEmails(ctx, req.(*ListTreeAccessEmailsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FamilyTreeService_DeleteTreeAccessEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTreeAccessEmailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).DeleteTreeAccessEmail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_DeleteTreeAccessEmail_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).DeleteTreeAccessEmail(ctx, req.(*DeleteTreeAccessEmailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _FamilyTreeService_ValidatePersonsInTree_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ValidatePersonsInTreeRequest)
 	if err := dec(in); err != nil {
@@ -900,6 +1002,18 @@ var FamilyTreeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTreeContent",
 			Handler:    _FamilyTreeService_GetTreeContent_Handler,
+		},
+		{
+			MethodName: "AddTreeAccessEmail",
+			Handler:    _FamilyTreeService_AddTreeAccessEmail_Handler,
+		},
+		{
+			MethodName: "ListTreeAccessEmails",
+			Handler:    _FamilyTreeService_ListTreeAccessEmails_Handler,
+		},
+		{
+			MethodName: "DeleteTreeAccessEmail",
+			Handler:    _FamilyTreeService_DeleteTreeAccessEmail_Handler,
 		},
 		{
 			MethodName: "ValidatePersonsInTree",

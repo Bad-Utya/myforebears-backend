@@ -91,6 +91,9 @@ service FamilyTreeService {
     rpc GetRelatives (GetRelativesRequest) returns (GetRelativesResponse);
     rpc GetTree (GetTreeRequest) returns (GetTreeResponse);
     rpc GetTreeContent (GetTreeContentRequest) returns (GetTreeContentResponse);
+    rpc AddTreeAccessEmail (AddTreeAccessEmailRequest) returns (AddTreeAccessEmailResponse);
+    rpc ListTreeAccessEmails (ListTreeAccessEmailsRequest) returns (ListTreeAccessEmailsResponse);
+    rpc DeleteTreeAccessEmail (DeleteTreeAccessEmailRequest) returns (DeleteTreeAccessEmailResponse);
     rpc ValidatePersonsInTree (ValidatePersonsInTreeRequest) returns (ValidatePersonsInTreeResponse);
     rpc UpdatePartnerRelationshipStatus (UpdatePartnerRelationshipStatusRequest) returns (UpdatePartnerRelationshipStatusResponse);
     rpc UpdateTreeSettings (UpdateTreeSettingsRequest) returns (UpdateTreeSettingsResponse);
@@ -287,6 +290,31 @@ message GetTreeContentResponse {
     repeated Person persons = 1;
     repeated Relationship relationships = 2;
 }
+
+message AddTreeAccessEmailRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string email = 3;
+}
+
+message AddTreeAccessEmailResponse {}
+
+message ListTreeAccessEmailsRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+}
+
+message ListTreeAccessEmailsResponse {
+    repeated string emails = 1;
+}
+
+message DeleteTreeAccessEmailRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string email = 3;
+}
+
+message DeleteTreeAccessEmailResponse {}
 
 message ValidatePersonsInTreeRequest {
     int32 request_user_id = 1;

@@ -9,6 +9,7 @@ import (
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/storage"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -120,6 +121,80 @@ func (s *Storage) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isVi
 
 	if cmdTag.RowsAffected() == 0 {
 		return fmt.Errorf("%s: %w", op, storage.ErrTreeNotFound)
+	}
+
+	return nil
+}
+
+func (s *Storage) AddTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error {
+	const op = "storage.postgres.AddTreeAccessEmail"
+
+	_, err := s.pool.Exec(
+		ctx,
+		`INSERT INTO tree_access_emails (tree_id, email)
+		 VALUES ($1, $2)`,
+		treeID,
+		email,
+	)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return fmt.Errorf("%s: %w", op, storage.ErrTreeAccessEmailExists)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) ListTreeAccessEmails(ctx context.Context, treeID uuid.UUID) ([]string, error) {
+	const op = "storage.postgres.ListTreeAccessEmails"
+
+	rows, err := s.pool.Query(
+		ctx,
+		`SELECT email
+		 FROM tree_access_emails
+		 WHERE tree_id = $1
+		 ORDER BY email ASC`,
+		treeID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	emails := make([]string, 0)
+	for rows.Next() {
+		var email string
+		if err := rows.Scan(&email); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		emails = append(emails, email)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return emails, nil
+}
+
+func (s *Storage) DeleteTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error {
+	const op = "storage.postgres.DeleteTreeAccessEmail"
+
+	cmdTag, err := s.pool.Exec(
+		ctx,
+		`DELETE FROM tree_access_emails
+		 WHERE tree_id = $1 AND email = $2`,
+		treeID,
+		email,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrTreeAccessEmailNotFound)
 	}
 
 	return nil

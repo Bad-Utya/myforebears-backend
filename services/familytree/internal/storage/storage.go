@@ -9,16 +9,21 @@ import (
 )
 
 var (
-	ErrPersonNotFound      = errors.New("person not found")
-	ErrTreeNotFound        = errors.New("tree not found")
-	ErrRelationshipExists  = errors.New("relationship already exists")
-	ErrRelationshipMissing = errors.New("relationship not found")
+	ErrPersonNotFound          = errors.New("person not found")
+	ErrTreeNotFound            = errors.New("tree not found")
+	ErrRelationshipExists      = errors.New("relationship already exists")
+	ErrRelationshipMissing     = errors.New("relationship not found")
+	ErrTreeAccessEmailExists   = errors.New("tree access email already exists")
+	ErrTreeAccessEmailNotFound = errors.New("tree access email not found")
 )
 
 type PersonStorage interface {
 	CreateTree(ctx context.Context, tree models.Tree) error
 	GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, error)
 	UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool) error
+	AddTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error
+	ListTreeAccessEmails(ctx context.Context, treeID uuid.UUID) ([]string, error)
+	DeleteTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error
 	GetTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error)
 	CreatePerson(ctx context.Context, person models.Person) error
 	GetPerson(ctx context.Context, personID uuid.UUID) (models.Person, error)

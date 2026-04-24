@@ -58,6 +58,10 @@ type updateTreeSettingsRequest struct {
 	IsPublicOnMainPage bool `json:"is_public_on_main_page"`
 }
 
+type treeAccessEmailRequest struct {
+	Email string `json:"email"`
+}
+
 func (h *Handler) CreateTree(w http.ResponseWriter, r *http.Request) {
 	userID, err := middleware.UserIDFromContext(r.Context())
 	if err != nil {
@@ -185,6 +189,69 @@ func (h *Handler) UpdateTreeSettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, map[string]any{"tree": toTreeJSON(resp.GetTree())})
+}
+
+func (h *Handler) AddTreeAccessEmail(w http.ResponseWriter, r *http.Request) {
+	userID, treeID, ok := h.requireUserAndTree(w, r)
+	if !ok {
+		return
+	}
+
+	var req treeAccessEmailRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid request body")
+		return
+	}
+
+	err := h.client.AddTreeAccessEmail(r.Context(), userID, treeID, req.Email)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("add tree access email failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]string{"status": "ok"})
+}
+
+func (h *Handler) ListTreeAccessEmails(w http.ResponseWriter, r *http.Request) {
+	userID, treeID, ok := h.requireUserAndTree(w, r)
+	if !ok {
+		return
+	}
+
+	resp, err := h.client.ListTreeAccessEmails(r.Context(), userID, treeID)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("list tree access emails failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"emails": resp.GetEmails()})
+}
+
+func (h *Handler) DeleteTreeAccessEmail(w http.ResponseWriter, r *http.Request) {
+	userID, treeID, ok := h.requireUserAndTree(w, r)
+	if !ok {
+		return
+	}
+
+	var req treeAccessEmailRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid request body")
+		return
+	}
+
+	err := h.client.DeleteTreeAccessEmail(r.Context(), userID, treeID, req.Email)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("delete tree access email failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]string{"status": "ok"})
 }
 
 func (h *Handler) ListPersons(w http.ResponseWriter, r *http.Request) {

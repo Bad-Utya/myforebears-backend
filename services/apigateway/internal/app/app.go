@@ -143,6 +143,9 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 			r.Get("/{tree_id}", familyTreeHandler.GetTree)
 			r.Patch("/{tree_id}", familyTreeHandler.UpdateTreeSettings)
 			r.Get("/{tree_id}/content", familyTreeHandler.GetTreeContent)
+			r.Post("/{tree_id}/access-emails", familyTreeHandler.AddTreeAccessEmail)
+			r.Get("/{tree_id}/access-emails", familyTreeHandler.ListTreeAccessEmails)
+			r.Delete("/{tree_id}/access-emails", familyTreeHandler.DeleteTreeAccessEmail)
 
 			r.Post("/{tree_id}/parents", familyTreeHandler.AddParent)
 			r.Post("/{tree_id}/children", familyTreeHandler.AddChild)
