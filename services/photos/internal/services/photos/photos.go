@@ -31,8 +31,8 @@ var (
 )
 
 type FamilyTreeClient interface {
-	GetPerson(ctx context.Context, requestUserID int, personID string) error
-	UpdatePersonAvatarPhoto(ctx context.Context, requestUserID int, personID string, avatarPhotoID string) error
+	GetPerson(ctx context.Context, treeID string, personID string) error
+	UpdatePersonAvatarPhoto(ctx context.Context, personID string, avatarPhotoID string) error
 }
 
 type EventsClient interface {
@@ -131,7 +131,9 @@ func (s *Service) UploadPersonAvatar(ctx context.Context, requestUserID int, per
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.familyTree.GetPerson(ctx, requestUserID, parsedPersonID.String()); err != nil {
+	tree_id := "" // TODO: change
+
+	if err := s.familyTree.GetPerson(ctx, tree_id, parsedPersonID.String()); err != nil {
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -159,7 +161,7 @@ func (s *Service) UploadPersonAvatar(ctx context.Context, requestUserID int, per
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.familyTree.UpdatePersonAvatarPhoto(ctx, requestUserID, parsedPersonID.String(), photo.ID.String()); err != nil {
+	if err := s.familyTree.UpdatePersonAvatarPhoto(ctx, parsedPersonID.String(), photo.ID.String()); err != nil {
 		_, _ = s.meta.DeletePhotoByID(ctx, photo.ID)
 		_ = s.objects.DeleteObject(ctx, photo.ObjectKey)
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
@@ -204,7 +206,9 @@ func (s *Service) UploadPersonPhoto(ctx context.Context, requestUserID int, pers
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.familyTree.GetPerson(ctx, requestUserID, parsedPersonID.String()); err != nil {
+	tree_id := "" // TODO: change
+
+	if err := s.familyTree.GetPerson(ctx, tree_id, parsedPersonID.String()); err != nil {
 		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -239,7 +243,9 @@ func (s *Service) ListPersonPhotos(ctx context.Context, requestUserID int, perso
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.familyTree.GetPerson(ctx, requestUserID, parsedPersonID.String()); err != nil {
+	tree_id := "" // TODO: change
+
+	if err := s.familyTree.GetPerson(ctx, tree_id, parsedPersonID.String()); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -330,10 +336,6 @@ func (s *Service) GetPhotoByID(ctx context.Context, requestUserID int, photoID s
 		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.authorizePhoto(ctx, requestUserID, photo); err != nil {
-		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
-	}
-
 	data, err := s.objects.GetObject(ctx, photo.ObjectKey)
 	if err != nil {
 		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
@@ -350,15 +352,11 @@ func (s *Service) DeletePhotoByID(ctx context.Context, requestUserID int, photoI
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	photo, err := s.meta.GetPhotoByID(ctx, parsedPhotoID)
+	_, err = s.meta.GetPhotoByID(ctx, parsedPhotoID)
 	if err != nil {
 		if errors.Is(err, storage.ErrPhotoNotFound) {
 			return fmt.Errorf("%s: %w", op, ErrPhotoNotFound)
 		}
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	if err := s.authorizePhoto(ctx, requestUserID, photo); err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -371,7 +369,7 @@ func (s *Service) DeletePhotoByID(ctx context.Context, requestUserID int, photoI
 	}
 
 	if deleted.IsPersonAvatar && deleted.PersonID != nil {
-		if err := s.familyTree.UpdatePersonAvatarPhoto(ctx, requestUserID, deleted.PersonID.String(), ""); err != nil {
+		if err := s.familyTree.UpdatePersonAvatarPhoto(ctx, deleted.PersonID.String(), ""); err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
 	}
@@ -381,42 +379,6 @@ func (s *Service) DeletePhotoByID(ctx context.Context, requestUserID int, photoI
 	}
 
 	return nil
-}
-
-func (s *Service) authorizePhoto(ctx context.Context, requestUserID int, photo models.Photo) error {
-	if requestUserID <= 0 {
-		return ErrInvalidUserID
-	}
-
-	if photo.IsUserAvatar {
-		if photo.OwnerUserID != requestUserID {
-			return ErrForbidden
-		}
-		return nil
-	}
-
-	if photo.PersonID != nil {
-		if photo.TreeID == nil {
-			return ErrForbidden
-		}
-		if err := s.familyTree.GetPerson(ctx, requestUserID, photo.PersonID.String()); err != nil {
-			return ErrForbidden
-		}
-		return nil
-	}
-
-	if photo.EventID != nil {
-		treeID, err := s.events.GetEventTreeID(ctx, requestUserID, photo.EventID.String())
-		if err != nil {
-			return ErrForbidden
-		}
-		if photo.TreeID != nil && photo.TreeID.String() != treeID {
-			return ErrForbidden
-		}
-		return nil
-	}
-
-	return ErrForbidden
 }
 
 func validateAndParsePhotoID(requestUserID int, photoID string) (uuid.UUID, error) {

@@ -107,19 +107,13 @@ func (h *Handler) ListTrees(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetTree(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.UserIDFromContext(r.Context())
-	if err != nil {
-		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
-		return
-	}
-
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
-	resp, err := h.client.GetTree(r.Context(), userID, treeID)
+	resp, err := h.client.GetTree(r.Context(), treeID)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("get tree failed", slog.String("error", err.Error()))
@@ -131,19 +125,13 @@ func (h *Handler) GetTree(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetTreeContent(w http.ResponseWriter, r *http.Request) {
-	userID, err := middleware.UserIDFromContext(r.Context())
-	if err != nil {
-		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
-		return
-	}
-
 	treeID := chi.URLParam(r, "tree_id")
 	if strings.TrimSpace(treeID) == "" {
 		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
-	resp, err := h.client.GetTreeContent(r.Context(), userID, treeID)
+	resp, err := h.client.GetTreeContent(r.Context(), treeID)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("get tree content failed", slog.String("error", err.Error()))
@@ -169,8 +157,9 @@ func (h *Handler) GetTreeContent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateTreeSettings(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -180,7 +169,7 @@ func (h *Handler) UpdateTreeSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.client.UpdateTreeSettings(r.Context(), userID, treeID, req.IsViewRestricted, req.IsPublicOnMainPage)
+	resp, err := h.client.UpdateTreeSettings(r.Context(), treeID, req.IsViewRestricted, req.IsPublicOnMainPage)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("update tree settings failed", slog.String("error", err.Error()))
@@ -192,8 +181,9 @@ func (h *Handler) UpdateTreeSettings(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AddTreeAccessEmail(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -203,7 +193,7 @@ func (h *Handler) AddTreeAccessEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.client.AddTreeAccessEmail(r.Context(), userID, treeID, req.Email)
+	err := h.client.AddTreeAccessEmail(r.Context(), treeID, req.Email)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("add tree access email failed", slog.String("error", err.Error()))
@@ -215,12 +205,13 @@ func (h *Handler) AddTreeAccessEmail(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) ListTreeAccessEmails(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
-	resp, err := h.client.ListTreeAccessEmails(r.Context(), userID, treeID)
+	resp, err := h.client.ListTreeAccessEmails(r.Context(), treeID)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("list tree access emails failed", slog.String("error", err.Error()))
@@ -232,8 +223,9 @@ func (h *Handler) ListTreeAccessEmails(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteTreeAccessEmail(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -243,7 +235,7 @@ func (h *Handler) DeleteTreeAccessEmail(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err := h.client.DeleteTreeAccessEmail(r.Context(), userID, treeID, req.Email)
+	err := h.client.DeleteTreeAccessEmail(r.Context(), treeID, req.Email)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("delete tree access email failed", slog.String("error", err.Error()))
@@ -255,12 +247,13 @@ func (h *Handler) DeleteTreeAccessEmail(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *Handler) ListPersons(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
-	resp, err := h.client.ListPersonsByTree(r.Context(), userID, treeID)
+	resp, err := h.client.ListPersonsByTree(r.Context(), treeID)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("list persons failed", slog.String("error", err.Error()))
@@ -277,8 +270,9 @@ func (h *Handler) ListPersons(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetPerson(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -288,7 +282,7 @@ func (h *Handler) GetPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.client.GetPersonInTree(r.Context(), userID, treeID, personID)
+	resp, err := h.client.GetPerson(r.Context(), treeID, personID)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("get person failed", slog.String("error", err.Error()))
@@ -300,8 +294,9 @@ func (h *Handler) GetPerson(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AddParent(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -312,13 +307,12 @@ func (h *Handler) AddParent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	grpcReq := &familytreepb.AddParentRequest{
-		RequestUserId: int32(userID),
-		TreeId:        treeID,
-		ChildId:       req.ChildID,
-		Role:          parseParentRole(req.Role),
-		FirstName:     req.FirstName,
-		LastName:      req.LastName,
-		Patronymic:    req.Patronymic,
+		TreeId:     treeID,
+		ChildId:    req.ChildID,
+		Role:       parseParentRole(req.Role),
+		FirstName:  req.FirstName,
+		LastName:   req.LastName,
+		Patronymic: req.Patronymic,
 	}
 
 	resp, err := h.client.AddParent(r.Context(), grpcReq)
@@ -338,8 +332,9 @@ func (h *Handler) AddParent(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AddChild(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -350,14 +345,13 @@ func (h *Handler) AddChild(w http.ResponseWriter, r *http.Request) {
 	}
 
 	grpcReq := &familytreepb.AddChildRequest{
-		RequestUserId: int32(userID),
-		TreeId:        treeID,
-		Parent1Id:     req.Parent1ID,
-		Parent2Id:     req.Parent2ID,
-		FirstName:     req.FirstName,
-		LastName:      req.LastName,
-		Patronymic:    req.Patronymic,
-		Gender:        parseGender(req.Gender),
+		TreeId:     treeID,
+		Parent1Id:  req.Parent1ID,
+		Parent2Id:  req.Parent2ID,
+		FirstName:  req.FirstName,
+		LastName:   req.LastName,
+		Patronymic: req.Patronymic,
+		Gender:     parseGender(req.Gender),
 	}
 
 	resp, err := h.client.AddChild(r.Context(), grpcReq)
@@ -377,8 +371,9 @@ func (h *Handler) AddChild(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) AddPartner(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -389,12 +384,11 @@ func (h *Handler) AddPartner(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.client.AddPartner(r.Context(), &familytreepb.AddPartnerRequest{
-		RequestUserId: int32(userID),
-		TreeId:        treeID,
-		PersonId:      req.PersonID,
-		FirstName:     req.FirstName,
-		LastName:      req.LastName,
-		Patronymic:    req.Patronymic,
+		TreeId:     treeID,
+		PersonId:   req.PersonID,
+		FirstName:  req.FirstName,
+		LastName:   req.LastName,
+		Patronymic: req.Patronymic,
 	})
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
@@ -407,8 +401,9 @@ func (h *Handler) AddPartner(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdatePersonName(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -425,12 +420,11 @@ func (h *Handler) UpdatePersonName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.client.UpdatePersonName(r.Context(), &familytreepb.UpdatePersonNameRequest{
-		RequestUserId: int32(userID),
-		TreeId:        treeID,
-		PersonId:      personID,
-		FirstName:     req.FirstName,
-		LastName:      req.LastName,
-		Patronymic:    req.Patronymic,
+		TreeId:     treeID,
+		PersonId:   personID,
+		FirstName:  req.FirstName,
+		LastName:   req.LastName,
+		Patronymic: req.Patronymic,
 	})
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
@@ -443,8 +437,9 @@ func (h *Handler) UpdatePersonName(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeletePerson(w http.ResponseWriter, r *http.Request) {
-	userID, treeID, ok := h.requireUserAndTree(w, r)
-	if !ok {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
 		return
 	}
 
@@ -455,9 +450,8 @@ func (h *Handler) DeletePerson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := h.client.DeletePersonInTree(r.Context(), &familytreepb.DeletePersonInTreeRequest{
-		RequestUserId: int32(userID),
-		TreeId:        treeID,
-		PersonId:      personID,
+		TreeId:   treeID,
+		PersonId: personID,
 	})
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
@@ -467,22 +461,6 @@ func (h *Handler) DeletePerson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, map[string]string{"status": "ok"})
-}
-
-func (h *Handler) requireUserAndTree(w http.ResponseWriter, r *http.Request) (int, string, bool) {
-	userID, err := middleware.UserIDFromContext(r.Context())
-	if err != nil {
-		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
-		return 0, "", false
-	}
-
-	treeID := chi.URLParam(r, "tree_id")
-	if strings.TrimSpace(treeID) == "" {
-		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
-		return 0, "", false
-	}
-
-	return userID, treeID, true
 }
 
 func parseParentRole(v string) familytreepb.ParentRole {

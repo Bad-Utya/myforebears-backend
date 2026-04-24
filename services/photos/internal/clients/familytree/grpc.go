@@ -35,13 +35,12 @@ func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int)
 	}, nil
 }
 
-func (c *Client) GetPerson(ctx context.Context, requestUserID int, personID string) error {
+func (c *Client) GetPerson(ctx context.Context, treeID string, personID string) error {
 	const op = "clients.familytree.GetPerson"
 
-	_, err := c.api.GetPersonInTree(ctx, &familytreepb.GetPersonInTreeRequest{
-		RequestUserId: int32(requestUserID),
-		TreeId:        "",
-		PersonId:      personID,
+	_, err := c.api.GetPerson(ctx, &familytreepb.GetPersonRequest{
+		TreeId:   treeID,
+		PersonId: personID,
 	})
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -50,11 +49,10 @@ func (c *Client) GetPerson(ctx context.Context, requestUserID int, personID stri
 	return nil
 }
 
-func (c *Client) UpdatePersonAvatarPhoto(ctx context.Context, requestUserID int, personID string, avatarPhotoID string) error {
+func (c *Client) UpdatePersonAvatarPhoto(ctx context.Context, personID string, avatarPhotoID string) error {
 	const op = "clients.familytree.UpdatePersonAvatarPhoto"
 
 	_, err := c.api.UpdatePersonAvatarPhoto(ctx, &familytreepb.UpdatePersonAvatarPhotoRequest{
-		RequestUserId: int32(requestUserID),
 		PersonId:      personID,
 		AvatarPhotoId: avatarPhotoID,
 	})
