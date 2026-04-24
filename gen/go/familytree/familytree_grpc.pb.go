@@ -29,7 +29,6 @@ const (
 	FamilyTreeService_DeletePersonInTree_FullMethodName              = "/familytree.FamilyTreeService/DeletePersonInTree"
 	FamilyTreeService_CreatePerson_FullMethodName                    = "/familytree.FamilyTreeService/CreatePerson"
 	FamilyTreeService_GetPerson_FullMethodName                       = "/familytree.FamilyTreeService/GetPerson"
-	FamilyTreeService_GetPersonInTree_FullMethodName                 = "/familytree.FamilyTreeService/GetPersonInTree"
 	FamilyTreeService_ListPersonsByTree_FullMethodName               = "/familytree.FamilyTreeService/ListPersonsByTree"
 	FamilyTreeService_UpdatePerson_FullMethodName                    = "/familytree.FamilyTreeService/UpdatePerson"
 	FamilyTreeService_DeletePerson_FullMethodName                    = "/familytree.FamilyTreeService/DeletePerson"
@@ -62,7 +61,6 @@ type FamilyTreeServiceClient interface {
 	DeletePersonInTree(ctx context.Context, in *DeletePersonInTreeRequest, opts ...grpc.CallOption) (*DeletePersonInTreeResponse, error)
 	CreatePerson(ctx context.Context, in *CreatePersonRequest, opts ...grpc.CallOption) (*CreatePersonResponse, error)
 	GetPerson(ctx context.Context, in *GetPersonRequest, opts ...grpc.CallOption) (*GetPersonResponse, error)
-	GetPersonInTree(ctx context.Context, in *GetPersonInTreeRequest, opts ...grpc.CallOption) (*GetPersonInTreeResponse, error)
 	ListPersonsByTree(ctx context.Context, in *ListPersonsByTreeRequest, opts ...grpc.CallOption) (*ListPersonsByTreeResponse, error)
 	UpdatePerson(ctx context.Context, in *UpdatePersonRequest, opts ...grpc.CallOption) (*UpdatePersonResponse, error)
 	DeletePerson(ctx context.Context, in *DeletePersonRequest, opts ...grpc.CallOption) (*DeletePersonResponse, error)
@@ -183,16 +181,6 @@ func (c *familyTreeServiceClient) GetPerson(ctx context.Context, in *GetPersonRe
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetPersonResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_GetPerson_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *familyTreeServiceClient) GetPersonInTree(ctx context.Context, in *GetPersonInTreeRequest, opts ...grpc.CallOption) (*GetPersonInTreeResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetPersonInTreeResponse)
-	err := c.cc.Invoke(ctx, FamilyTreeService_GetPersonInTree_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -373,7 +361,6 @@ type FamilyTreeServiceServer interface {
 	DeletePersonInTree(context.Context, *DeletePersonInTreeRequest) (*DeletePersonInTreeResponse, error)
 	CreatePerson(context.Context, *CreatePersonRequest) (*CreatePersonResponse, error)
 	GetPerson(context.Context, *GetPersonRequest) (*GetPersonResponse, error)
-	GetPersonInTree(context.Context, *GetPersonInTreeRequest) (*GetPersonInTreeResponse, error)
 	ListPersonsByTree(context.Context, *ListPersonsByTreeRequest) (*ListPersonsByTreeResponse, error)
 	UpdatePerson(context.Context, *UpdatePersonRequest) (*UpdatePersonResponse, error)
 	DeletePerson(context.Context, *DeletePersonRequest) (*DeletePersonResponse, error)
@@ -429,9 +416,6 @@ func (UnimplementedFamilyTreeServiceServer) CreatePerson(context.Context, *Creat
 }
 func (UnimplementedFamilyTreeServiceServer) GetPerson(context.Context, *GetPersonRequest) (*GetPersonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPerson not implemented")
-}
-func (UnimplementedFamilyTreeServiceServer) GetPersonInTree(context.Context, *GetPersonInTreeRequest) (*GetPersonInTreeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetPersonInTree not implemented")
 }
 func (UnimplementedFamilyTreeServiceServer) ListPersonsByTree(context.Context, *ListPersonsByTreeRequest) (*ListPersonsByTreeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListPersonsByTree not implemented")
@@ -678,24 +662,6 @@ func _FamilyTreeService_GetPerson_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FamilyTreeServiceServer).GetPerson(ctx, req.(*GetPersonRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FamilyTreeService_GetPersonInTree_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetPersonInTreeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FamilyTreeServiceServer).GetPersonInTree(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: FamilyTreeService_GetPersonInTree_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FamilyTreeServiceServer).GetPersonInTree(ctx, req.(*GetPersonInTreeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1034,10 +1000,6 @@ var FamilyTreeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPerson",
 			Handler:    _FamilyTreeService_GetPerson_Handler,
-		},
-		{
-			MethodName: "GetPersonInTree",
-			Handler:    _FamilyTreeService_GetPersonInTree_Handler,
 		},
 		{
 			MethodName: "ListPersonsByTree",
