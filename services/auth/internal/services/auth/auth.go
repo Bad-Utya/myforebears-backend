@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/Bad-Utya/myforebears-backend/services/auth/internal/domain/models"
@@ -26,6 +27,9 @@ const (
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrUserExists         = errors.New("user already exists")
+	ErrInvalidNickname    = errors.New("invalid nickname")
+	ErrInvalidUserID      = errors.New("invalid user id")
+	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidCode        = errors.New("invalid code")
 	ErrInvalidToken       = errors.New("invalid token")
 	ErrInvalidLink        = errors.New("invalid link")
@@ -48,9 +52,11 @@ type Auth struct {
 }
 
 type UserStorage interface {
-	SaveUser(ctx context.Context, email string, passHash []byte) (int, error)
+	SaveUser(ctx context.Context, email string, passHash []byte, nickname string) (int, error)
 	GetUser(ctx context.Context, email string) (models.User, error)
+	GetUserByID(ctx context.Context, userID int) (models.User, error)
 	UpdatePassword(ctx context.Context, email string, password []byte) error
+	UpdateNickname(ctx context.Context, userID int, nickname string) error
 }
 
 type VerificationStorage interface {
@@ -272,7 +278,8 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 
 	// Code is correct and already deleted from Redis by the Lua script.
 	// Save user to the database.
-	userID, err := a.userStorage.SaveUser(ctx, email, passHash)
+	nickname := defaultNicknameByEmail(email)
+	userID, err := a.userStorage.SaveUser(ctx, email, passHash, nickname)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExists) {
 			log.Info("user already exists")
@@ -287,6 +294,7 @@ func (a *Auth) Register(ctx context.Context, email string, code string) (string,
 		ID:       userID,
 		Email:    email,
 		PassHash: passHash,
+		Nickname: nickname,
 	}
 
 	accessToken, err := jwt.NewToken(user.ID, user.Email, a.jwtSecret, a.accessTokenTTL, "access")
@@ -584,4 +592,68 @@ func (a *Auth) LogoutFromAllDevices(ctx context.Context, accessToken string) err
 
 	log.Info("user logged out from all devices")
 	return nil
+}
+
+func (a *Auth) GetUserInfo(ctx context.Context, userID int) (models.User, error) {
+	const op = "auth.GetUserInfo"
+
+	log := a.log.With(slog.String("op", op))
+
+	log.Info("getting user info", slog.Int("user_id", userID))
+
+	if userID <= 0 {
+		return models.User{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
+	}
+
+	user, err := a.userStorage.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, storage.ErrUserNotFound) {
+			return models.User{}, fmt.Errorf("%s: %w", op, ErrUserNotFound)
+		}
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
+func (a *Auth) UpdateNickname(ctx context.Context, userID int, nickname string) (models.User, error) {
+	const op = "auth.UpdateNickname"
+
+	log := a.log.With(slog.String("op", op))
+
+	nickname = strings.TrimSpace(nickname)
+	if userID <= 0 {
+		return models.User{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
+	}
+	if nickname == "" {
+		return models.User{}, fmt.Errorf("%s: %w", op, ErrInvalidNickname)
+	}
+
+	if err := a.userStorage.UpdateNickname(ctx, userID, nickname); err != nil {
+		if errors.Is(err, storage.ErrUserNotFound) {
+			return models.User{}, fmt.Errorf("%s: %w", op, ErrUserNotFound)
+		}
+		log.Error("failed to update nickname", slog.String("error", err.Error()))
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	user, err := a.userStorage.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, storage.ErrUserNotFound) {
+			return models.User{}, fmt.Errorf("%s: %w", op, ErrUserNotFound)
+		}
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
+func defaultNicknameByEmail(email string) string {
+	email = strings.TrimSpace(email)
+	parts := strings.SplitN(email, "@", 2)
+	if len(parts) == 0 || strings.TrimSpace(parts[0]) == "" {
+		return "user"
+	}
+
+	return strings.TrimSpace(parts[0])
 }

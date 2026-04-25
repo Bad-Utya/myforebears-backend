@@ -13,6 +13,7 @@ func Map(err error) error {
 	case errors.Is(err, personsvc.ErrInvalidPersonID),
 		errors.Is(err, personsvc.ErrInvalidTreeID),
 		errors.Is(err, personsvc.ErrInvalidUserID),
+		errors.Is(err, personsvc.ErrInvalidLimit),
 		errors.Is(err, personsvc.ErrInvalidName),
 		errors.Is(err, personsvc.ErrInvalidGender),
 		errors.Is(err, personsvc.ErrDeleteNotAllowed),

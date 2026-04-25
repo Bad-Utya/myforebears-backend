@@ -97,6 +97,7 @@ func (h *Handler) UpdateTreeSettings(ctx context.Context, req *familytreepb.Upda
 		req.GetTreeId(),
 		req.GetIsViewRestricted(),
 		req.GetIsPublicOnMainPage(),
+		req.GetName(),
 	)
 	if err != nil {
 		return nil, grpcerr.Map(err)

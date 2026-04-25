@@ -14,6 +14,8 @@ import (
 type FamilyTreeService interface {
 	CreateTree(ctx context.Context, requestUserID int) (models.Tree, models.Person, error)
 	ListTreesByCreator(ctx context.Context, requestUserID int) ([]models.Tree, error)
+	ListPublicTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error)
+	ListRandomPublicTrees(ctx context.Context, limit int) ([]models.Tree, error)
 	GetTree(ctx context.Context, treeID string) (models.Tree, error)
 	GetTreeContent(ctx context.Context, treeID string) ([]models.Person, []models.Relationship, error)
 	GetTreeAccessInfo(ctx context.Context, treeID string) (models.Tree, error)
@@ -21,7 +23,7 @@ type FamilyTreeService interface {
 	AddTreeAccessEmail(ctx context.Context, treeID string, email string) error
 	ListTreeAccessEmails(ctx context.Context, treeID string) ([]string, error)
 	DeleteTreeAccessEmail(ctx context.Context, treeID string, email string) error
-	UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool) (models.Tree, error)
+	UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool, name string) (models.Tree, error)
 	ListPersonsByTree(ctx context.Context, treeID string) ([]models.Person, error)
 	AddParent(ctx context.Context, treeID string, childID string, role personsvc.ParentRole, firstName string, lastName string, patronymic string) (models.Person, *models.Person, error)
 	AddChild(ctx context.Context, treeID string, parent1ID string, parent2ID string, firstName string, lastName string, patronymic string, gender models.Gender) (models.Person, *models.Person, error)

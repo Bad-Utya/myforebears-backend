@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 
 	familytreepb "github.com/Bad-Utya/myforebears-backend/gen/go/familytree"
@@ -54,8 +55,9 @@ type updatePersonNameRequest struct {
 }
 
 type updateTreeSettingsRequest struct {
-	IsViewRestricted   bool `json:"is_view_restricted"`
-	IsPublicOnMainPage bool `json:"is_public_on_main_page"`
+	IsViewRestricted   bool   `json:"is_view_restricted"`
+	IsPublicOnMainPage bool   `json:"is_public_on_main_page"`
+	Name               string `json:"name"`
 }
 
 type treeAccessEmailRequest struct {
@@ -68,6 +70,7 @@ type familyTreeJSON struct {
 	CreatedAtUnix      int64  `json:"created_at_unix"`
 	IsViewRestricted   bool   `json:"is_view_restricted"`
 	IsPublicOnMainPage bool   `json:"is_public_on_main_page"`
+	Name               string `json:"name"`
 }
 
 type familyPersonJSON struct {
@@ -250,6 +253,92 @@ func (h *Handler) ListTrees(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"trees": trees})
 }
 
+// ListPublicTreesByCreator returns public trees for a specified user.
+// @Summary List public trees by creator
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Param user_id path int true "User ID"
+// @Success 200 {object} treesSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/public/users/{user_id} [get]
+func (h *Handler) ListPublicTreesByCreator(w http.ResponseWriter, r *http.Request) {
+	userIDRaw := strings.TrimSpace(chi.URLParam(r, "user_id"))
+	if userIDRaw == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "user_id is required")
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDRaw)
+	if err != nil || userID <= 0 {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid user_id")
+		return
+	}
+
+	resp, err := h.client.ListPublicTreesByCreator(r.Context(), userID)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("list public trees by creator failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	trees := make([]map[string]any, 0, len(resp.GetTrees()))
+	for _, t := range resp.GetTrees() {
+		trees = append(trees, toTreeJSON(t))
+	}
+
+	response.OK(w, map[string]any{"trees": trees})
+}
+
+// ListRandomPublicTrees returns random public trees from all users.
+// @Summary List random public trees
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Param limit query int true "Trees count"
+// @Success 200 {object} treesSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/public/random [get]
+func (h *Handler) ListRandomPublicTrees(w http.ResponseWriter, r *http.Request) {
+	limitRaw := strings.TrimSpace(r.URL.Query().Get("limit"))
+	if limitRaw == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "limit is required")
+		return
+	}
+
+	limit, err := strconv.Atoi(limitRaw)
+	if err != nil || limit <= 0 {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid limit")
+		return
+	}
+
+	resp, err := h.client.ListRandomPublicTrees(r.Context(), limit)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("list random public trees failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	trees := make([]map[string]any, 0, len(resp.GetTrees()))
+	for _, t := range resp.GetTrees() {
+		trees = append(trees, toTreeJSON(t))
+	}
+
+	response.OK(w, map[string]any{"trees": trees})
+}
+
 // GetTree returns a tree by ID.
 // @Summary Get tree
 // @Tags familytree
@@ -332,7 +421,7 @@ func (h *Handler) GetTreeContent(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"persons": persons, "relationships": relationships})
 }
 
-// UpdateTreeSettings updates visibility settings of a tree.
+// UpdateTreeSettings updates settings of a tree.
 // @Summary Update tree settings
 // @Tags familytree
 // @Accept json
@@ -362,7 +451,7 @@ func (h *Handler) UpdateTreeSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.client.UpdateTreeSettings(r.Context(), treeID, req.IsViewRestricted, req.IsPublicOnMainPage)
+	resp, err := h.client.UpdateTreeSettings(r.Context(), treeID, req.IsViewRestricted, req.IsPublicOnMainPage, req.Name)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("update tree settings failed", slog.String("error", err.Error()))
@@ -874,5 +963,6 @@ func toTreeJSON(t *familytreepb.Tree) map[string]any {
 		"created_at_unix":        t.GetCreatedAtUnix(),
 		"is_view_restricted":     t.GetIsViewRestricted(),
 		"is_public_on_main_page": t.GetIsPublicOnMainPage(),
+		"name":                   t.GetName(),
 	}
 }

@@ -35,6 +35,34 @@ func (h *Handler) ListTreesByCreator(ctx context.Context, req *familytreepb.List
 	return &familytreepb.ListTreesByCreatorResponse{Trees: out}, nil
 }
 
+func (h *Handler) ListPublicTreesByCreator(ctx context.Context, req *familytreepb.ListPublicTreesByCreatorRequest) (*familytreepb.ListPublicTreesByCreatorResponse, error) {
+	trees, err := h.service.ListPublicTreesByCreator(ctx, int(req.GetCreatorId()))
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	out := make([]*familytreepb.Tree, 0, len(trees))
+	for _, tree := range trees {
+		out = append(out, toProtoTree(tree))
+	}
+
+	return &familytreepb.ListPublicTreesByCreatorResponse{Trees: out}, nil
+}
+
+func (h *Handler) ListRandomPublicTrees(ctx context.Context, req *familytreepb.ListRandomPublicTreesRequest) (*familytreepb.ListRandomPublicTreesResponse, error) {
+	trees, err := h.service.ListRandomPublicTrees(ctx, int(req.GetLimit()))
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	out := make([]*familytreepb.Tree, 0, len(trees))
+	for _, tree := range trees {
+		out = append(out, toProtoTree(tree))
+	}
+
+	return &familytreepb.ListRandomPublicTreesResponse{Trees: out}, nil
+}
+
 func (h *Handler) ListPersonsByTree(ctx context.Context, req *familytreepb.ListPersonsByTreeRequest) (*familytreepb.ListPersonsByTreeResponse, error) {
 	persons, err := h.service.ListPersonsByTree(ctx, req.GetTreeId())
 	if err != nil {
@@ -173,5 +201,6 @@ func toProtoTree(tree models.Tree) *familytreepb.Tree {
 		CreatedAtUnix:      tree.CreatedAt.Unix(),
 		IsViewRestricted:   tree.IsViewRestricted,
 		IsPublicOnMainPage: tree.IsPublicOnMainPage,
+		Name:               tree.Name,
 	}
 }

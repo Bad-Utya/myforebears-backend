@@ -160,3 +160,25 @@ func (c *Client) LogoutFromAllDevices(ctx context.Context, accessToken string) e
 
 	return nil
 }
+
+func (c *Client) GetUserInfo(ctx context.Context, userID int) (*authpb.GetUserInfoResponse, error) {
+	const op = "clients.auth.GetUserInfo"
+
+	resp, err := c.api.GetUserInfo(ctx, &authpb.GetUserInfoRequest{UserId: int32(userID)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) UpdateNickname(ctx context.Context, userID int, nickname string) (*authpb.UpdateNicknameResponse, error) {
+	const op = "clients.auth.UpdateNickname"
+
+	resp, err := c.api.UpdateNickname(ctx, &authpb.UpdateNicknameRequest{UserId: int32(userID), Nickname: nickname})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}

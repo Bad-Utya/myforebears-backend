@@ -18,6 +18,7 @@ var (
 	ErrInvalidName             = errors.New("first name and last name are required")
 	ErrInvalidGender           = errors.New("invalid gender")
 	ErrInvalidUserID           = errors.New("invalid user id")
+	ErrInvalidLimit            = errors.New("invalid limit")
 	ErrForbidden               = errors.New("forbidden")
 	ErrInvalidParentRole       = errors.New("invalid parent role")
 	ErrParentExists            = errors.New("parent with this role already exists")

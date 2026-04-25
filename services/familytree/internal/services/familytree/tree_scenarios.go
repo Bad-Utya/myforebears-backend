@@ -39,6 +39,7 @@ func (s *Service) CreateTree(ctx context.Context, requestUserID int) (models.Tre
 		CreatedAt:          time.Now(),
 		IsViewRestricted:   true,
 		IsPublicOnMainPage: false,
+		Name:               "New tree",
 	}
 
 	if err := s.personStorage.CreateTree(ctx, tree); err != nil {
@@ -74,6 +75,48 @@ func (s *Service) ListTreesByCreator(ctx context.Context, requestUserID int) ([]
 	}
 
 	log.Info("trees listed", slog.Int("count", len(trees)))
+
+	return trees, nil
+}
+
+func (s *Service) ListPublicTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error) {
+	const op = "service.familytree.ListPublicTreesByCreator"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("listing public trees by creator", slog.Int("creator_id", creatorID))
+
+	if creatorID <= 0 {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
+	}
+
+	trees, err := s.personStorage.GetPublicTreesByCreator(ctx, creatorID)
+	if err != nil {
+		log.Error("failed to list public trees", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("public trees listed", slog.Int("count", len(trees)))
+
+	return trees, nil
+}
+
+func (s *Service) ListRandomPublicTrees(ctx context.Context, limit int) ([]models.Tree, error) {
+	const op = "service.familytree.ListRandomPublicTrees"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("listing random public trees", slog.Int("limit", limit))
+
+	if limit <= 0 {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidLimit)
+	}
+
+	trees, err := s.personStorage.GetRandomPublicTrees(ctx, limit)
+	if err != nil {
+		log.Error("failed to list random public trees", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	log.Info("random public trees listed", slog.Int("count", len(trees)))
 
 	return trees, nil
 }
@@ -132,15 +175,18 @@ func (s *Service) GetTreeContent(ctx context.Context, treeID string) ([]models.P
 	return persons, relationships, nil
 }
 
-func (s *Service) UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool) (models.Tree, error) {
+func (s *Service) UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool, name string) (models.Tree, error) {
 	const op = "service.familytree.UpdateTreeSettings"
 	log := s.log.With(slog.String("op", op))
+
+	name = strings.TrimSpace(name)
 
 	log.Info(
 		"updating tree settings",
 		slog.String("tree_id", treeID),
 		slog.Bool("is_view_restricted", isViewRestricted),
 		slog.Bool("is_public_on_main_page", isPublicOnMainPage),
+		slog.String("name", name),
 	)
 
 	parsedTreeID, err := s.authorizeTree(ctx, treeID)
@@ -149,7 +195,7 @@ func (s *Service) UpdateTreeSettings(ctx context.Context, treeID string, isViewR
 		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.personStorage.UpdateTreeSettings(ctx, parsedTreeID, isViewRestricted, isPublicOnMainPage); err != nil {
+	if err := s.personStorage.UpdateTreeSettings(ctx, parsedTreeID, isViewRestricted, isPublicOnMainPage, name); err != nil {
 		if errors.Is(err, storage.ErrTreeNotFound) {
 			log.Info("tree not found", slog.String("tree_id", parsedTreeID.String()))
 			return models.Tree{}, fmt.Errorf("%s: %w", op, ErrTreeNotFound)

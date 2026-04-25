@@ -44,6 +44,7 @@ message Tree {
     int64 created_at_unix = 3;
     bool is_view_restricted = 4;
     bool is_public_on_main_page = 5;
+    string name = 6;
 }
 
 message Person {
@@ -71,6 +72,8 @@ message Relative {
 service FamilyTreeService {
     rpc CreateTree (CreateTreeRequest) returns (CreateTreeResponse);
     rpc ListTreesByCreator (ListTreesByCreatorRequest) returns (ListTreesByCreatorResponse);
+    rpc ListPublicTreesByCreator (ListPublicTreesByCreatorRequest) returns (ListPublicTreesByCreatorResponse);
+    rpc ListRandomPublicTrees (ListRandomPublicTreesRequest) returns (ListRandomPublicTreesResponse);
 
     rpc AddParent (AddParentRequest) returns (AddParentResponse);
     rpc AddChild (AddChildRequest) returns (AddChildResponse);
@@ -114,6 +117,22 @@ message ListTreesByCreatorRequest {
 }
 
 message ListTreesByCreatorResponse {
+    repeated Tree trees = 1;
+}
+
+message ListPublicTreesByCreatorRequest {
+    int32 creator_id = 1;
+}
+
+message ListPublicTreesByCreatorResponse {
+    repeated Tree trees = 1;
+}
+
+message ListRandomPublicTreesRequest {
+    int32 limit = 1;
+}
+
+message ListRandomPublicTreesResponse {
     repeated Tree trees = 1;
 }
 
@@ -339,6 +358,7 @@ message UpdateTreeSettingsRequest {
     string tree_id = 1;
     bool is_view_restricted = 2;
     bool is_public_on_main_page = 3;
+    string name = 4;
 }
 
 message UpdateTreeSettingsResponse {

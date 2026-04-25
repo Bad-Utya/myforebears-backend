@@ -61,6 +61,28 @@ func (c *Client) ListTreesByCreator(ctx context.Context, requestUserID int) (*fa
 	return resp, nil
 }
 
+func (c *Client) ListPublicTreesByCreator(ctx context.Context, creatorID int) (*familytreepb.ListPublicTreesByCreatorResponse, error) {
+	const op = "clients.familytree.ListPublicTreesByCreator"
+
+	resp, err := c.api.ListPublicTreesByCreator(ctx, &familytreepb.ListPublicTreesByCreatorRequest{CreatorId: int32(creatorID)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) ListRandomPublicTrees(ctx context.Context, limit int) (*familytreepb.ListRandomPublicTreesResponse, error) {
+	const op = "clients.familytree.ListRandomPublicTrees"
+
+	resp, err := c.api.ListRandomPublicTrees(ctx, &familytreepb.ListRandomPublicTreesRequest{Limit: int32(limit)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) GetTree(ctx context.Context, treeID string) (*familytreepb.GetTreeResponse, error) {
 	const op = "clients.familytree.GetTree"
 
@@ -146,13 +168,14 @@ func (c *Client) DeleteTreeAccessEmail(ctx context.Context, treeID string, email
 	return nil
 }
 
-func (c *Client) UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool) (*familytreepb.UpdateTreeSettingsResponse, error) {
+func (c *Client) UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool, name string) (*familytreepb.UpdateTreeSettingsResponse, error) {
 	const op = "clients.familytree.UpdateTreeSettings"
 
 	resp, err := c.api.UpdateTreeSettings(ctx, &familytreepb.UpdateTreeSettingsRequest{
 		TreeId:             treeID,
 		IsViewRestricted:   isViewRestricted,
 		IsPublicOnMainPage: isPublicOnMainPage,
+		Name:               name,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)

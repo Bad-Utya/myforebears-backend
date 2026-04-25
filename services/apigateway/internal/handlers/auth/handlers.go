@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/lib/grpcerr"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/lib/response"
+	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/middleware"
+	"github.com/go-chi/chi/v5"
 )
 
 const (
@@ -59,8 +62,17 @@ type resetPasswordWithTokenRequest struct {
 	Password string `json:"password"`
 }
 
+type updateNicknameRequest struct {
+	Nickname string `json:"nickname"`
+}
+
 type tokensResponse struct {
 	AccessToken string `json:"access_token"`
+}
+
+type userInfoResponse struct {
+	ID       int32  `json:"id"`
+	Nickname string `json:"nickname"`
 }
 
 type authStatusData struct {
@@ -416,6 +428,84 @@ func (h *Handler) LogoutFromAllDevices(w http.ResponseWriter, r *http.Request) {
 
 	clearRefreshTokenCookie(w)
 	response.OK(w, map[string]string{"status": "ok"})
+}
+
+// GetUserInfo returns public user info by id.
+// @Summary Get user info
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user_id path int true "User ID"
+// @Success 200 {object} map[string]userInfoResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/users/{user_id} [get]
+func (h *Handler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
+	userIDRaw := strings.TrimSpace(chi.URLParam(r, "user_id"))
+	if userIDRaw == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "user_id is required")
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDRaw)
+	if err != nil || userID <= 0 {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid user_id")
+		return
+	}
+
+	resp, err := h.client.GetUserInfo(r.Context(), userID)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("get user info failed", slog.String("error", err.Error()))
+		response.Error(w, status, "auth_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"user": map[string]any{
+		"id":       resp.GetUser().GetId(),
+		"nickname": resp.GetUser().GetNickname(),
+	}})
+}
+
+// UpdateNickname updates nickname for authenticated user.
+// @Summary Update my nickname
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body updateNicknameRequest true "Request body"
+// @Success 200 {object} map[string]userInfoResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/users/me/nickname [patch]
+func (h *Handler) UpdateNickname(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.UserIDFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	var req updateNicknameRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid request body")
+		return
+	}
+
+	resp, err := h.client.UpdateNickname(r.Context(), userID, req.Nickname)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("update nickname failed", slog.String("error", err.Error()))
+		response.Error(w, status, "auth_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"user": map[string]any{
+		"id":       resp.GetUser().GetId(),
+		"nickname": resp.GetUser().GetNickname(),
+	}})
 }
 
 // setRefreshTokenCookie sets the refresh token as an HttpOnly cookie.

@@ -68,12 +68,13 @@ func (s *Storage) CreateTree(ctx context.Context, tree models.Tree) error {
 
 	_, err := s.pool.Exec(
 		ctx,
-		`INSERT INTO trees (id, creator_id, is_view_restricted, is_public_on_main_page)
-		 VALUES ($1, $2, $3, $4)`,
+		`INSERT INTO trees (id, creator_id, is_view_restricted, is_public_on_main_page, name)
+		 VALUES ($1, $2, $3, $4, $5)`,
 		tree.ID,
 		tree.CreatorID,
 		tree.IsViewRestricted,
 		tree.IsPublicOnMainPage,
+		tree.Name,
 	)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -88,10 +89,10 @@ func (s *Storage) GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, e
 	var tree models.Tree
 	err := s.pool.QueryRow(
 		ctx,
-		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name
 		 FROM trees WHERE id = $1`,
 		treeID,
-	).Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage)
+	).Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.Tree{}, fmt.Errorf("%s: %w", op, storage.ErrTreeNotFound)
@@ -102,17 +103,19 @@ func (s *Storage) GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, e
 	return tree, nil
 }
 
-func (s *Storage) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool) error {
+func (s *Storage) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool, name string) error {
 	const op = "storage.postgres.UpdateTreeSettings"
 
 	cmdTag, err := s.pool.Exec(
 		ctx,
 		`UPDATE trees
 		 SET is_view_restricted = $1,
-		     is_public_on_main_page = $2
-		 WHERE id = $3`,
+		     is_public_on_main_page = $2,
+		     name = $3
+		 WHERE id = $4`,
 		isViewRestricted,
 		isPublicOnMainPage,
+		name,
 		treeID,
 	)
 	if err != nil {
@@ -226,7 +229,7 @@ func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]model
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name
 		 FROM trees
 		 WHERE creator_id = $1
 		 ORDER BY created_at DESC`,
@@ -240,7 +243,72 @@ func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]model
 	trees := make([]models.Tree, 0)
 	for rows.Next() {
 		var tree models.Tree
-		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage); err != nil {
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		trees = append(trees, tree)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return trees, nil
+}
+
+func (s *Storage) GetPublicTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error) {
+	const op = "storage.postgres.GetPublicTreesByCreator"
+
+	rows, err := s.pool.Query(
+		ctx,
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name
+		 FROM trees
+		 WHERE creator_id = $1 AND is_public_on_main_page = TRUE
+		 ORDER BY created_at DESC`,
+		creatorID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	trees := make([]models.Tree, 0)
+	for rows.Next() {
+		var tree models.Tree
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		trees = append(trees, tree)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return trees, nil
+}
+
+func (s *Storage) GetRandomPublicTrees(ctx context.Context, limit int) ([]models.Tree, error) {
+	const op = "storage.postgres.GetRandomPublicTrees"
+
+	rows, err := s.pool.Query(
+		ctx,
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name
+		 FROM trees
+		 WHERE is_public_on_main_page = TRUE
+		 ORDER BY RANDOM()
+		 LIMIT $1`,
+		limit,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	trees := make([]models.Tree, 0)
+	for rows.Next() {
+		var tree models.Tree
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		trees = append(trees, tree)

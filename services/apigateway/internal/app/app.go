@@ -137,7 +137,19 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		})
 	})
 
+	router.Route("/api/users", func(r chi.Router) {
+		r.Get("/{user_id}", authHandler.GetUserInfo)
+
+		r.Group(func(r chi.Router) {
+			r.Use(tokenChecker.Middleware)
+			r.Patch("/me/nickname", authHandler.UpdateNickname)
+		})
+	})
+
 	router.Route("/api/familytree", func(r chi.Router) {
+		r.Get("/public/users/{user_id}", familyTreeHandler.ListPublicTreesByCreator)
+		r.Get("/public/random", familyTreeHandler.ListRandomPublicTrees)
+
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
 			r.Post("/", familyTreeHandler.CreateTree)

@@ -12,4 +12,5 @@ type Tree struct {
 	CreatedAt          time.Time
 	IsViewRestricted   bool
 	IsPublicOnMainPage bool
+	Name               string
 }

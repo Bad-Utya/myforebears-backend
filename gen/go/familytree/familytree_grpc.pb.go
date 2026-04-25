@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	FamilyTreeService_CreateTree_FullMethodName                      = "/familytree.FamilyTreeService/CreateTree"
 	FamilyTreeService_ListTreesByCreator_FullMethodName              = "/familytree.FamilyTreeService/ListTreesByCreator"
+	FamilyTreeService_ListPublicTreesByCreator_FullMethodName        = "/familytree.FamilyTreeService/ListPublicTreesByCreator"
+	FamilyTreeService_ListRandomPublicTrees_FullMethodName           = "/familytree.FamilyTreeService/ListRandomPublicTrees"
 	FamilyTreeService_AddParent_FullMethodName                       = "/familytree.FamilyTreeService/AddParent"
 	FamilyTreeService_AddChild_FullMethodName                        = "/familytree.FamilyTreeService/AddChild"
 	FamilyTreeService_AddPartner_FullMethodName                      = "/familytree.FamilyTreeService/AddPartner"
@@ -53,6 +55,8 @@ const (
 type FamilyTreeServiceClient interface {
 	CreateTree(ctx context.Context, in *CreateTreeRequest, opts ...grpc.CallOption) (*CreateTreeResponse, error)
 	ListTreesByCreator(ctx context.Context, in *ListTreesByCreatorRequest, opts ...grpc.CallOption) (*ListTreesByCreatorResponse, error)
+	ListPublicTreesByCreator(ctx context.Context, in *ListPublicTreesByCreatorRequest, opts ...grpc.CallOption) (*ListPublicTreesByCreatorResponse, error)
+	ListRandomPublicTrees(ctx context.Context, in *ListRandomPublicTreesRequest, opts ...grpc.CallOption) (*ListRandomPublicTreesResponse, error)
 	AddParent(ctx context.Context, in *AddParentRequest, opts ...grpc.CallOption) (*AddParentResponse, error)
 	AddChild(ctx context.Context, in *AddChildRequest, opts ...grpc.CallOption) (*AddChildResponse, error)
 	AddPartner(ctx context.Context, in *AddPartnerRequest, opts ...grpc.CallOption) (*AddPartnerResponse, error)
@@ -101,6 +105,26 @@ func (c *familyTreeServiceClient) ListTreesByCreator(ctx context.Context, in *Li
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListTreesByCreatorResponse)
 	err := c.cc.Invoke(ctx, FamilyTreeService_ListTreesByCreator_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *familyTreeServiceClient) ListPublicTreesByCreator(ctx context.Context, in *ListPublicTreesByCreatorRequest, opts ...grpc.CallOption) (*ListPublicTreesByCreatorResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListPublicTreesByCreatorResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_ListPublicTreesByCreator_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *familyTreeServiceClient) ListRandomPublicTrees(ctx context.Context, in *ListRandomPublicTreesRequest, opts ...grpc.CallOption) (*ListRandomPublicTreesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListRandomPublicTreesResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_ListRandomPublicTrees_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -353,6 +377,8 @@ func (c *familyTreeServiceClient) UpdateTreeSettings(ctx context.Context, in *Up
 type FamilyTreeServiceServer interface {
 	CreateTree(context.Context, *CreateTreeRequest) (*CreateTreeResponse, error)
 	ListTreesByCreator(context.Context, *ListTreesByCreatorRequest) (*ListTreesByCreatorResponse, error)
+	ListPublicTreesByCreator(context.Context, *ListPublicTreesByCreatorRequest) (*ListPublicTreesByCreatorResponse, error)
+	ListRandomPublicTrees(context.Context, *ListRandomPublicTreesRequest) (*ListRandomPublicTreesResponse, error)
 	AddParent(context.Context, *AddParentRequest) (*AddParentResponse, error)
 	AddChild(context.Context, *AddChildRequest) (*AddChildResponse, error)
 	AddPartner(context.Context, *AddPartnerRequest) (*AddPartnerResponse, error)
@@ -392,6 +418,12 @@ func (UnimplementedFamilyTreeServiceServer) CreateTree(context.Context, *CreateT
 }
 func (UnimplementedFamilyTreeServiceServer) ListTreesByCreator(context.Context, *ListTreesByCreatorRequest) (*ListTreesByCreatorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTreesByCreator not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) ListPublicTreesByCreator(context.Context, *ListPublicTreesByCreatorRequest) (*ListPublicTreesByCreatorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListPublicTreesByCreator not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) ListRandomPublicTrees(context.Context, *ListRandomPublicTreesRequest) (*ListRandomPublicTreesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListRandomPublicTrees not implemented")
 }
 func (UnimplementedFamilyTreeServiceServer) AddParent(context.Context, *AddParentRequest) (*AddParentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddParent not implemented")
@@ -518,6 +550,42 @@ func _FamilyTreeService_ListTreesByCreator_Handler(srv interface{}, ctx context.
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FamilyTreeServiceServer).ListTreesByCreator(ctx, req.(*ListTreesByCreatorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FamilyTreeService_ListPublicTreesByCreator_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListPublicTreesByCreatorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).ListPublicTreesByCreator(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_ListPublicTreesByCreator_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).ListPublicTreesByCreator(ctx, req.(*ListPublicTreesByCreatorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FamilyTreeService_ListRandomPublicTrees_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRandomPublicTreesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).ListRandomPublicTrees(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_ListRandomPublicTrees_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).ListRandomPublicTrees(ctx, req.(*ListRandomPublicTreesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -968,6 +1036,14 @@ var FamilyTreeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListTreesByCreator",
 			Handler:    _FamilyTreeService_ListTreesByCreator_Handler,
+		},
+		{
+			MethodName: "ListPublicTreesByCreator",
+			Handler:    _FamilyTreeService_ListPublicTreesByCreator_Handler,
+		},
+		{
+			MethodName: "ListRandomPublicTrees",
+			Handler:    _FamilyTreeService_ListRandomPublicTrees_Handler,
 		},
 		{
 			MethodName: "AddParent",

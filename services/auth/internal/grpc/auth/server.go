@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	authpb "github.com/Bad-Utya/myforebears-backend/gen/go/auth"
+	"github.com/Bad-Utya/myforebears-backend/services/auth/internal/domain/models"
 	"github.com/Bad-Utya/myforebears-backend/services/auth/internal/services/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -21,6 +22,8 @@ type Auth interface {
 	RefreshTokens(ctx context.Context, refreshToken string) (string, string, error)
 	Logout(ctx context.Context, accessToken string) error
 	LogoutFromAllDevices(ctx context.Context, accessToken string) error
+	GetUserInfo(ctx context.Context, userID int) (models.User, error)
+	UpdateNickname(ctx context.Context, userID int, nickname string) (models.User, error)
 }
 
 type ServerAPI struct {
@@ -129,7 +132,7 @@ func (s *ServerAPI) ResetPasswordWithToken(ctx context.Context, req *authpb.Rese
 	return &authpb.ResetPasswordWithTokenResponse{}, nil
 }
 
-func (s *ServerAPI) RefreshToken(ctx context.Context, req *authpb.RefreshTokensRequest) (*authpb.RefreshTokensResponse, error) {
+func (s *ServerAPI) RefreshTokens(ctx context.Context, req *authpb.RefreshTokensRequest) (*authpb.RefreshTokensResponse, error) {
 	accessToken, refreshToken, err := s.auth.RefreshTokens(ctx, req.GetRefreshToken())
 	if err != nil {
 		if errors.Is(err, auth.ErrInvalidToken) {
@@ -143,6 +146,48 @@ func (s *ServerAPI) RefreshToken(ctx context.Context, req *authpb.RefreshTokensR
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
+
+func (s *ServerAPI) GetUserInfo(ctx context.Context, req *authpb.GetUserInfoRequest) (*authpb.GetUserInfoResponse, error) {
+	user, err := s.auth.GetUserInfo(ctx, int(req.GetUserId()))
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidUserID) {
+			return nil, status.Error(codes.InvalidArgument, "invalid user id")
+		}
+		if errors.Is(err, auth.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	return &authpb.GetUserInfoResponse{User: toProtoUser(user)}, nil
+}
+
+func (s *ServerAPI) UpdateNickname(ctx context.Context, req *authpb.UpdateNicknameRequest) (*authpb.UpdateNicknameResponse, error) {
+	user, err := s.auth.UpdateNickname(ctx, int(req.GetUserId()), req.GetNickname())
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidUserID) {
+			return nil, status.Error(codes.InvalidArgument, "invalid user id")
+		}
+		if errors.Is(err, auth.ErrInvalidNickname) {
+			return nil, status.Error(codes.InvalidArgument, "invalid nickname")
+		}
+		if errors.Is(err, auth.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	return &authpb.UpdateNicknameResponse{User: toProtoUser(user)}, nil
+}
+
+func toProtoUser(user models.User) *authpb.User {
+	return &authpb.User{
+		Id:       int32(user.ID),
+		Nickname: user.Nickname,
+	}
 }
 
 func (s *ServerAPI) Logout(ctx context.Context, req *authpb.LogoutRequest) (*authpb.LogoutResponse, error) {
