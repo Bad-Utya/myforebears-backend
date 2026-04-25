@@ -26,6 +26,44 @@ func New(log *slog.Logger, client *photosclient.Client) *Handler {
 	return &Handler{log: log, client: client}
 }
 
+type photoJSON struct {
+	ID             string `json:"id"`
+	OwnerUserID    int32  `json:"owner_user_id"`
+	TreeID         string `json:"tree_id"`
+	PersonID       string `json:"person_id"`
+	EventID        string `json:"event_id"`
+	IsUserAvatar   bool   `json:"is_user_avatar"`
+	IsPersonAvatar bool   `json:"is_person_avatar"`
+	FileName       string `json:"file_name"`
+	MimeType       string `json:"mime_type"`
+	SizeBytes      int64  `json:"size_bytes"`
+	CreatedAtUnix  int64  `json:"created_at_unix"`
+}
+
+type photoSuccessData struct {
+	Photo photoJSON `json:"photo"`
+}
+
+type photosSuccessData struct {
+	Photos []photoJSON `json:"photos"`
+}
+
+type photosStatusData struct {
+	Status string `json:"status"`
+}
+
+type photoSuccessResponse struct {
+	Data photoSuccessData `json:"data"`
+}
+
+type photosSuccessResponse struct {
+	Data photosSuccessData `json:"data"`
+}
+
+type photosStatusSuccessResponse struct {
+	Data photosStatusData `json:"data"`
+}
+
 // UploadUserAvatar uploads avatar image for authenticated user.
 // @Summary Upload user avatar
 // @Tags photos
@@ -33,7 +71,7 @@ func New(log *slog.Logger, client *photosclient.Client) *Handler {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param file formData file true "Avatar file"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} photoSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -109,7 +147,7 @@ func (h *Handler) GetUserAvatar(w http.ResponseWriter, r *http.Request) {
 // @Param tree_id path string true "Tree ID"
 // @Param person_id path string true "Person ID"
 // @Param file formData file true "Avatar file"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} photoSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -195,7 +233,7 @@ func (h *Handler) GetPersonAvatar(w http.ResponseWriter, r *http.Request) {
 // @Param tree_id path string true "Tree ID"
 // @Param person_id path string true "Person ID"
 // @Param file formData file true "Photo file"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} photoSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -242,7 +280,7 @@ func (h *Handler) UploadPersonPhoto(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param person_id path string true "Person ID"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} photosSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -287,7 +325,7 @@ func (h *Handler) ListPersonPhotos(w http.ResponseWriter, r *http.Request) {
 // @Param tree_id path string true "Tree ID"
 // @Param event_id path string true "Event ID"
 // @Param file formData file true "Photo file"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} photoSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -334,7 +372,7 @@ func (h *Handler) UploadEventPhoto(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param event_id path string true "Event ID"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} photosSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -416,7 +454,7 @@ func (h *Handler) GetPhotoByID(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param photo_id path string true "Photo ID"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} photosStatusSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse

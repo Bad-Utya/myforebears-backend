@@ -43,7 +43,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/auth.authTokensSuccessResponse"
                         }
                     },
                     "400": {
@@ -107,7 +107,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/auth.authStatusSuccessResponse"
                         }
                     },
                     "401": {
@@ -171,7 +171,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/auth.authStatusSuccessResponse"
                         }
                     },
                     "401": {
@@ -230,7 +230,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/auth.authTokensSuccessResponse"
                         }
                     },
                     "401": {
@@ -294,7 +294,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/auth.authTokensSuccessResponse"
                         }
                     },
                     "400": {
@@ -364,7 +364,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/auth.authStatusSuccessResponse"
                         }
                     },
                     "400": {
@@ -439,7 +439,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/auth.authStatusSuccessResponse"
                         }
                     },
                     "400": {
@@ -515,7 +515,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/auth.authStatusSuccessResponse"
                         }
                     },
                     "400": {
@@ -573,7 +573,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/auth.authStatusSuccessResponse"
                         }
                     },
                     "400": {
@@ -630,7 +630,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/events.eventTypesSuccessResponse"
                         }
                     },
                     "401": {
@@ -702,7 +702,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/events.eventTypeSuccessResponse"
                         }
                     },
                     "400": {
@@ -780,7 +780,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/events.eventTypeSuccessResponse"
                         }
                     },
                     "400": {
@@ -856,7 +856,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/events.eventsStatusSuccessResponse"
                         }
                     },
                     "400": {
@@ -934,7 +934,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/events.eventsSuccessResponse"
                         }
                     },
                     "400": {
@@ -1019,7 +1019,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/events.eventSuccessResponse"
                         }
                     },
                     "400": {
@@ -1104,7 +1104,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/events.eventSuccessResponse"
                         }
                     },
                     "400": {
@@ -1196,7 +1196,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/events.eventSuccessResponse"
                         }
                     },
                     "400": {
@@ -1279,7 +1279,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/events.eventsStatusSuccessResponse"
                         }
                     },
                     "400": {
@@ -1348,7 +1348,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.treesSuccessResponse"
                         }
                     },
                     "401": {
@@ -1409,7 +1409,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.createTreeSuccessResponse"
                         }
                     },
                     "401": {
@@ -1481,7 +1481,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.treeSuccessResponse"
                         }
                     },
                     "400": {
@@ -1566,7 +1566,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.treeSuccessResponse"
                         }
                     },
                     "400": {
@@ -1644,7 +1644,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.treeAccessEmailsSuccessResponse"
                         }
                     },
                     "400": {
@@ -1729,7 +1729,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.familyStatusSuccessResponse"
                         }
                     },
                     "400": {
@@ -1814,7 +1814,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.familyStatusSuccessResponse"
                         }
                     },
                     "400": {
@@ -1901,7 +1901,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.addChildSuccessResponse"
                         }
                     },
                     "400": {
@@ -1979,7 +1979,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.treeContentSuccessResponse"
                         }
                     },
                     "400": {
@@ -2066,7 +2066,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.addParentSuccessResponse"
                         }
                     },
                     "400": {
@@ -2153,7 +2153,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.addPartnerSuccessResponse"
                         }
                     },
                     "400": {
@@ -2231,7 +2231,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.personsSuccessResponse"
                         }
                     },
                     "400": {
@@ -2316,7 +2316,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.personSuccessResponse"
                         }
                     },
                     "400": {
@@ -2399,7 +2399,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.familyStatusSuccessResponse"
                         }
                     },
                     "400": {
@@ -2491,7 +2491,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/familytree.personSuccessResponse"
                         }
                     },
                     "400": {
@@ -2625,7 +2625,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/photos.photoSuccessResponse"
                         }
                     },
                     "400": {
@@ -2710,7 +2710,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/photos.photosSuccessResponse"
                         }
                     },
                     "400": {
@@ -2800,7 +2800,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/photos.photoSuccessResponse"
                         }
                     },
                     "400": {
@@ -2885,7 +2885,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/photos.photosSuccessResponse"
                         }
                     },
                     "400": {
@@ -2975,7 +2975,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/photos.photoSuccessResponse"
                         }
                     },
                     "400": {
@@ -3147,7 +3147,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/photos.photoSuccessResponse"
                         }
                     },
                     "400": {
@@ -3312,7 +3312,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.SuccessResponse"
+                            "$ref": "#/definitions/photos.photosStatusSuccessResponse"
                         }
                     },
                     "400": {
@@ -3362,6 +3362,30 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "auth.authStatusData": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.authStatusSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/auth.authStatusData"
+                }
+            }
+        },
+        "auth.authTokensSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/auth.tokensResponse"
+                }
+            }
+        },
         "auth.loginRequest": {
             "type": "object",
             "properties": {
@@ -3422,6 +3446,14 @@ const docTemplate = `{
                 }
             }
         },
+        "auth.tokensResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                }
+            }
+        },
         "events.createEventTypeRequest": {
             "type": "object",
             "properties": {
@@ -3432,7 +3464,184 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "primary_persons_mode": {
+                    "type": "string",
+                    "enum": [
+                        "FIXED",
+                        "UNLIMITED"
+                    ]
+                }
+            }
+        },
+        "events.eventJSON": {
+            "type": "object",
+            "properties": {
+                "additional_person_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "created_at_unix": {
+                    "type": "integer"
+                },
+                "date_bound": {
+                    "type": "string",
+                    "enum": [
+                        "EVENT_DATE_BOUND_UNSPECIFIED",
+                        "EVENT_DATE_BOUND_EXACT",
+                        "EVENT_DATE_BOUND_NOT_BEFORE",
+                        "EVENT_DATE_BOUND_NOT_AFTER"
+                    ]
+                },
+                "date_iso": {
                     "type": "string"
+                },
+                "date_precision": {
+                    "type": "string",
+                    "enum": [
+                        "EVENT_DATE_PRECISION_UNSPECIFIED",
+                        "EVENT_DATE_PRECISION_DAY",
+                        "EVENT_DATE_PRECISION_MONTH",
+                        "EVENT_DATE_PRECISION_YEAR"
+                    ]
+                },
+                "date_unknown": {
+                    "type": "boolean"
+                },
+                "event_type_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_autogenerated": {
+                    "type": "boolean"
+                },
+                "primary_person_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tree_id": {
+                    "type": "string"
+                },
+                "updated_at_unix": {
+                    "type": "integer"
+                }
+            }
+        },
+        "events.eventSuccessData": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/events.eventJSON"
+                }
+            }
+        },
+        "events.eventSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/events.eventSuccessData"
+                }
+            }
+        },
+        "events.eventTypeJSON": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner_user_id": {
+                    "type": "integer"
+                },
+                "primary_persons_count": {
+                    "type": "integer"
+                },
+                "primary_persons_mode": {
+                    "type": "string",
+                    "enum": [
+                        "PRIMARY_PERSONS_MODE_UNSPECIFIED",
+                        "PRIMARY_PERSONS_MODE_FIXED",
+                        "PRIMARY_PERSONS_MODE_UNLIMITED"
+                    ]
+                }
+            }
+        },
+        "events.eventTypeSuccessData": {
+            "type": "object",
+            "properties": {
+                "event_type": {
+                    "$ref": "#/definitions/events.eventTypeJSON"
+                }
+            }
+        },
+        "events.eventTypeSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/events.eventTypeSuccessData"
+                }
+            }
+        },
+        "events.eventTypesSuccessData": {
+            "type": "object",
+            "properties": {
+                "event_types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/events.eventTypeJSON"
+                    }
+                }
+            }
+        },
+        "events.eventTypesSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/events.eventTypesSuccessData"
+                }
+            }
+        },
+        "events.eventsStatusData": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "events.eventsStatusSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/events.eventsStatusData"
+                }
+            }
+        },
+        "events.eventsSuccessData": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/events.eventJSON"
+                    }
+                }
+            }
+        },
+        "events.eventsSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/events.eventsSuccessData"
                 }
             }
         },
@@ -3446,13 +3655,23 @@ const docTemplate = `{
                     }
                 },
                 "date_bound": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "EXACT",
+                        "NOT_BEFORE",
+                        "NOT_AFTER"
+                    ]
                 },
                 "date_iso": {
                     "type": "string"
                 },
                 "date_precision": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "DAY",
+                        "MONTH",
+                        "YEAR"
+                    ]
                 },
                 "date_unknown": {
                     "type": "boolean"
@@ -3478,7 +3697,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "gender": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "MALE",
+                        "FEMALE"
+                    ]
                 },
                 "last_name": {
                     "type": "string"
@@ -3491,6 +3714,25 @@ const docTemplate = `{
                 },
                 "patronymic": {
                     "type": "string"
+                }
+            }
+        },
+        "familytree.addChildSuccessData": {
+            "type": "object",
+            "properties": {
+                "auto_created_parent": {
+                    "$ref": "#/definitions/familytree.familyPersonJSON"
+                },
+                "child": {
+                    "$ref": "#/definitions/familytree.familyPersonJSON"
+                }
+            }
+        },
+        "familytree.addChildSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.addChildSuccessData"
                 }
             }
         },
@@ -3510,7 +3752,30 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "FATHER",
+                        "MOTHER"
+                    ]
+                }
+            }
+        },
+        "familytree.addParentSuccessData": {
+            "type": "object",
+            "properties": {
+                "auto_created_second_parent": {
+                    "$ref": "#/definitions/familytree.familyPersonJSON"
+                },
+                "parent": {
+                    "$ref": "#/definitions/familytree.familyPersonJSON"
+                }
+            }
+        },
+        "familytree.addParentSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.addParentSuccessData"
                 }
             }
         },
@@ -3531,11 +3796,249 @@ const docTemplate = `{
                 }
             }
         },
+        "familytree.addPartnerSuccessData": {
+            "type": "object",
+            "properties": {
+                "partner": {
+                    "$ref": "#/definitions/familytree.familyPersonJSON"
+                }
+            }
+        },
+        "familytree.addPartnerSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.addPartnerSuccessData"
+                }
+            }
+        },
+        "familytree.createTreeSuccessData": {
+            "type": "object",
+            "properties": {
+                "root_person": {
+                    "$ref": "#/definitions/familytree.familyPersonJSON"
+                },
+                "tree": {
+                    "$ref": "#/definitions/familytree.familyTreeJSON"
+                }
+            }
+        },
+        "familytree.createTreeSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.createTreeSuccessData"
+                }
+            }
+        },
+        "familytree.familyPersonJSON": {
+            "type": "object",
+            "properties": {
+                "avatar_photo_id": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string",
+                    "enum": [
+                        "GENDER_UNSPECIFIED",
+                        "GENDER_MALE",
+                        "GENDER_FEMALE"
+                    ]
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "patronymic": {
+                    "type": "string"
+                },
+                "tree_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "familytree.familyRelationshipJSON": {
+            "type": "object",
+            "properties": {
+                "person_id_from": {
+                    "type": "string"
+                },
+                "person_id_to": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "RELATIONSHIP_TYPE_UNSPECIFIED",
+                        "RELATIONSHIP_PARENT_CHILD",
+                        "RELATIONSHIP_PARTNER",
+                        "RELATIONSHIP_PARTNER_UNMARRIED",
+                        "RELATIONSHIP_PARTNER_MARRIED",
+                        "RELATIONSHIP_PARTNER_DIVORCED"
+                    ]
+                }
+            }
+        },
+        "familytree.familyStatusData": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "familytree.familyStatusSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.familyStatusData"
+                }
+            }
+        },
+        "familytree.familyTreeJSON": {
+            "type": "object",
+            "properties": {
+                "created_at_unix": {
+                    "type": "integer"
+                },
+                "creator_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_public_on_main_page": {
+                    "type": "boolean"
+                },
+                "is_view_restricted": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "familytree.personSuccessData": {
+            "type": "object",
+            "properties": {
+                "person": {
+                    "$ref": "#/definitions/familytree.familyPersonJSON"
+                }
+            }
+        },
+        "familytree.personSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.personSuccessData"
+                }
+            }
+        },
+        "familytree.personsSuccessData": {
+            "type": "object",
+            "properties": {
+                "persons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/familytree.familyPersonJSON"
+                    }
+                }
+            }
+        },
+        "familytree.personsSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.personsSuccessData"
+                }
+            }
+        },
         "familytree.treeAccessEmailRequest": {
             "type": "object",
             "properties": {
                 "email": {
                     "type": "string"
+                }
+            }
+        },
+        "familytree.treeAccessEmailsSuccessData": {
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "familytree.treeAccessEmailsSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.treeAccessEmailsSuccessData"
+                }
+            }
+        },
+        "familytree.treeContentSuccessData": {
+            "type": "object",
+            "properties": {
+                "persons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/familytree.familyPersonJSON"
+                    }
+                },
+                "relationships": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/familytree.familyRelationshipJSON"
+                    }
+                }
+            }
+        },
+        "familytree.treeContentSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.treeContentSuccessData"
+                }
+            }
+        },
+        "familytree.treeSuccessData": {
+            "type": "object",
+            "properties": {
+                "tree": {
+                    "$ref": "#/definitions/familytree.familyTreeJSON"
+                }
+            }
+        },
+        "familytree.treeSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.treeSuccessData"
+                }
+            }
+        },
+        "familytree.treesSuccessData": {
+            "type": "object",
+            "properties": {
+                "trees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/familytree.familyTreeJSON"
+                    }
+                }
+            }
+        },
+        "familytree.treesSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/familytree.treesSuccessData"
                 }
             }
         },
@@ -3564,6 +4067,95 @@ const docTemplate = `{
                 }
             }
         },
+        "photos.photoJSON": {
+            "type": "object",
+            "properties": {
+                "created_at_unix": {
+                    "type": "integer"
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_person_avatar": {
+                    "type": "boolean"
+                },
+                "is_user_avatar": {
+                    "type": "boolean"
+                },
+                "mime_type": {
+                    "type": "string"
+                },
+                "owner_user_id": {
+                    "type": "integer"
+                },
+                "person_id": {
+                    "type": "string"
+                },
+                "size_bytes": {
+                    "type": "integer"
+                },
+                "tree_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "photos.photoSuccessData": {
+            "type": "object",
+            "properties": {
+                "photo": {
+                    "$ref": "#/definitions/photos.photoJSON"
+                }
+            }
+        },
+        "photos.photoSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/photos.photoSuccessData"
+                }
+            }
+        },
+        "photos.photosStatusData": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "photos.photosStatusSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/photos.photosStatusData"
+                }
+            }
+        },
+        "photos.photosSuccessData": {
+            "type": "object",
+            "properties": {
+                "photos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/photos.photoJSON"
+                    }
+                }
+            }
+        },
+        "photos.photosSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/photos.photosSuccessData"
+                }
+            }
+        },
         "response.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -3573,12 +4165,6 @@ const docTemplate = `{
                 "message": {
                     "type": "string"
                 }
-            }
-        },
-        "response.SuccessResponse": {
-            "type": "object",
-            "properties": {
-                "data": {}
             }
         }
     },

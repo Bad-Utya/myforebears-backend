@@ -25,7 +25,7 @@ func New(log *slog.Logger, client *familytreeclient.Client) *Handler {
 
 type addParentRequest struct {
 	ChildID    string `json:"child_id"`
-	Role       string `json:"role"`
+	Role       string `json:"role" enums:"FATHER,MOTHER"`
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
 	Patronymic string `json:"patronymic"`
@@ -37,7 +37,7 @@ type addChildRequest struct {
 	FirstName  string `json:"first_name"`
 	LastName   string `json:"last_name"`
 	Patronymic string `json:"patronymic"`
-	Gender     string `json:"gender"`
+	Gender     string `json:"gender" enums:"MALE,FEMALE"`
 }
 
 type addPartnerRequest struct {
@@ -62,13 +62,129 @@ type treeAccessEmailRequest struct {
 	Email string `json:"email"`
 }
 
+type familyTreeJSON struct {
+	ID                 string `json:"id"`
+	CreatorID          int32  `json:"creator_id"`
+	CreatedAtUnix      int64  `json:"created_at_unix"`
+	IsViewRestricted   bool   `json:"is_view_restricted"`
+	IsPublicOnMainPage bool   `json:"is_public_on_main_page"`
+}
+
+type familyPersonJSON struct {
+	ID            string `json:"id"`
+	TreeID        string `json:"tree_id"`
+	FirstName     string `json:"first_name"`
+	LastName      string `json:"last_name"`
+	Patronymic    string `json:"patronymic"`
+	Gender        string `json:"gender" enums:"GENDER_UNSPECIFIED,GENDER_MALE,GENDER_FEMALE"`
+	AvatarPhotoID string `json:"avatar_photo_id"`
+}
+
+type familyRelationshipJSON struct {
+	PersonIDFrom string `json:"person_id_from"`
+	PersonIDTo   string `json:"person_id_to"`
+	Type         string `json:"type" enums:"RELATIONSHIP_TYPE_UNSPECIFIED,RELATIONSHIP_PARENT_CHILD,RELATIONSHIP_PARTNER,RELATIONSHIP_PARTNER_UNMARRIED,RELATIONSHIP_PARTNER_MARRIED,RELATIONSHIP_PARTNER_DIVORCED"`
+}
+
+type familyStatusData struct {
+	Status string `json:"status"`
+}
+
+type createTreeSuccessData struct {
+	Tree       familyTreeJSON   `json:"tree"`
+	RootPerson familyPersonJSON `json:"root_person"`
+}
+
+type treeSuccessData struct {
+	Tree familyTreeJSON `json:"tree"`
+}
+
+type treesSuccessData struct {
+	Trees []familyTreeJSON `json:"trees"`
+}
+
+type treeContentSuccessData struct {
+	Persons       []familyPersonJSON       `json:"persons"`
+	Relationships []familyRelationshipJSON `json:"relationships"`
+}
+
+type treeAccessEmailsSuccessData struct {
+	Emails []string `json:"emails"`
+}
+
+type personsSuccessData struct {
+	Persons []familyPersonJSON `json:"persons"`
+}
+
+type personSuccessData struct {
+	Person familyPersonJSON `json:"person"`
+}
+
+type addParentSuccessData struct {
+	Parent                  familyPersonJSON  `json:"parent"`
+	AutoCreatedSecondParent *familyPersonJSON `json:"auto_created_second_parent,omitempty"`
+}
+
+type addChildSuccessData struct {
+	Child             familyPersonJSON  `json:"child"`
+	AutoCreatedParent *familyPersonJSON `json:"auto_created_parent,omitempty"`
+}
+
+type addPartnerSuccessData struct {
+	Partner familyPersonJSON `json:"partner"`
+}
+
+type familyStatusSuccessResponse struct {
+	Data familyStatusData `json:"data"`
+}
+
+type createTreeSuccessResponse struct {
+	Data createTreeSuccessData `json:"data"`
+}
+
+type treeSuccessResponse struct {
+	Data treeSuccessData `json:"data"`
+}
+
+type treesSuccessResponse struct {
+	Data treesSuccessData `json:"data"`
+}
+
+type treeContentSuccessResponse struct {
+	Data treeContentSuccessData `json:"data"`
+}
+
+type treeAccessEmailsSuccessResponse struct {
+	Data treeAccessEmailsSuccessData `json:"data"`
+}
+
+type personsSuccessResponse struct {
+	Data personsSuccessData `json:"data"`
+}
+
+type personSuccessResponse struct {
+	Data personSuccessData `json:"data"`
+}
+
+type addParentSuccessResponse struct {
+	Data addParentSuccessData `json:"data"`
+}
+
+type addChildSuccessResponse struct {
+	Data addChildSuccessData `json:"data"`
+}
+
+type addPartnerSuccessResponse struct {
+	Data addPartnerSuccessData `json:"data"`
+}
+
 // CreateTree creates a new family tree with root person.
 // @Summary Create tree
 // @Tags familytree
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} createTreeSuccessResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
@@ -103,7 +219,7 @@ func (h *Handler) CreateTree(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} treesSuccessResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
@@ -141,7 +257,7 @@ func (h *Handler) ListTrees(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} treeSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -175,7 +291,7 @@ func (h *Handler) GetTree(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} treeContentSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -224,7 +340,7 @@ func (h *Handler) GetTreeContent(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param request body updateTreeSettingsRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} treeSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -265,7 +381,7 @@ func (h *Handler) UpdateTreeSettings(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param request body treeAccessEmailRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} familyStatusSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -305,7 +421,7 @@ func (h *Handler) AddTreeAccessEmail(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} treeAccessEmailsSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -340,7 +456,7 @@ func (h *Handler) ListTreeAccessEmails(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param request body treeAccessEmailRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} familyStatusSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -380,7 +496,7 @@ func (h *Handler) DeleteTreeAccessEmail(w http.ResponseWriter, r *http.Request) 
 // @Produce json
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} personsSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -420,7 +536,7 @@ func (h *Handler) ListPersons(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param person_id path string true "Person ID"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} personSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -461,7 +577,7 @@ func (h *Handler) GetPerson(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param request body addParentRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} addParentSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -516,7 +632,7 @@ func (h *Handler) AddParent(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param request body addChildRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} addChildSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -572,7 +688,7 @@ func (h *Handler) AddChild(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param request body addPartnerRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} addPartnerSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -620,7 +736,7 @@ func (h *Handler) AddPartner(w http.ResponseWriter, r *http.Request) {
 // @Param tree_id path string true "Tree ID"
 // @Param person_id path string true "Person ID"
 // @Param request body updatePersonNameRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} personSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -673,7 +789,7 @@ func (h *Handler) UpdatePersonName(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Param tree_id path string true "Tree ID"
 // @Param person_id path string true "Person ID"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} familyStatusSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse

@@ -63,6 +63,18 @@ type tokensResponse struct {
 	AccessToken string `json:"access_token"`
 }
 
+type authStatusData struct {
+	Status string `json:"status"`
+}
+
+type authStatusSuccessResponse struct {
+	Data authStatusData `json:"data"`
+}
+
+type authTokensSuccessResponse struct {
+	Data tokensResponse `json:"data"`
+}
+
 // --- Handlers ---
 
 // SendCode sends a verification code to email for registration flow.
@@ -72,7 +84,7 @@ type tokensResponse struct {
 // @Accept json
 // @Produce json
 // @Param request body sendCodeRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} authStatusSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 409 {object} response.ErrorResponse
 // @Failure 429 {object} response.ErrorResponse
@@ -108,7 +120,7 @@ func (h *Handler) SendCode(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param request body registerRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} authTokensSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
@@ -147,7 +159,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param request body loginRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} authTokensSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
@@ -186,7 +198,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param request body sendLinkForResetPasswordRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} authStatusSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 409 {object} response.ErrorResponse
@@ -223,7 +235,7 @@ func (h *Handler) SendLinkForResetPassword(w http.ResponseWriter, r *http.Reques
 // @Accept json
 // @Produce json
 // @Param request body resetPasswordWithLinkRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} authStatusSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
@@ -262,7 +274,7 @@ func (h *Handler) ResetPasswordWithLink(w http.ResponseWriter, r *http.Request) 
 // @Produce json
 // @Security ApiKeyAuth
 // @Param request body resetPasswordWithTokenRequest true "Request body"
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} authStatusSuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
@@ -306,7 +318,7 @@ func (h *Handler) ResetPasswordWithToken(w http.ResponseWriter, r *http.Request)
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} authTokensSuccessResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 409 {object} response.ErrorResponse
@@ -345,7 +357,7 @@ func (h *Handler) RefreshTokens(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} authStatusSuccessResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
@@ -379,7 +391,7 @@ func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Security ApiKeyAuth
-// @Success 200 {object} response.SuccessResponse
+// @Success 200 {object} authStatusSuccessResponse
 // @Failure 401 {object} response.ErrorResponse
 // @Failure 403 {object} response.ErrorResponse
 // @Failure 404 {object} response.ErrorResponse
