@@ -10,7 +10,9 @@ import (
 
 	"log/slog"
 
+	familytreepb "github.com/Bad-Utya/myforebears-backend/gen/go/familytree"
 	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/domain/models"
+	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine"
 	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/storage"
 	"github.com/google/uuid"
 )
@@ -29,6 +31,7 @@ var (
 
 type FamilyTreeClient interface {
 	GetPerson(ctx context.Context, treeID string, personID string) error
+	GetTreeContent(ctx context.Context, treeID string) (*familytreepb.GetTreeContentResponse, error)
 	GetTreeCreatorID(ctx context.Context, treeID string) (int, error)
 }
 
@@ -192,7 +195,7 @@ func (s *Service) createVisualisation(ctx context.Context, visType models.Visual
 		Type:              visType,
 		Status:            models.VisualisationStatusPending,
 		FileName:          buildFileName(visType, id),
-		MIMEType:          "application/pdf",
+		MIMEType:          "image/svg+xml",
 		SizeBytes:         0,
 		ObjectKey:         buildObjectKey(parsedTreeID, id),
 		CreatedAt:         now,
@@ -249,7 +252,7 @@ func (s *Service) runGeneration(vis models.Visualisation) {
 		return
 	}
 
-	pdfContent, err := s.generateVisualisationFile(vis)
+	svgContent, err := s.generateVisualisationFile(vis)
 	if err != nil {
 		if updateErr := s.meta.SetVisualisationFailed(ctx, vis.ID, err.Error()); updateErr != nil {
 			s.log.Error("failed to set visualisation failed", slog.String("visualisation_id", vis.ID.String()), slog.String("error", updateErr.Error()))
@@ -257,30 +260,40 @@ func (s *Service) runGeneration(vis models.Visualisation) {
 		return
 	}
 
-	if err := s.objects.PutObject(ctx, vis.ObjectKey, pdfContent, vis.MIMEType); err != nil {
+	if err := s.objects.PutObject(ctx, vis.ObjectKey, svgContent, vis.MIMEType); err != nil {
 		if updateErr := s.meta.SetVisualisationFailed(ctx, vis.ID, err.Error()); updateErr != nil {
 			s.log.Error("failed to set visualisation failed", slog.String("visualisation_id", vis.ID.String()), slog.String("error", updateErr.Error()))
 		}
 		return
 	}
 
-	if err := s.meta.SetVisualisationReady(ctx, vis.ID, int64(len(pdfContent))); err != nil {
+	if err := s.meta.SetVisualisationReady(ctx, vis.ID, int64(len(svgContent))); err != nil {
 		s.log.Error("failed to set visualisation ready", slog.String("visualisation_id", vis.ID.String()), slog.String("error", err.Error()))
 		return
 	}
 }
 
 func (s *Service) generateVisualisationFile(vis models.Visualisation) ([]byte, error) {
-	// Placeholder for future visualisation algorithms.
-	_ = vis
-	return nil, ErrGenerationNotImplemented
+	const op = "service.visualisation.generateVisualisationFile"
+
+	content, err := s.familyTree.GetTreeContent(context.Background(), vis.TreeID.String())
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	svgBytes, err := engine.RenderSVG(vis.Type, vis.RootPersonID, vis.IncludedPersonIDs, content)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return svgBytes, nil
 }
 
 func buildFileName(visType models.VisualisationType, visID uuid.UUID) string {
 	normalizedType := strings.ReplaceAll(string(visType), "_", "-")
-	return fmt.Sprintf("%s-%s.pdf", normalizedType, visID.String())
+	return fmt.Sprintf("%s-%s.svg", normalizedType, visID.String())
 }
 
 func buildObjectKey(treeID uuid.UUID, visID uuid.UUID) string {
-	return filepath.ToSlash(fmt.Sprintf("visualisations/%s/%s.pdf", treeID.String(), visID.String()))
+	return filepath.ToSlash(fmt.Sprintf("visualisations/%s/%s.svg", treeID.String(), visID.String()))
 }

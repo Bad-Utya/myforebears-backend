@@ -539,9 +539,23 @@ definitions:
       message:
         type: string
     type: object
+  response.SuccessResponse:
+    properties:
+      data: {}
+    type: object
+  visualisation.createVisualisationRequest:
+    properties:
+      included_person_ids:
+        items:
+          type: string
+        type: array
+      root_person_id:
+        type: string
+    type: object
 info:
   contact: {}
-  description: HTTP API gateway for auth, family tree, events and photos services.
+  description: HTTP API gateway for auth, family tree, events, photos and visualisation
+    services.
   title: MyForebears API Gateway
   version: "1.0"
 paths:
@@ -2875,6 +2889,387 @@ paths:
       summary: Update my nickname
       tags:
       - users
+  /api/visualisations/{tree_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List tree visualisations
+      tags:
+      - visualisations
+  /api/visualisations/{tree_id}/{visualisation_id}:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Visualisation ID
+        in: path
+        name: visualisation_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete visualisation by ID
+      tags:
+      - visualisations
+    get:
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Visualisation ID
+        in: path
+        name: visualisation_id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get visualisation by ID
+      tags:
+      - visualisations
+  /api/visualisations/{tree_id}/ancestors:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Create visualisation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/visualisation.createVisualisationRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create ancestors visualisation
+      tags:
+      - visualisations
+  /api/visualisations/{tree_id}/ancestors-descendants:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Create visualisation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/visualisation.createVisualisationRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create ancestors and descendants visualisation
+      tags:
+      - visualisations
+  /api/visualisations/{tree_id}/descendants:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Create visualisation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/visualisation.createVisualisationRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create descendants visualisation
+      tags:
+      - visualisations
+  /api/visualisations/{tree_id}/full:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Create visualisation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/visualisation.createVisualisationRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/response.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create full visualisation
+      tags:
+      - visualisations
 schemes:
 - http
 - https

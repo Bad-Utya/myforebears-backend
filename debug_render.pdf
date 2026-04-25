@@ -1,0 +1,57 @@
+%PDF-1.4
+%EOF
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 640.00 452.00] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Length 873 >>
+stream
+0 0 0 RG
+0.25 0.25 0.25 RG
+80.00 124.00 m 80.00 156.00 l 80.00 156.00 l 80.00 188.00 l S
+0.35 0.35 0.35 RG
+64.00 86.00 m 96.00 86.00 l S
+0.850 0.920 1.000 rg
+64.00 188.00 180.00 76.00 re f
+0 0 0 RG
+64.00 188.00 180.00 76.00 re S
+BT /F1 10.0 Tf 126.50 241.00 Td (Данил) Tj ET
+BT /F1 10.0 Tf 115.50 229.00 Td (Стадник) Tj ET
+BT /F1 10.0 Tf 104.50 217.00 Td (Сергеевич) Tj ET
+0.860 0.920 1.000 rg
+48.00 48.00 180.00 76.00 re f
+0 0 0 RG
+48.00 48.00 180.00 76.00 re S
+BT /F1 10.0 Tf 105.00 101.00 Td (Сергей) Tj ET
+BT /F1 10.0 Tf 99.50 89.00 Td (Стадник) Tj ET
+BT /F1 10.0 Tf 66.50 77.00 Td (Александрович) Tj ET
+1.000 0.900 0.930 rg
+80.00 48.00 180.00 76.00 re f
+0 0 0 RG
+80.00 48.00 180.00 76.00 re S
+BT /F1 10.0 Tf 106.75 95.00 Td (Юлия Стадник) Tj ET
+BT /F1 10.0 Tf 98.50 83.00 Td (Александровна) Tj ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000014 00000 n 
+0000000063 00000 n 
+0000000120 00000 n 
+0000000252 00000 n 
+0000000322 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1245
+%%EOF

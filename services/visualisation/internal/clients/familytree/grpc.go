@@ -49,6 +49,17 @@ func (c *Client) GetPerson(ctx context.Context, treeID string, personID string) 
 	return nil
 }
 
+func (c *Client) GetTreeContent(ctx context.Context, treeID string) (*familytreepb.GetTreeContentResponse, error) {
+	const op = "clients.familytree.GetTreeContent"
+
+	resp, err := c.api.GetTreeContent(ctx, &familytreepb.GetTreeContentRequest{TreeId: treeID})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) GetTreeCreatorID(ctx context.Context, treeID string) (int, error) {
 	const op = "clients.familytree.GetTreeCreatorID"
 
