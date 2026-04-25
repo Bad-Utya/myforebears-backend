@@ -16,22 +16,25 @@ import (
 	familytreeclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/familytree"
 	photosclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/photos"
 	redisclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/redis"
+	visualisationclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/visualisation"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/config"
 	authhandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/auth"
 	eventshandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/events"
 	familytreehandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/familytree"
 	photoshandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/photos"
+	visualisationhandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/visualisation"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/middleware"
 )
 
 type App struct {
-	log              *slog.Logger
-	httpServer       *http.Server
-	authClient       *authclient.Client
-	familyTreeClient *familytreeclient.Client
-	eventsClient     *eventsclient.Client
-	photosClient     *photosclient.Client
-	redisClient      *redisclient.Client
+	log                 *slog.Logger
+	httpServer          *http.Server
+	authClient          *authclient.Client
+	familyTreeClient    *familytreeclient.Client
+	eventsClient        *eventsclient.Client
+	photosClient        *photosclient.Client
+	visualisationClient *visualisationclient.Client
+	redisClient         *redisclient.Client
 }
 
 func New(log *slog.Logger, cfg *config.Config) *App {
@@ -82,6 +85,17 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		panic(fmt.Sprintf("failed to connect to photos service: %v", err))
 	}
 
+	visualisationGRPC, err := visualisationclient.New(
+		ctx,
+		log,
+		cfg.Clients.Visualisation.Address,
+		cfg.Clients.Visualisation.Timeout,
+		cfg.Clients.Visualisation.RetriesCount,
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to visualisation service: %v", err))
+	}
+
 	// Build HTTP router.
 	router := chi.NewRouter()
 
@@ -116,6 +130,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC)
 	eventsHandler := eventshandler.New(log, eventsGRPC)
 	photosHandler := photoshandler.New(log, photosGRPC)
+	visualisationHandler := visualisationhandler.New(log, visualisationGRPC)
 
 	router.Get("/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL("/swagger/doc.json"),
@@ -228,6 +243,23 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		})
 	})
 
+	router.Route("/api/visualisations", func(r chi.Router) {
+		r.Group(func(r chi.Router) {
+			r.Use(treeAccessChecker.ReadAccessMiddleware)
+			r.Get("/{tree_id}", visualisationHandler.ListTreeVisualisations)
+			r.Get("/{tree_id}/{visualisation_id}", visualisationHandler.GetVisualisationByID)
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(treeAccessChecker.OwnerOnlyMiddleware)
+			r.Post("/{tree_id}/ancestors", visualisationHandler.CreateAncestorsVisualisation)
+			r.Post("/{tree_id}/descendants", visualisationHandler.CreateDescendantsVisualisation)
+			r.Post("/{tree_id}/ancestors-descendants", visualisationHandler.CreateAncestorsAndDescendantsVisualisation)
+			r.Post("/{tree_id}/full", visualisationHandler.CreateFullVisualisation)
+			r.Delete("/{tree_id}/{visualisation_id}", visualisationHandler.DeleteVisualisationByID)
+		})
+	})
+
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.HTTP.Port),
 		Handler:      router,
@@ -237,13 +269,14 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	}
 
 	return &App{
-		log:              log,
-		httpServer:       httpServer,
-		authClient:       authGRPC,
-		familyTreeClient: familyTreeGRPC,
-		eventsClient:     eventsGRPC,
-		photosClient:     photosGRPC,
-		redisClient:      redisClient,
+		log:                 log,
+		httpServer:          httpServer,
+		authClient:          authGRPC,
+		familyTreeClient:    familyTreeGRPC,
+		eventsClient:        eventsGRPC,
+		photosClient:        photosGRPC,
+		visualisationClient: visualisationGRPC,
+		redisClient:         redisClient,
 	}
 }
 
@@ -288,6 +321,10 @@ func (a *App) Stop(ctx context.Context) {
 
 	if err := a.photosClient.Close(); err != nil {
 		a.log.Error("failed to close photos grpc connection", slog.String("op", op), slog.String("error", err.Error()))
+	}
+
+	if err := a.visualisationClient.Close(); err != nil {
+		a.log.Error("failed to close visualisation grpc connection", slog.String("op", op), slog.String("error", err.Error()))
 	}
 
 	if err := a.redisClient.Close(); err != nil {

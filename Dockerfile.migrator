@@ -20,5 +20,6 @@ COPY services/auth/migrations /migrations/auth
 COPY services/events/migrations /migrations/events
 COPY services/familytree/migrations /migrations/familytree
 COPY services/photos/migrations /migrations/photos
+COPY services/visualisation/migrations /migrations/visualisation
 
 ENTRYPOINT ["/usr/local/bin/migrator"]

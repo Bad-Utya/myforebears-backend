@@ -8,5 +8,6 @@ use (
 	./services/events
 	./services/familytree
 	./services/photos
+	./services/visualisation
 	./utility
 )

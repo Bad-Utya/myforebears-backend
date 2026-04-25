@@ -1,7 +1,7 @@
 // Package main API Gateway for MyForebears.
 // @title MyForebears API Gateway
 // @version 1.0
-// @description HTTP API gateway for auth, family tree, events and photos services.
+// @description HTTP API gateway for auth, family tree, events, photos and visualisation services.
 // @BasePath /
 // @schemes http https
 // @securityDefinitions.apikey ApiKeyAuth

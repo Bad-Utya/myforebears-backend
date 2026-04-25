@@ -101,6 +101,7 @@ services:
         psql -h postgres -U ${POSTGRES_USER} -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${EVENTS_POSTGRES_DB}'" | grep -q 1 || psql -h postgres -U ${POSTGRES_USER} -d postgres -c "CREATE DATABASE ${EVENTS_POSTGRES_DB}";
         psql -h postgres -U ${POSTGRES_USER} -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${FAMILYTREE_POSTGRES_DB}'" | grep -q 1 || psql -h postgres -U ${POSTGRES_USER} -d postgres -c "CREATE DATABASE ${FAMILYTREE_POSTGRES_DB}";
         psql -h postgres -U ${POSTGRES_USER} -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${PHOTOS_POSTGRES_DB}'" | grep -q 1 || psql -h postgres -U ${POSTGRES_USER} -d postgres -c "CREATE DATABASE ${PHOTOS_POSTGRES_DB}";
+        psql -h postgres -U ${POSTGRES_USER} -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${VISUALISATION_POSTGRES_DB}'" | grep -q 1 || psql -h postgres -U ${POSTGRES_USER} -d postgres -c "CREATE DATABASE ${VISUALISATION_POSTGRES_DB}";
 
   minio:
     image: minio/minio:latest
@@ -132,6 +133,7 @@ services:
           sleep 2;
         done;
         mc mb --ignore-existing local/${S3_BUCKET};
+        mc mb --ignore-existing local/${S3_VISUALISATIONS_BUCKET};
 
   migrate-auth:
     build:
@@ -228,6 +230,30 @@ services:
       - disable
       - -migrations-path
       - /migrations/photos
+
+  migrate-visualisation:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrator
+    container_name: migrate-visualisation
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    command:
+      - -host
+      - postgres
+      - -port
+      - "5432"
+      - -user
+      - ${POSTGRES_USER}
+      - -password
+      - ${POSTGRES_PASSWORD}
+      - -dbname
+      - ${VISUALISATION_POSTGRES_DB}
+      - -sslmode
+      - disable
+      - -migrations-path
+      - /migrations/visualisation
 
   auth:
     build:
@@ -326,6 +352,34 @@ services:
     ports:
       - "50054:50054"
 
+  visualisation:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: visualisation
+    container_name: visualisation-service
+    restart: unless-stopped
+    depends_on:
+      migrate-visualisation:
+        condition: service_completed_successfully
+      familytree:
+        condition: service_started
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      CONFIG_PATH: /app/config/docker.yaml
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_REGION: ${S3_REGION}
+      S3_VISUALISATIONS_BUCKET: ${S3_VISUALISATIONS_BUCKET}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE}
+    ports:
+      - "50055:50055"
+
   emailprovider:
     build:
       context: .
@@ -364,6 +418,8 @@ services:
       events:
         condition: service_started
       photos:
+        condition: service_started
+      visualisation:
         condition: service_started
     environment:
       CONFIG_PATH: /app/config/docker.yaml

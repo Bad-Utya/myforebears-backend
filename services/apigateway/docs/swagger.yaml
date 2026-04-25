@@ -58,6 +58,18 @@ definitions:
       access_token:
         type: string
     type: object
+  auth.updateNicknameRequest:
+    properties:
+      nickname:
+        type: string
+    type: object
+  auth.userInfoResponse:
+    properties:
+      id:
+        type: integer
+      nickname:
+        type: string
+    type: object
   events.createEventTypeRequest:
     properties:
       name:
@@ -365,6 +377,8 @@ definitions:
         type: boolean
       is_view_restricted:
         type: boolean
+      name:
+        type: string
     type: object
   familytree.personSuccessData:
     properties:
@@ -458,6 +472,8 @@ definitions:
         type: boolean
       is_view_restricted:
         type: boolean
+      name:
+        type: string
     type: object
   photos.photoJSON:
     properties:
@@ -2162,6 +2178,94 @@ paths:
       summary: Update person name
       tags:
       - familytree
+  /api/familytree/public/random:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Trees count
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.treesSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List random public trees
+      tags:
+      - familytree
+  /api/familytree/public/users/{user_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.treesSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List public trees by creator
+      tags:
+      - familytree
   /api/photos/{tree_id}/{photo_id}:
     delete:
       consumes:
@@ -2696,6 +2800,81 @@ paths:
       summary: Upload user avatar
       tags:
       - photos
+  /api/users/{user_id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/auth.userInfoResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get user info
+      tags:
+      - users
+  /api/users/me/nickname:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.updateNicknameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/auth.userInfoResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update my nickname
+      tags:
+      - users
 schemes:
 - http
 - https

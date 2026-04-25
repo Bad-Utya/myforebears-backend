@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package visualisation;
+
+option go_package = "github.com/Bad-Utya/myforebears-backend/gen/go/visualisation;visualisationpb";
+
+enum VisualisationType {
+    VISUALISATION_TYPE_UNSPECIFIED = 0;
+    VISUALISATION_TYPE_ANCESTORS = 1;
+    VISUALISATION_TYPE_DESCENDANTS = 2;
+    VISUALISATION_TYPE_ANCESTORS_AND_DESCENDANTS = 3;
+    VISUALISATION_TYPE_FULL = 4;
+}
+
+enum VisualisationStatus {
+    VISUALISATION_STATUS_UNSPECIFIED = 0;
+    VISUALISATION_STATUS_PENDING = 1;
+    VISUALISATION_STATUS_PROCESSING = 2;
+    VISUALISATION_STATUS_READY = 3;
+    VISUALISATION_STATUS_FAILED = 4;
+}
+
+message Visualisation {
+    string id = 1;
+    int32 owner_user_id = 2;
+    string tree_id = 3;
+    string root_person_id = 4;
+    repeated string included_person_ids = 5;
+    VisualisationType type = 6;
+    VisualisationStatus status = 7;
+    string file_name = 8;
+    string mime_type = 9;
+    int64 size_bytes = 10;
+    string error_message = 11;
+    int64 created_at_unix = 12;
+    int64 updated_at_unix = 13;
+    int64 completed_at_unix = 14;
+}
+
+service VisualisationService {
+    rpc CreateAncestorsVisualisation (CreateLineageVisualisationRequest) returns (CreateVisualisationResponse);
+    rpc CreateDescendantsVisualisation (CreateLineageVisualisationRequest) returns (CreateVisualisationResponse);
+    rpc CreateAncestorsAndDescendantsVisualisation (CreateLineageVisualisationRequest) returns (CreateVisualisationResponse);
+    rpc CreateFullVisualisation (CreateFullVisualisationRequest) returns (CreateVisualisationResponse);
+
+    rpc ListTreeVisualisations (ListTreeVisualisationsRequest) returns (ListTreeVisualisationsResponse);
+    rpc GetVisualisationByID (GetVisualisationByIDRequest) returns (GetVisualisationContentResponse);
+    rpc DeleteVisualisationByID (DeleteVisualisationByIDRequest) returns (DeleteVisualisationByIDResponse);
+}
+
+message CreateLineageVisualisationRequest {
+    string tree_id = 1;
+    string root_person_id = 2;
+}
+
+message CreateFullVisualisationRequest {
+    string tree_id = 1;
+    string root_person_id = 2;
+    repeated string included_person_ids = 3;
+}
+
+message CreateVisualisationResponse {
+    Visualisation visualisation = 1;
+    string status = 2;
+}
+
+message ListTreeVisualisationsRequest {
+    string tree_id = 1;
+}
+
+message ListTreeVisualisationsResponse {
+    repeated Visualisation visualisations = 1;
+}
+
+message GetVisualisationByIDRequest {
+    string tree_id = 1;
+    string visualisation_id = 2;
+}
+
+message GetVisualisationContentResponse {
+    Visualisation visualisation = 1;
+    bytes content = 2;
+}
+
+message DeleteVisualisationByIDRequest {
+    string tree_id = 1;
+    string visualisation_id = 2;
+}
+
+message DeleteVisualisationByIDResponse {}

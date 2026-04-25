@@ -20,6 +20,10 @@ clients:
     address: "photos:50054"
     timeout: 5s
     retries_count: 3
+  visualisation:
+    address: "visualisation:50055"
+    timeout: 5s
+    retries_count: 3
   token_storage:
     address: "redis:6379"
     password: "from-env"
