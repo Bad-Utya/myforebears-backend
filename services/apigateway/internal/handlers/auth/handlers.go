@@ -508,16 +508,48 @@ func (h *Handler) UpdateNickname(w http.ResponseWriter, r *http.Request) {
 	}})
 }
 
+// GetMe returns the authenticated user's info.
+// @Summary Get user info
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} map[string]userInfoResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/users/me [get]
+func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.UserIDFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	resp, err := h.client.GetUserInfo(r.Context(), userID)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("get user info failed", slog.String("error", err.Error()))
+		response.Error(w, status, "auth_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"user": map[string]any{
+		"id":       resp.GetUser().GetId(),
+		"nickname": resp.GetUser().GetNickname(),
+	}})
+}
+
 // setRefreshTokenCookie sets the refresh token as an HttpOnly cookie.
 func setRefreshTokenCookie(w http.ResponseWriter, token string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     refreshTokenCookie,
 		Value:    token,
-		Path:     "/api/auth",
+		Path:     "/",
 		MaxAge:   int(refreshTokenTTL.Seconds()),
 		HttpOnly: true,
-		Secure:   false, // set to true in production (HTTPS)
-		SameSite: http.SameSiteStrictMode,
+		Secure:   true, // set to true in production (HTTPS)
+		SameSite: http.SameSiteNoneMode,
 	})
 }
 

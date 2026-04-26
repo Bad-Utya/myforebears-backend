@@ -32,6 +32,7 @@ var (
 type FamilyTreeClient interface {
 	GetPerson(ctx context.Context, treeID string, personID string) error
 	GetTreeContent(ctx context.Context, treeID string) (*familytreepb.GetTreeContentResponse, error)
+	GetTreeContentWithinDepth(ctx context.Context, treeID string, rootPersonID string, maxDepth int32) (*familytreepb.GetTreeContentResponse, error)
 	GetTreeCreatorID(ctx context.Context, treeID string) (int, error)
 }
 
@@ -287,6 +288,48 @@ func (s *Service) generateVisualisationFile(vis models.Visualisation) ([]byte, e
 	}
 
 	return svgBytes, nil
+}
+
+// RenderCoordinatesForClient renders tree visualization for client-side rendering
+// maxDepth: 0 = unlimited; N > 0 = include people up to N hops from root
+// allowLayerShift: if false, disable layer shifting optimization
+func (s *Service) RenderCoordinatesForClient(
+	ctx context.Context,
+	treeID string,
+	rootPersonID string,
+	maxDepth int,
+) ([]byte, error) {
+	const op = "service.visualisation.RenderCoordinatesForClient"
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	parsedRootPersonID, err := uuid.Parse(rootPersonID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidRootPersonID)
+	}
+
+	if err := s.familyTree.GetPerson(ctx, parsedTreeID.String(), parsedRootPersonID.String()); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if maxDepth < 0 {
+		return nil, fmt.Errorf("%s: maxDepth must be >= 0", op)
+	}
+
+	content, err := s.familyTree.GetTreeContentWithinDepth(ctx, parsedTreeID.String(), parsedRootPersonID.String(), int32(maxDepth))
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	coordBytes, err := engine.RenderCoordinates(models.VisualisationTypeFull, parsedRootPersonID, nil, content, 0, false)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return coordBytes, nil
 }
 
 func buildFileName(visType models.VisualisationType, visID uuid.UUID) string {

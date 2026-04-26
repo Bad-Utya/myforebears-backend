@@ -183,6 +183,29 @@ func (h *Handler) DeletePersonInTree(ctx context.Context, req *familytreepb.Dele
 	return &familytreepb.DeletePersonInTreeResponse{}, nil
 }
 
+func (h *Handler) ExportTreeGEDCOM(ctx context.Context, req *familytreepb.ExportTreeGEDCOMRequest) (*familytreepb.ExportTreeGEDCOMResponse, error) {
+	gedcomContent, err := h.service.ExportTreeGEDCOM(ctx, int(req.GetRequestUserId()), req.GetTreeId())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &familytreepb.ExportTreeGEDCOMResponse{GedcomContent: gedcomContent}, nil
+}
+
+func (h *Handler) ImportTreeGEDCOM(ctx context.Context, req *familytreepb.ImportTreeGEDCOMRequest) (*familytreepb.ImportTreeGEDCOMResponse, error) {
+	tree, personsCount, relationshipsCount, errors, err := h.service.ImportTreeGEDCOM(ctx, int(req.GetRequestUserId()), req.GetGedcomContent())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &familytreepb.ImportTreeGEDCOMResponse{
+		Tree:                  toProtoTree(tree),
+		PersonsImported:       int32(personsCount),
+		RelationshipsImported: int32(relationshipsCount),
+		Errors:                errors,
+	}, nil
+}
+
 func toModelParentRole(role familytreepb.ParentRole) personsvc.ParentRole {
 	switch role {
 	case familytreepb.ParentRole_PARENT_ROLE_FATHER:

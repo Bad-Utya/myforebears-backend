@@ -552,6 +552,13 @@ definitions:
       root_person_id:
         type: string
     type: object
+  visualisation.renderCoordinatesForClientRequest:
+    properties:
+      max_depth:
+        type: integer
+      root_person_id:
+        type: string
+    type: object
 info:
   contact: {}
   description: HTTP API gateway for auth, family tree, events, photos and visualisation
@@ -1861,6 +1868,48 @@ paths:
       summary: Get tree content
       tags:
       - familytree
+  /api/familytree/{tree_id}/export/gedcom:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: GEDCOM content
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Export tree as GEDCOM
+      tags:
+      - familytree
   /api/familytree/{tree_id}/parents:
     post:
       consumes:
@@ -2190,6 +2239,42 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update person name
+      tags:
+      - familytree
+  /api/familytree/import/gedcom:
+    post:
+      consumes:
+      - text/plain
+      parameters:
+      - description: GEDCOM content
+        in: body
+        name: gedcom_content
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Import GEDCOM file
       tags:
       - familytree
   /api/familytree/public/random:
@@ -2848,6 +2933,36 @@ paths:
       summary: Get user info
       tags:
       - users
+  /api/users/me:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/auth.userInfoResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user info
+      tags:
+      - users
   /api/users/me/nickname:
     patch:
       consumes:
@@ -3156,6 +3271,63 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create ancestors and descendants visualisation
+      tags:
+      - visualisations
+  /api/visualisations/{tree_id}/coordinates:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Render coordinates request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/visualisation.renderCoordinatesForClientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Render coordinates for client
       tags:
       - visualisations
   /api/visualisations/{tree_id}/descendants:

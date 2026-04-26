@@ -93,6 +93,7 @@ service FamilyTreeService {
     rpc GetRelatives (GetRelativesRequest) returns (GetRelativesResponse);
     rpc GetTree (GetTreeRequest) returns (GetTreeResponse);
     rpc GetTreeContent (GetTreeContentRequest) returns (GetTreeContentResponse);
+        rpc GetTreeContentWithinDepth (GetTreeContentWithinDepthRequest) returns (GetTreeContentResponse);
     rpc GetTreeAccessInfo (GetTreeAccessInfoRequest) returns (GetTreeAccessInfoResponse);
     rpc IsTreeAccessEmailAllowed (IsTreeAccessEmailAllowedRequest) returns (IsTreeAccessEmailAllowedResponse);
     rpc AddTreeAccessEmail (AddTreeAccessEmailRequest) returns (AddTreeAccessEmailResponse);
@@ -101,6 +102,9 @@ service FamilyTreeService {
     rpc ValidatePersonsInTree (ValidatePersonsInTreeRequest) returns (ValidatePersonsInTreeResponse);
     rpc UpdatePartnerRelationshipStatus (UpdatePartnerRelationshipStatusRequest) returns (UpdatePartnerRelationshipStatusResponse);
     rpc UpdateTreeSettings (UpdateTreeSettingsRequest) returns (UpdateTreeSettingsResponse);
+    
+    rpc ExportTreeGEDCOM (ExportTreeGEDCOMRequest) returns (ExportTreeGEDCOMResponse);
+    rpc ImportTreeGEDCOM (ImportTreeGEDCOMRequest) returns (ImportTreeGEDCOMResponse);
 }
 
 message CreateTreeRequest {
@@ -293,6 +297,12 @@ message GetTreeContentRequest {
     string tree_id = 1;
 }
 
+    message GetTreeContentWithinDepthRequest {
+        string tree_id = 1;
+        string root_person_id = 2;
+        int32 max_depth = 3;
+    }
+
 message GetTreeContentResponse {
     string tree_id = 1;
     repeated Person persons = 2;
@@ -363,4 +373,25 @@ message UpdateTreeSettingsRequest {
 
 message UpdateTreeSettingsResponse {
     Tree tree = 1;
+}
+
+message ExportTreeGEDCOMRequest {
+    string tree_id = 1;
+    int32 request_user_id = 2;
+}
+
+message ExportTreeGEDCOMResponse {
+    string gedcom_content = 1;
+}
+
+message ImportTreeGEDCOMRequest {
+    string gedcom_content = 1;
+    int32 request_user_id = 2;
+}
+
+message ImportTreeGEDCOMResponse {
+    Tree tree = 1;
+    int32 persons_imported = 2;
+    int32 relationships_imported = 3;
+    repeated string errors = 4;
 }

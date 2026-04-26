@@ -2,6 +2,7 @@ package familytree
 
 import (
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -912,6 +913,97 @@ func (h *Handler) DeletePerson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, map[string]string{"status": "ok"})
+}
+
+// ExportGEDCOM exports a family tree to GEDCOM format
+// @Summary Export tree as GEDCOM
+// @Tags familytree
+// @Accept json
+// @Produce text/plain
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Success 200 {string} string "GEDCOM content"
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/export/gedcom [get]
+func (h *Handler) ExportGEDCOM(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.UserIDFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
+		return
+	}
+
+	resp, err := h.client.ExportTreeGEDCOM(r.Context(), userID, treeID)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("export tree to GEDCOM failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	// Return GEDCOM as a downloadable file
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Content-Disposition", "attachment; filename=tree_"+treeID+".ged")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(resp.GetGedcomContent()))
+}
+
+// ImportGEDCOM imports a GEDCOM file and creates a new family tree
+// @Summary Import GEDCOM file
+// @Tags familytree
+// @Accept text/plain
+// @Produce json
+// @Security ApiKeyAuth
+// @Param gedcom_content body string true "GEDCOM content"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/import/gedcom [post]
+func (h *Handler) ImportGEDCOM(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.UserIDFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	// Read GEDCOM content from request body
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		response.Error(w, http.StatusBadRequest, "bad_request", "failed to read request body")
+		return
+	}
+	defer r.Body.Close()
+
+	gedcomContent := string(body)
+	if strings.TrimSpace(gedcomContent) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "GEDCOM content is required")
+		return
+	}
+
+	resp, err := h.client.ImportTreeGEDCOM(r.Context(), userID, gedcomContent)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("import tree from GEDCOM failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{
+		"tree":                   toTreeJSON(resp.GetTree()),
+		"persons_imported":       resp.GetPersonsImported(),
+		"relationships_imported": resp.GetRelationshipsImported(),
+		"errors":                 resp.GetErrors(),
+	})
 }
 
 func parseParentRole(v string) familytreepb.ParentRole {

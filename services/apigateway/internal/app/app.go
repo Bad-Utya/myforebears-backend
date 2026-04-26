@@ -153,12 +153,13 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	})
 
 	router.Route("/api/users", func(r chi.Router) {
-		r.Get("/{user_id}", authHandler.GetUserInfo)
-
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
 			r.Patch("/me/nickname", authHandler.UpdateNickname)
+			r.Get("/me", authHandler.GetMe)
 		})
+
+		r.Get("/{user_id}", authHandler.GetUserInfo)
 	})
 
 	router.Route("/api/familytree", func(r chi.Router) {
@@ -169,6 +170,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 			r.Use(tokenChecker.Middleware)
 			r.Post("/", familyTreeHandler.CreateTree)
 			r.Get("/", familyTreeHandler.ListTrees)
+			r.Post("/import/gedcom", familyTreeHandler.ImportGEDCOM)
 		})
 
 		r.Group(func(r chi.Router) {
@@ -182,6 +184,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		r.Group(func(r chi.Router) {
 			r.Use(treeAccessChecker.OwnerOnlyMiddleware)
 			r.Patch("/{tree_id}", familyTreeHandler.UpdateTreeSettings)
+			r.Get("/{tree_id}/export/gedcom", familyTreeHandler.ExportGEDCOM)
 			r.Post("/{tree_id}/access-emails", familyTreeHandler.AddTreeAccessEmail)
 			r.Get("/{tree_id}/access-emails", familyTreeHandler.ListTreeAccessEmails)
 			r.Delete("/{tree_id}/access-emails", familyTreeHandler.DeleteTreeAccessEmail)
@@ -248,6 +251,11 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 			r.Use(treeAccessChecker.ReadAccessMiddleware)
 			r.Get("/{tree_id}", visualisationHandler.ListTreeVisualisations)
 			r.Get("/{tree_id}/{visualisation_id}", visualisationHandler.GetVisualisationByID)
+		})
+
+		r.Group(func(r chi.Router) {
+			r.Use(treeAccessChecker.ReadAccessMiddleware)
+			r.Post("/{tree_id}/coordinates", visualisationHandler.RenderCoordinatesForClient)
 		})
 
 		r.Group(func(r chi.Router) {

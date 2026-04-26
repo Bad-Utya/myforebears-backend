@@ -2594,6 +2594,66 @@ func (x *GetTreeContentRequest) GetTreeId() string {
 	return ""
 }
 
+type GetTreeContentWithinDepthRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
+	RootPersonId  string                 `protobuf:"bytes,2,opt,name=root_person_id,json=rootPersonId,proto3" json:"root_person_id,omitempty"`
+	MaxDepth      int32                  `protobuf:"varint,3,opt,name=max_depth,json=maxDepth,proto3" json:"max_depth,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetTreeContentWithinDepthRequest) Reset() {
+	*x = GetTreeContentWithinDepthRequest{}
+	mi := &file_familytree_familytree_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetTreeContentWithinDepthRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetTreeContentWithinDepthRequest) ProtoMessage() {}
+
+func (x *GetTreeContentWithinDepthRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_familytree_familytree_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetTreeContentWithinDepthRequest.ProtoReflect.Descriptor instead.
+func (*GetTreeContentWithinDepthRequest) Descriptor() ([]byte, []int) {
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *GetTreeContentWithinDepthRequest) GetTreeId() string {
+	if x != nil {
+		return x.TreeId
+	}
+	return ""
+}
+
+func (x *GetTreeContentWithinDepthRequest) GetRootPersonId() string {
+	if x != nil {
+		return x.RootPersonId
+	}
+	return ""
+}
+
+func (x *GetTreeContentWithinDepthRequest) GetMaxDepth() int32 {
+	if x != nil {
+		return x.MaxDepth
+	}
+	return 0
+}
+
 type GetTreeContentResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
@@ -2605,7 +2665,7 @@ type GetTreeContentResponse struct {
 
 func (x *GetTreeContentResponse) Reset() {
 	*x = GetTreeContentResponse{}
-	mi := &file_familytree_familytree_proto_msgTypes[43]
+	mi := &file_familytree_familytree_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2617,7 +2677,7 @@ func (x *GetTreeContentResponse) String() string {
 func (*GetTreeContentResponse) ProtoMessage() {}
 
 func (x *GetTreeContentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[43]
+	mi := &file_familytree_familytree_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2630,7 +2690,7 @@ func (x *GetTreeContentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTreeContentResponse.ProtoReflect.Descriptor instead.
 func (*GetTreeContentResponse) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{43}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *GetTreeContentResponse) GetTreeId() string {
@@ -2663,7 +2723,7 @@ type GetTreeAccessInfoRequest struct {
 
 func (x *GetTreeAccessInfoRequest) Reset() {
 	*x = GetTreeAccessInfoRequest{}
-	mi := &file_familytree_familytree_proto_msgTypes[44]
+	mi := &file_familytree_familytree_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2675,7 +2735,7 @@ func (x *GetTreeAccessInfoRequest) String() string {
 func (*GetTreeAccessInfoRequest) ProtoMessage() {}
 
 func (x *GetTreeAccessInfoRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[44]
+	mi := &file_familytree_familytree_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2688,7 +2748,7 @@ func (x *GetTreeAccessInfoRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTreeAccessInfoRequest.ProtoReflect.Descriptor instead.
 func (*GetTreeAccessInfoRequest) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{44}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *GetTreeAccessInfoRequest) GetTreeId() string {
@@ -2707,7 +2767,7 @@ type GetTreeAccessInfoResponse struct {
 
 func (x *GetTreeAccessInfoResponse) Reset() {
 	*x = GetTreeAccessInfoResponse{}
-	mi := &file_familytree_familytree_proto_msgTypes[45]
+	mi := &file_familytree_familytree_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2719,7 +2779,7 @@ func (x *GetTreeAccessInfoResponse) String() string {
 func (*GetTreeAccessInfoResponse) ProtoMessage() {}
 
 func (x *GetTreeAccessInfoResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[45]
+	mi := &file_familytree_familytree_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2732,7 +2792,7 @@ func (x *GetTreeAccessInfoResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTreeAccessInfoResponse.ProtoReflect.Descriptor instead.
 func (*GetTreeAccessInfoResponse) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{45}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *GetTreeAccessInfoResponse) GetTree() *Tree {
@@ -2752,7 +2812,7 @@ type IsTreeAccessEmailAllowedRequest struct {
 
 func (x *IsTreeAccessEmailAllowedRequest) Reset() {
 	*x = IsTreeAccessEmailAllowedRequest{}
-	mi := &file_familytree_familytree_proto_msgTypes[46]
+	mi := &file_familytree_familytree_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2764,7 +2824,7 @@ func (x *IsTreeAccessEmailAllowedRequest) String() string {
 func (*IsTreeAccessEmailAllowedRequest) ProtoMessage() {}
 
 func (x *IsTreeAccessEmailAllowedRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[46]
+	mi := &file_familytree_familytree_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2777,7 +2837,7 @@ func (x *IsTreeAccessEmailAllowedRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsTreeAccessEmailAllowedRequest.ProtoReflect.Descriptor instead.
 func (*IsTreeAccessEmailAllowedRequest) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{46}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *IsTreeAccessEmailAllowedRequest) GetTreeId() string {
@@ -2803,7 +2863,7 @@ type IsTreeAccessEmailAllowedResponse struct {
 
 func (x *IsTreeAccessEmailAllowedResponse) Reset() {
 	*x = IsTreeAccessEmailAllowedResponse{}
-	mi := &file_familytree_familytree_proto_msgTypes[47]
+	mi := &file_familytree_familytree_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2815,7 +2875,7 @@ func (x *IsTreeAccessEmailAllowedResponse) String() string {
 func (*IsTreeAccessEmailAllowedResponse) ProtoMessage() {}
 
 func (x *IsTreeAccessEmailAllowedResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[47]
+	mi := &file_familytree_familytree_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2828,7 +2888,7 @@ func (x *IsTreeAccessEmailAllowedResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsTreeAccessEmailAllowedResponse.ProtoReflect.Descriptor instead.
 func (*IsTreeAccessEmailAllowedResponse) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{47}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *IsTreeAccessEmailAllowedResponse) GetAllowed() bool {
@@ -2848,7 +2908,7 @@ type AddTreeAccessEmailRequest struct {
 
 func (x *AddTreeAccessEmailRequest) Reset() {
 	*x = AddTreeAccessEmailRequest{}
-	mi := &file_familytree_familytree_proto_msgTypes[48]
+	mi := &file_familytree_familytree_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2860,7 +2920,7 @@ func (x *AddTreeAccessEmailRequest) String() string {
 func (*AddTreeAccessEmailRequest) ProtoMessage() {}
 
 func (x *AddTreeAccessEmailRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[48]
+	mi := &file_familytree_familytree_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2873,7 +2933,7 @@ func (x *AddTreeAccessEmailRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddTreeAccessEmailRequest.ProtoReflect.Descriptor instead.
 func (*AddTreeAccessEmailRequest) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{48}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *AddTreeAccessEmailRequest) GetTreeId() string {
@@ -2898,7 +2958,7 @@ type AddTreeAccessEmailResponse struct {
 
 func (x *AddTreeAccessEmailResponse) Reset() {
 	*x = AddTreeAccessEmailResponse{}
-	mi := &file_familytree_familytree_proto_msgTypes[49]
+	mi := &file_familytree_familytree_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2910,7 +2970,7 @@ func (x *AddTreeAccessEmailResponse) String() string {
 func (*AddTreeAccessEmailResponse) ProtoMessage() {}
 
 func (x *AddTreeAccessEmailResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[49]
+	mi := &file_familytree_familytree_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2923,7 +2983,7 @@ func (x *AddTreeAccessEmailResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddTreeAccessEmailResponse.ProtoReflect.Descriptor instead.
 func (*AddTreeAccessEmailResponse) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{49}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{50}
 }
 
 type ListTreeAccessEmailsRequest struct {
@@ -2935,7 +2995,7 @@ type ListTreeAccessEmailsRequest struct {
 
 func (x *ListTreeAccessEmailsRequest) Reset() {
 	*x = ListTreeAccessEmailsRequest{}
-	mi := &file_familytree_familytree_proto_msgTypes[50]
+	mi := &file_familytree_familytree_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2947,7 +3007,7 @@ func (x *ListTreeAccessEmailsRequest) String() string {
 func (*ListTreeAccessEmailsRequest) ProtoMessage() {}
 
 func (x *ListTreeAccessEmailsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[50]
+	mi := &file_familytree_familytree_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2960,7 +3020,7 @@ func (x *ListTreeAccessEmailsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTreeAccessEmailsRequest.ProtoReflect.Descriptor instead.
 func (*ListTreeAccessEmailsRequest) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{50}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *ListTreeAccessEmailsRequest) GetTreeId() string {
@@ -2979,7 +3039,7 @@ type ListTreeAccessEmailsResponse struct {
 
 func (x *ListTreeAccessEmailsResponse) Reset() {
 	*x = ListTreeAccessEmailsResponse{}
-	mi := &file_familytree_familytree_proto_msgTypes[51]
+	mi := &file_familytree_familytree_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2991,7 +3051,7 @@ func (x *ListTreeAccessEmailsResponse) String() string {
 func (*ListTreeAccessEmailsResponse) ProtoMessage() {}
 
 func (x *ListTreeAccessEmailsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[51]
+	mi := &file_familytree_familytree_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3004,7 +3064,7 @@ func (x *ListTreeAccessEmailsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTreeAccessEmailsResponse.ProtoReflect.Descriptor instead.
 func (*ListTreeAccessEmailsResponse) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{51}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *ListTreeAccessEmailsResponse) GetEmails() []string {
@@ -3024,7 +3084,7 @@ type DeleteTreeAccessEmailRequest struct {
 
 func (x *DeleteTreeAccessEmailRequest) Reset() {
 	*x = DeleteTreeAccessEmailRequest{}
-	mi := &file_familytree_familytree_proto_msgTypes[52]
+	mi := &file_familytree_familytree_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3036,7 +3096,7 @@ func (x *DeleteTreeAccessEmailRequest) String() string {
 func (*DeleteTreeAccessEmailRequest) ProtoMessage() {}
 
 func (x *DeleteTreeAccessEmailRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[52]
+	mi := &file_familytree_familytree_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3049,7 +3109,7 @@ func (x *DeleteTreeAccessEmailRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTreeAccessEmailRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTreeAccessEmailRequest) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{52}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *DeleteTreeAccessEmailRequest) GetTreeId() string {
@@ -3074,7 +3134,7 @@ type DeleteTreeAccessEmailResponse struct {
 
 func (x *DeleteTreeAccessEmailResponse) Reset() {
 	*x = DeleteTreeAccessEmailResponse{}
-	mi := &file_familytree_familytree_proto_msgTypes[53]
+	mi := &file_familytree_familytree_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3086,7 +3146,7 @@ func (x *DeleteTreeAccessEmailResponse) String() string {
 func (*DeleteTreeAccessEmailResponse) ProtoMessage() {}
 
 func (x *DeleteTreeAccessEmailResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[53]
+	mi := &file_familytree_familytree_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3099,7 +3159,7 @@ func (x *DeleteTreeAccessEmailResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTreeAccessEmailResponse.ProtoReflect.Descriptor instead.
 func (*DeleteTreeAccessEmailResponse) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{53}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{54}
 }
 
 type ValidatePersonsInTreeRequest struct {
@@ -3112,7 +3172,7 @@ type ValidatePersonsInTreeRequest struct {
 
 func (x *ValidatePersonsInTreeRequest) Reset() {
 	*x = ValidatePersonsInTreeRequest{}
-	mi := &file_familytree_familytree_proto_msgTypes[54]
+	mi := &file_familytree_familytree_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3124,7 +3184,7 @@ func (x *ValidatePersonsInTreeRequest) String() string {
 func (*ValidatePersonsInTreeRequest) ProtoMessage() {}
 
 func (x *ValidatePersonsInTreeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[54]
+	mi := &file_familytree_familytree_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3137,7 +3197,7 @@ func (x *ValidatePersonsInTreeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidatePersonsInTreeRequest.ProtoReflect.Descriptor instead.
 func (*ValidatePersonsInTreeRequest) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{54}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *ValidatePersonsInTreeRequest) GetTreeId() string {
@@ -3162,7 +3222,7 @@ type ValidatePersonsInTreeResponse struct {
 
 func (x *ValidatePersonsInTreeResponse) Reset() {
 	*x = ValidatePersonsInTreeResponse{}
-	mi := &file_familytree_familytree_proto_msgTypes[55]
+	mi := &file_familytree_familytree_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3174,7 +3234,7 @@ func (x *ValidatePersonsInTreeResponse) String() string {
 func (*ValidatePersonsInTreeResponse) ProtoMessage() {}
 
 func (x *ValidatePersonsInTreeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[55]
+	mi := &file_familytree_familytree_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3187,7 +3247,7 @@ func (x *ValidatePersonsInTreeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidatePersonsInTreeResponse.ProtoReflect.Descriptor instead.
 func (*ValidatePersonsInTreeResponse) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{55}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{56}
 }
 
 type UpdatePartnerRelationshipStatusRequest struct {
@@ -3202,7 +3262,7 @@ type UpdatePartnerRelationshipStatusRequest struct {
 
 func (x *UpdatePartnerRelationshipStatusRequest) Reset() {
 	*x = UpdatePartnerRelationshipStatusRequest{}
-	mi := &file_familytree_familytree_proto_msgTypes[56]
+	mi := &file_familytree_familytree_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3214,7 +3274,7 @@ func (x *UpdatePartnerRelationshipStatusRequest) String() string {
 func (*UpdatePartnerRelationshipStatusRequest) ProtoMessage() {}
 
 func (x *UpdatePartnerRelationshipStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[56]
+	mi := &file_familytree_familytree_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3227,7 +3287,7 @@ func (x *UpdatePartnerRelationshipStatusRequest) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use UpdatePartnerRelationshipStatusRequest.ProtoReflect.Descriptor instead.
 func (*UpdatePartnerRelationshipStatusRequest) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{56}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *UpdatePartnerRelationshipStatusRequest) GetTreeId() string {
@@ -3266,7 +3326,7 @@ type UpdatePartnerRelationshipStatusResponse struct {
 
 func (x *UpdatePartnerRelationshipStatusResponse) Reset() {
 	*x = UpdatePartnerRelationshipStatusResponse{}
-	mi := &file_familytree_familytree_proto_msgTypes[57]
+	mi := &file_familytree_familytree_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3278,7 +3338,7 @@ func (x *UpdatePartnerRelationshipStatusResponse) String() string {
 func (*UpdatePartnerRelationshipStatusResponse) ProtoMessage() {}
 
 func (x *UpdatePartnerRelationshipStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[57]
+	mi := &file_familytree_familytree_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3291,7 +3351,7 @@ func (x *UpdatePartnerRelationshipStatusResponse) ProtoReflect() protoreflect.Me
 
 // Deprecated: Use UpdatePartnerRelationshipStatusResponse.ProtoReflect.Descriptor instead.
 func (*UpdatePartnerRelationshipStatusResponse) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{57}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{58}
 }
 
 type UpdateTreeSettingsRequest struct {
@@ -3306,7 +3366,7 @@ type UpdateTreeSettingsRequest struct {
 
 func (x *UpdateTreeSettingsRequest) Reset() {
 	*x = UpdateTreeSettingsRequest{}
-	mi := &file_familytree_familytree_proto_msgTypes[58]
+	mi := &file_familytree_familytree_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3318,7 +3378,7 @@ func (x *UpdateTreeSettingsRequest) String() string {
 func (*UpdateTreeSettingsRequest) ProtoMessage() {}
 
 func (x *UpdateTreeSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[58]
+	mi := &file_familytree_familytree_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3331,7 +3391,7 @@ func (x *UpdateTreeSettingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTreeSettingsRequest.ProtoReflect.Descriptor instead.
 func (*UpdateTreeSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{58}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *UpdateTreeSettingsRequest) GetTreeId() string {
@@ -3371,7 +3431,7 @@ type UpdateTreeSettingsResponse struct {
 
 func (x *UpdateTreeSettingsResponse) Reset() {
 	*x = UpdateTreeSettingsResponse{}
-	mi := &file_familytree_familytree_proto_msgTypes[59]
+	mi := &file_familytree_familytree_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3383,7 +3443,7 @@ func (x *UpdateTreeSettingsResponse) String() string {
 func (*UpdateTreeSettingsResponse) ProtoMessage() {}
 
 func (x *UpdateTreeSettingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_familytree_familytree_proto_msgTypes[59]
+	mi := &file_familytree_familytree_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3396,12 +3456,228 @@ func (x *UpdateTreeSettingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTreeSettingsResponse.ProtoReflect.Descriptor instead.
 func (*UpdateTreeSettingsResponse) Descriptor() ([]byte, []int) {
-	return file_familytree_familytree_proto_rawDescGZIP(), []int{59}
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *UpdateTreeSettingsResponse) GetTree() *Tree {
 	if x != nil {
 		return x.Tree
+	}
+	return nil
+}
+
+type ExportTreeGEDCOMRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
+	RequestUserId int32                  `protobuf:"varint,2,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExportTreeGEDCOMRequest) Reset() {
+	*x = ExportTreeGEDCOMRequest{}
+	mi := &file_familytree_familytree_proto_msgTypes[61]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExportTreeGEDCOMRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExportTreeGEDCOMRequest) ProtoMessage() {}
+
+func (x *ExportTreeGEDCOMRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_familytree_familytree_proto_msgTypes[61]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExportTreeGEDCOMRequest.ProtoReflect.Descriptor instead.
+func (*ExportTreeGEDCOMRequest) Descriptor() ([]byte, []int) {
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{61}
+}
+
+func (x *ExportTreeGEDCOMRequest) GetTreeId() string {
+	if x != nil {
+		return x.TreeId
+	}
+	return ""
+}
+
+func (x *ExportTreeGEDCOMRequest) GetRequestUserId() int32 {
+	if x != nil {
+		return x.RequestUserId
+	}
+	return 0
+}
+
+type ExportTreeGEDCOMResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GedcomContent string                 `protobuf:"bytes,1,opt,name=gedcom_content,json=gedcomContent,proto3" json:"gedcom_content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ExportTreeGEDCOMResponse) Reset() {
+	*x = ExportTreeGEDCOMResponse{}
+	mi := &file_familytree_familytree_proto_msgTypes[62]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ExportTreeGEDCOMResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExportTreeGEDCOMResponse) ProtoMessage() {}
+
+func (x *ExportTreeGEDCOMResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_familytree_familytree_proto_msgTypes[62]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExportTreeGEDCOMResponse.ProtoReflect.Descriptor instead.
+func (*ExportTreeGEDCOMResponse) Descriptor() ([]byte, []int) {
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{62}
+}
+
+func (x *ExportTreeGEDCOMResponse) GetGedcomContent() string {
+	if x != nil {
+		return x.GedcomContent
+	}
+	return ""
+}
+
+type ImportTreeGEDCOMRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GedcomContent string                 `protobuf:"bytes,1,opt,name=gedcom_content,json=gedcomContent,proto3" json:"gedcom_content,omitempty"`
+	RequestUserId int32                  `protobuf:"varint,2,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImportTreeGEDCOMRequest) Reset() {
+	*x = ImportTreeGEDCOMRequest{}
+	mi := &file_familytree_familytree_proto_msgTypes[63]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImportTreeGEDCOMRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImportTreeGEDCOMRequest) ProtoMessage() {}
+
+func (x *ImportTreeGEDCOMRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_familytree_familytree_proto_msgTypes[63]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImportTreeGEDCOMRequest.ProtoReflect.Descriptor instead.
+func (*ImportTreeGEDCOMRequest) Descriptor() ([]byte, []int) {
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{63}
+}
+
+func (x *ImportTreeGEDCOMRequest) GetGedcomContent() string {
+	if x != nil {
+		return x.GedcomContent
+	}
+	return ""
+}
+
+func (x *ImportTreeGEDCOMRequest) GetRequestUserId() int32 {
+	if x != nil {
+		return x.RequestUserId
+	}
+	return 0
+}
+
+type ImportTreeGEDCOMResponse struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	Tree                  *Tree                  `protobuf:"bytes,1,opt,name=tree,proto3" json:"tree,omitempty"`
+	PersonsImported       int32                  `protobuf:"varint,2,opt,name=persons_imported,json=personsImported,proto3" json:"persons_imported,omitempty"`
+	RelationshipsImported int32                  `protobuf:"varint,3,opt,name=relationships_imported,json=relationshipsImported,proto3" json:"relationships_imported,omitempty"`
+	Errors                []string               `protobuf:"bytes,4,rep,name=errors,proto3" json:"errors,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *ImportTreeGEDCOMResponse) Reset() {
+	*x = ImportTreeGEDCOMResponse{}
+	mi := &file_familytree_familytree_proto_msgTypes[64]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImportTreeGEDCOMResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImportTreeGEDCOMResponse) ProtoMessage() {}
+
+func (x *ImportTreeGEDCOMResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_familytree_familytree_proto_msgTypes[64]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImportTreeGEDCOMResponse.ProtoReflect.Descriptor instead.
+func (*ImportTreeGEDCOMResponse) Descriptor() ([]byte, []int) {
+	return file_familytree_familytree_proto_rawDescGZIP(), []int{64}
+}
+
+func (x *ImportTreeGEDCOMResponse) GetTree() *Tree {
+	if x != nil {
+		return x.Tree
+	}
+	return nil
+}
+
+func (x *ImportTreeGEDCOMResponse) GetPersonsImported() int32 {
+	if x != nil {
+		return x.PersonsImported
+	}
+	return 0
+}
+
+func (x *ImportTreeGEDCOMResponse) GetRelationshipsImported() int32 {
+	if x != nil {
+		return x.RelationshipsImported
+	}
+	return 0
+}
+
+func (x *ImportTreeGEDCOMResponse) GetErrors() []string {
+	if x != nil {
+		return x.Errors
 	}
 	return nil
 }
@@ -3579,7 +3855,11 @@ const file_familytree_familytree_proto_rawDesc = "" +
 	"\x0fGetTreeResponse\x12$\n" +
 	"\x04tree\x18\x01 \x01(\v2\x10.familytree.TreeR\x04tree\"0\n" +
 	"\x15GetTreeContentRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\"\x9f\x01\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\"~\n" +
+	" GetTreeContentWithinDepthRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12$\n" +
+	"\x0eroot_person_id\x18\x02 \x01(\tR\frootPersonId\x12\x1b\n" +
+	"\tmax_depth\x18\x03 \x01(\x05R\bmaxDepth\"\x9f\x01\n" +
 	"\x16GetTreeContentResponse\x12\x17\n" +
 	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12,\n" +
 	"\apersons\x18\x02 \x03(\v2\x12.familytree.PersonR\apersons\x12>\n" +
@@ -3624,7 +3904,20 @@ const file_familytree_familytree_proto_rawDesc = "" +
 	"\x16is_public_on_main_page\x18\x03 \x01(\bR\x12isPublicOnMainPage\x12\x12\n" +
 	"\x04name\x18\x04 \x01(\tR\x04name\"B\n" +
 	"\x1aUpdateTreeSettingsResponse\x12$\n" +
-	"\x04tree\x18\x01 \x01(\v2\x10.familytree.TreeR\x04tree*D\n" +
+	"\x04tree\x18\x01 \x01(\v2\x10.familytree.TreeR\x04tree\"Z\n" +
+	"\x17ExportTreeGEDCOMRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12&\n" +
+	"\x0frequest_user_id\x18\x02 \x01(\x05R\rrequestUserId\"A\n" +
+	"\x18ExportTreeGEDCOMResponse\x12%\n" +
+	"\x0egedcom_content\x18\x01 \x01(\tR\rgedcomContent\"h\n" +
+	"\x17ImportTreeGEDCOMRequest\x12%\n" +
+	"\x0egedcom_content\x18\x01 \x01(\tR\rgedcomContent\x12&\n" +
+	"\x0frequest_user_id\x18\x02 \x01(\x05R\rrequestUserId\"\xba\x01\n" +
+	"\x18ImportTreeGEDCOMResponse\x12$\n" +
+	"\x04tree\x18\x01 \x01(\v2\x10.familytree.TreeR\x04tree\x12)\n" +
+	"\x10persons_imported\x18\x02 \x01(\x05R\x0fpersonsImported\x125\n" +
+	"\x16relationships_imported\x18\x03 \x01(\x05R\x15relationshipsImported\x12\x16\n" +
+	"\x06errors\x18\x04 \x03(\tR\x06errors*D\n" +
 	"\x06Gender\x12\x16\n" +
 	"\x12GENDER_UNSPECIFIED\x10\x00\x12\x0f\n" +
 	"\vGENDER_MALE\x10\x01\x12\x11\n" +
@@ -3649,7 +3942,7 @@ const file_familytree_familytree_proto_rawDesc = "" +
 	"ParentRole\x12\x1b\n" +
 	"\x17PARENT_ROLE_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12PARENT_ROLE_FATHER\x10\x01\x12\x16\n" +
-	"\x12PARENT_ROLE_MOTHER\x10\x022\x8d\x15\n" +
+	"\x12PARENT_ROLE_MOTHER\x10\x022\xba\x17\n" +
 	"\x11FamilyTreeService\x12K\n" +
 	"\n" +
 	"CreateTree\x12\x1d.familytree.CreateTreeRequest\x1a\x1e.familytree.CreateTreeResponse\x12c\n" +
@@ -3672,7 +3965,8 @@ const file_familytree_familytree_proto_rawDesc = "" +
 	"\x12RemoveRelationship\x12%.familytree.RemoveRelationshipRequest\x1a&.familytree.RemoveRelationshipResponse\x12Q\n" +
 	"\fGetRelatives\x12\x1f.familytree.GetRelativesRequest\x1a .familytree.GetRelativesResponse\x12B\n" +
 	"\aGetTree\x12\x1a.familytree.GetTreeRequest\x1a\x1b.familytree.GetTreeResponse\x12W\n" +
-	"\x0eGetTreeContent\x12!.familytree.GetTreeContentRequest\x1a\".familytree.GetTreeContentResponse\x12`\n" +
+	"\x0eGetTreeContent\x12!.familytree.GetTreeContentRequest\x1a\".familytree.GetTreeContentResponse\x12m\n" +
+	"\x19GetTreeContentWithinDepth\x12,.familytree.GetTreeContentWithinDepthRequest\x1a\".familytree.GetTreeContentResponse\x12`\n" +
 	"\x11GetTreeAccessInfo\x12$.familytree.GetTreeAccessInfoRequest\x1a%.familytree.GetTreeAccessInfoResponse\x12u\n" +
 	"\x18IsTreeAccessEmailAllowed\x12+.familytree.IsTreeAccessEmailAllowedRequest\x1a,.familytree.IsTreeAccessEmailAllowedResponse\x12c\n" +
 	"\x12AddTreeAccessEmail\x12%.familytree.AddTreeAccessEmailRequest\x1a&.familytree.AddTreeAccessEmailResponse\x12i\n" +
@@ -3680,7 +3974,9 @@ const file_familytree_familytree_proto_rawDesc = "" +
 	"\x15DeleteTreeAccessEmail\x12(.familytree.DeleteTreeAccessEmailRequest\x1a).familytree.DeleteTreeAccessEmailResponse\x12l\n" +
 	"\x15ValidatePersonsInTree\x12(.familytree.ValidatePersonsInTreeRequest\x1a).familytree.ValidatePersonsInTreeResponse\x12\x8a\x01\n" +
 	"\x1fUpdatePartnerRelationshipStatus\x122.familytree.UpdatePartnerRelationshipStatusRequest\x1a3.familytree.UpdatePartnerRelationshipStatusResponse\x12c\n" +
-	"\x12UpdateTreeSettings\x12%.familytree.UpdateTreeSettingsRequest\x1a&.familytree.UpdateTreeSettingsResponseBHZFgithub.com/Bad-Utya/myforebears-backend/gen/go/familytree;familytreepbb\x06proto3"
+	"\x12UpdateTreeSettings\x12%.familytree.UpdateTreeSettingsRequest\x1a&.familytree.UpdateTreeSettingsResponse\x12]\n" +
+	"\x10ExportTreeGEDCOM\x12#.familytree.ExportTreeGEDCOMRequest\x1a$.familytree.ExportTreeGEDCOMResponse\x12]\n" +
+	"\x10ImportTreeGEDCOM\x12#.familytree.ImportTreeGEDCOMRequest\x1a$.familytree.ImportTreeGEDCOMResponseBHZFgithub.com/Bad-Utya/myforebears-backend/gen/go/familytree;familytreepbb\x06proto3"
 
 var (
 	file_familytree_familytree_proto_rawDescOnce sync.Once
@@ -3695,7 +3991,7 @@ func file_familytree_familytree_proto_rawDescGZIP() []byte {
 }
 
 var file_familytree_familytree_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_familytree_familytree_proto_msgTypes = make([]protoimpl.MessageInfo, 60)
+var file_familytree_familytree_proto_msgTypes = make([]protoimpl.MessageInfo, 65)
 var file_familytree_familytree_proto_goTypes = []any{
 	(Gender)(0),                                     // 0: familytree.Gender
 	(RelationshipType)(0),                           // 1: familytree.RelationshipType
@@ -3745,23 +4041,28 @@ var file_familytree_familytree_proto_goTypes = []any{
 	(*GetTreeRequest)(nil),                          // 45: familytree.GetTreeRequest
 	(*GetTreeResponse)(nil),                         // 46: familytree.GetTreeResponse
 	(*GetTreeContentRequest)(nil),                   // 47: familytree.GetTreeContentRequest
-	(*GetTreeContentResponse)(nil),                  // 48: familytree.GetTreeContentResponse
-	(*GetTreeAccessInfoRequest)(nil),                // 49: familytree.GetTreeAccessInfoRequest
-	(*GetTreeAccessInfoResponse)(nil),               // 50: familytree.GetTreeAccessInfoResponse
-	(*IsTreeAccessEmailAllowedRequest)(nil),         // 51: familytree.IsTreeAccessEmailAllowedRequest
-	(*IsTreeAccessEmailAllowedResponse)(nil),        // 52: familytree.IsTreeAccessEmailAllowedResponse
-	(*AddTreeAccessEmailRequest)(nil),               // 53: familytree.AddTreeAccessEmailRequest
-	(*AddTreeAccessEmailResponse)(nil),              // 54: familytree.AddTreeAccessEmailResponse
-	(*ListTreeAccessEmailsRequest)(nil),             // 55: familytree.ListTreeAccessEmailsRequest
-	(*ListTreeAccessEmailsResponse)(nil),            // 56: familytree.ListTreeAccessEmailsResponse
-	(*DeleteTreeAccessEmailRequest)(nil),            // 57: familytree.DeleteTreeAccessEmailRequest
-	(*DeleteTreeAccessEmailResponse)(nil),           // 58: familytree.DeleteTreeAccessEmailResponse
-	(*ValidatePersonsInTreeRequest)(nil),            // 59: familytree.ValidatePersonsInTreeRequest
-	(*ValidatePersonsInTreeResponse)(nil),           // 60: familytree.ValidatePersonsInTreeResponse
-	(*UpdatePartnerRelationshipStatusRequest)(nil),  // 61: familytree.UpdatePartnerRelationshipStatusRequest
-	(*UpdatePartnerRelationshipStatusResponse)(nil), // 62: familytree.UpdatePartnerRelationshipStatusResponse
-	(*UpdateTreeSettingsRequest)(nil),               // 63: familytree.UpdateTreeSettingsRequest
-	(*UpdateTreeSettingsResponse)(nil),              // 64: familytree.UpdateTreeSettingsResponse
+	(*GetTreeContentWithinDepthRequest)(nil),        // 48: familytree.GetTreeContentWithinDepthRequest
+	(*GetTreeContentResponse)(nil),                  // 49: familytree.GetTreeContentResponse
+	(*GetTreeAccessInfoRequest)(nil),                // 50: familytree.GetTreeAccessInfoRequest
+	(*GetTreeAccessInfoResponse)(nil),               // 51: familytree.GetTreeAccessInfoResponse
+	(*IsTreeAccessEmailAllowedRequest)(nil),         // 52: familytree.IsTreeAccessEmailAllowedRequest
+	(*IsTreeAccessEmailAllowedResponse)(nil),        // 53: familytree.IsTreeAccessEmailAllowedResponse
+	(*AddTreeAccessEmailRequest)(nil),               // 54: familytree.AddTreeAccessEmailRequest
+	(*AddTreeAccessEmailResponse)(nil),              // 55: familytree.AddTreeAccessEmailResponse
+	(*ListTreeAccessEmailsRequest)(nil),             // 56: familytree.ListTreeAccessEmailsRequest
+	(*ListTreeAccessEmailsResponse)(nil),            // 57: familytree.ListTreeAccessEmailsResponse
+	(*DeleteTreeAccessEmailRequest)(nil),            // 58: familytree.DeleteTreeAccessEmailRequest
+	(*DeleteTreeAccessEmailResponse)(nil),           // 59: familytree.DeleteTreeAccessEmailResponse
+	(*ValidatePersonsInTreeRequest)(nil),            // 60: familytree.ValidatePersonsInTreeRequest
+	(*ValidatePersonsInTreeResponse)(nil),           // 61: familytree.ValidatePersonsInTreeResponse
+	(*UpdatePartnerRelationshipStatusRequest)(nil),  // 62: familytree.UpdatePartnerRelationshipStatusRequest
+	(*UpdatePartnerRelationshipStatusResponse)(nil), // 63: familytree.UpdatePartnerRelationshipStatusResponse
+	(*UpdateTreeSettingsRequest)(nil),               // 64: familytree.UpdateTreeSettingsRequest
+	(*UpdateTreeSettingsResponse)(nil),              // 65: familytree.UpdateTreeSettingsResponse
+	(*ExportTreeGEDCOMRequest)(nil),                 // 66: familytree.ExportTreeGEDCOMRequest
+	(*ExportTreeGEDCOMResponse)(nil),                // 67: familytree.ExportTreeGEDCOMResponse
+	(*ImportTreeGEDCOMRequest)(nil),                 // 68: familytree.ImportTreeGEDCOMRequest
+	(*ImportTreeGEDCOMResponse)(nil),                // 69: familytree.ImportTreeGEDCOMResponse
 }
 var file_familytree_familytree_proto_depIdxs = []int32{
 	0,  // 0: familytree.Person.gender:type_name -> familytree.Gender
@@ -3798,67 +4099,74 @@ var file_familytree_familytree_proto_depIdxs = []int32{
 	5,  // 31: familytree.GetTreeAccessInfoResponse.tree:type_name -> familytree.Tree
 	2,  // 32: familytree.UpdatePartnerRelationshipStatusRequest.status:type_name -> familytree.PartnerRelationshipStatus
 	5,  // 33: familytree.UpdateTreeSettingsResponse.tree:type_name -> familytree.Tree
-	9,  // 34: familytree.FamilyTreeService.CreateTree:input_type -> familytree.CreateTreeRequest
-	11, // 35: familytree.FamilyTreeService.ListTreesByCreator:input_type -> familytree.ListTreesByCreatorRequest
-	13, // 36: familytree.FamilyTreeService.ListPublicTreesByCreator:input_type -> familytree.ListPublicTreesByCreatorRequest
-	15, // 37: familytree.FamilyTreeService.ListRandomPublicTrees:input_type -> familytree.ListRandomPublicTreesRequest
-	17, // 38: familytree.FamilyTreeService.AddParent:input_type -> familytree.AddParentRequest
-	19, // 39: familytree.FamilyTreeService.AddChild:input_type -> familytree.AddChildRequest
-	21, // 40: familytree.FamilyTreeService.AddPartner:input_type -> familytree.AddPartnerRequest
-	23, // 41: familytree.FamilyTreeService.UpdatePersonName:input_type -> familytree.UpdatePersonNameRequest
-	25, // 42: familytree.FamilyTreeService.UpdatePersonAvatarPhoto:input_type -> familytree.UpdatePersonAvatarPhotoRequest
-	27, // 43: familytree.FamilyTreeService.DeletePersonInTree:input_type -> familytree.DeletePersonInTreeRequest
-	29, // 44: familytree.FamilyTreeService.CreatePerson:input_type -> familytree.CreatePersonRequest
-	31, // 45: familytree.FamilyTreeService.GetPerson:input_type -> familytree.GetPersonRequest
-	33, // 46: familytree.FamilyTreeService.ListPersonsByTree:input_type -> familytree.ListPersonsByTreeRequest
-	35, // 47: familytree.FamilyTreeService.UpdatePerson:input_type -> familytree.UpdatePersonRequest
-	37, // 48: familytree.FamilyTreeService.DeletePerson:input_type -> familytree.DeletePersonRequest
-	39, // 49: familytree.FamilyTreeService.AddRelationship:input_type -> familytree.AddRelationshipRequest
-	41, // 50: familytree.FamilyTreeService.RemoveRelationship:input_type -> familytree.RemoveRelationshipRequest
-	43, // 51: familytree.FamilyTreeService.GetRelatives:input_type -> familytree.GetRelativesRequest
-	45, // 52: familytree.FamilyTreeService.GetTree:input_type -> familytree.GetTreeRequest
-	47, // 53: familytree.FamilyTreeService.GetTreeContent:input_type -> familytree.GetTreeContentRequest
-	49, // 54: familytree.FamilyTreeService.GetTreeAccessInfo:input_type -> familytree.GetTreeAccessInfoRequest
-	51, // 55: familytree.FamilyTreeService.IsTreeAccessEmailAllowed:input_type -> familytree.IsTreeAccessEmailAllowedRequest
-	53, // 56: familytree.FamilyTreeService.AddTreeAccessEmail:input_type -> familytree.AddTreeAccessEmailRequest
-	55, // 57: familytree.FamilyTreeService.ListTreeAccessEmails:input_type -> familytree.ListTreeAccessEmailsRequest
-	57, // 58: familytree.FamilyTreeService.DeleteTreeAccessEmail:input_type -> familytree.DeleteTreeAccessEmailRequest
-	59, // 59: familytree.FamilyTreeService.ValidatePersonsInTree:input_type -> familytree.ValidatePersonsInTreeRequest
-	61, // 60: familytree.FamilyTreeService.UpdatePartnerRelationshipStatus:input_type -> familytree.UpdatePartnerRelationshipStatusRequest
-	63, // 61: familytree.FamilyTreeService.UpdateTreeSettings:input_type -> familytree.UpdateTreeSettingsRequest
-	10, // 62: familytree.FamilyTreeService.CreateTree:output_type -> familytree.CreateTreeResponse
-	12, // 63: familytree.FamilyTreeService.ListTreesByCreator:output_type -> familytree.ListTreesByCreatorResponse
-	14, // 64: familytree.FamilyTreeService.ListPublicTreesByCreator:output_type -> familytree.ListPublicTreesByCreatorResponse
-	16, // 65: familytree.FamilyTreeService.ListRandomPublicTrees:output_type -> familytree.ListRandomPublicTreesResponse
-	18, // 66: familytree.FamilyTreeService.AddParent:output_type -> familytree.AddParentResponse
-	20, // 67: familytree.FamilyTreeService.AddChild:output_type -> familytree.AddChildResponse
-	22, // 68: familytree.FamilyTreeService.AddPartner:output_type -> familytree.AddPartnerResponse
-	24, // 69: familytree.FamilyTreeService.UpdatePersonName:output_type -> familytree.UpdatePersonNameResponse
-	26, // 70: familytree.FamilyTreeService.UpdatePersonAvatarPhoto:output_type -> familytree.UpdatePersonAvatarPhotoResponse
-	28, // 71: familytree.FamilyTreeService.DeletePersonInTree:output_type -> familytree.DeletePersonInTreeResponse
-	30, // 72: familytree.FamilyTreeService.CreatePerson:output_type -> familytree.CreatePersonResponse
-	32, // 73: familytree.FamilyTreeService.GetPerson:output_type -> familytree.GetPersonResponse
-	34, // 74: familytree.FamilyTreeService.ListPersonsByTree:output_type -> familytree.ListPersonsByTreeResponse
-	36, // 75: familytree.FamilyTreeService.UpdatePerson:output_type -> familytree.UpdatePersonResponse
-	38, // 76: familytree.FamilyTreeService.DeletePerson:output_type -> familytree.DeletePersonResponse
-	40, // 77: familytree.FamilyTreeService.AddRelationship:output_type -> familytree.AddRelationshipResponse
-	42, // 78: familytree.FamilyTreeService.RemoveRelationship:output_type -> familytree.RemoveRelationshipResponse
-	44, // 79: familytree.FamilyTreeService.GetRelatives:output_type -> familytree.GetRelativesResponse
-	46, // 80: familytree.FamilyTreeService.GetTree:output_type -> familytree.GetTreeResponse
-	48, // 81: familytree.FamilyTreeService.GetTreeContent:output_type -> familytree.GetTreeContentResponse
-	50, // 82: familytree.FamilyTreeService.GetTreeAccessInfo:output_type -> familytree.GetTreeAccessInfoResponse
-	52, // 83: familytree.FamilyTreeService.IsTreeAccessEmailAllowed:output_type -> familytree.IsTreeAccessEmailAllowedResponse
-	54, // 84: familytree.FamilyTreeService.AddTreeAccessEmail:output_type -> familytree.AddTreeAccessEmailResponse
-	56, // 85: familytree.FamilyTreeService.ListTreeAccessEmails:output_type -> familytree.ListTreeAccessEmailsResponse
-	58, // 86: familytree.FamilyTreeService.DeleteTreeAccessEmail:output_type -> familytree.DeleteTreeAccessEmailResponse
-	60, // 87: familytree.FamilyTreeService.ValidatePersonsInTree:output_type -> familytree.ValidatePersonsInTreeResponse
-	62, // 88: familytree.FamilyTreeService.UpdatePartnerRelationshipStatus:output_type -> familytree.UpdatePartnerRelationshipStatusResponse
-	64, // 89: familytree.FamilyTreeService.UpdateTreeSettings:output_type -> familytree.UpdateTreeSettingsResponse
-	62, // [62:90] is the sub-list for method output_type
-	34, // [34:62] is the sub-list for method input_type
-	34, // [34:34] is the sub-list for extension type_name
-	34, // [34:34] is the sub-list for extension extendee
-	0,  // [0:34] is the sub-list for field type_name
+	5,  // 34: familytree.ImportTreeGEDCOMResponse.tree:type_name -> familytree.Tree
+	9,  // 35: familytree.FamilyTreeService.CreateTree:input_type -> familytree.CreateTreeRequest
+	11, // 36: familytree.FamilyTreeService.ListTreesByCreator:input_type -> familytree.ListTreesByCreatorRequest
+	13, // 37: familytree.FamilyTreeService.ListPublicTreesByCreator:input_type -> familytree.ListPublicTreesByCreatorRequest
+	15, // 38: familytree.FamilyTreeService.ListRandomPublicTrees:input_type -> familytree.ListRandomPublicTreesRequest
+	17, // 39: familytree.FamilyTreeService.AddParent:input_type -> familytree.AddParentRequest
+	19, // 40: familytree.FamilyTreeService.AddChild:input_type -> familytree.AddChildRequest
+	21, // 41: familytree.FamilyTreeService.AddPartner:input_type -> familytree.AddPartnerRequest
+	23, // 42: familytree.FamilyTreeService.UpdatePersonName:input_type -> familytree.UpdatePersonNameRequest
+	25, // 43: familytree.FamilyTreeService.UpdatePersonAvatarPhoto:input_type -> familytree.UpdatePersonAvatarPhotoRequest
+	27, // 44: familytree.FamilyTreeService.DeletePersonInTree:input_type -> familytree.DeletePersonInTreeRequest
+	29, // 45: familytree.FamilyTreeService.CreatePerson:input_type -> familytree.CreatePersonRequest
+	31, // 46: familytree.FamilyTreeService.GetPerson:input_type -> familytree.GetPersonRequest
+	33, // 47: familytree.FamilyTreeService.ListPersonsByTree:input_type -> familytree.ListPersonsByTreeRequest
+	35, // 48: familytree.FamilyTreeService.UpdatePerson:input_type -> familytree.UpdatePersonRequest
+	37, // 49: familytree.FamilyTreeService.DeletePerson:input_type -> familytree.DeletePersonRequest
+	39, // 50: familytree.FamilyTreeService.AddRelationship:input_type -> familytree.AddRelationshipRequest
+	41, // 51: familytree.FamilyTreeService.RemoveRelationship:input_type -> familytree.RemoveRelationshipRequest
+	43, // 52: familytree.FamilyTreeService.GetRelatives:input_type -> familytree.GetRelativesRequest
+	45, // 53: familytree.FamilyTreeService.GetTree:input_type -> familytree.GetTreeRequest
+	47, // 54: familytree.FamilyTreeService.GetTreeContent:input_type -> familytree.GetTreeContentRequest
+	48, // 55: familytree.FamilyTreeService.GetTreeContentWithinDepth:input_type -> familytree.GetTreeContentWithinDepthRequest
+	50, // 56: familytree.FamilyTreeService.GetTreeAccessInfo:input_type -> familytree.GetTreeAccessInfoRequest
+	52, // 57: familytree.FamilyTreeService.IsTreeAccessEmailAllowed:input_type -> familytree.IsTreeAccessEmailAllowedRequest
+	54, // 58: familytree.FamilyTreeService.AddTreeAccessEmail:input_type -> familytree.AddTreeAccessEmailRequest
+	56, // 59: familytree.FamilyTreeService.ListTreeAccessEmails:input_type -> familytree.ListTreeAccessEmailsRequest
+	58, // 60: familytree.FamilyTreeService.DeleteTreeAccessEmail:input_type -> familytree.DeleteTreeAccessEmailRequest
+	60, // 61: familytree.FamilyTreeService.ValidatePersonsInTree:input_type -> familytree.ValidatePersonsInTreeRequest
+	62, // 62: familytree.FamilyTreeService.UpdatePartnerRelationshipStatus:input_type -> familytree.UpdatePartnerRelationshipStatusRequest
+	64, // 63: familytree.FamilyTreeService.UpdateTreeSettings:input_type -> familytree.UpdateTreeSettingsRequest
+	66, // 64: familytree.FamilyTreeService.ExportTreeGEDCOM:input_type -> familytree.ExportTreeGEDCOMRequest
+	68, // 65: familytree.FamilyTreeService.ImportTreeGEDCOM:input_type -> familytree.ImportTreeGEDCOMRequest
+	10, // 66: familytree.FamilyTreeService.CreateTree:output_type -> familytree.CreateTreeResponse
+	12, // 67: familytree.FamilyTreeService.ListTreesByCreator:output_type -> familytree.ListTreesByCreatorResponse
+	14, // 68: familytree.FamilyTreeService.ListPublicTreesByCreator:output_type -> familytree.ListPublicTreesByCreatorResponse
+	16, // 69: familytree.FamilyTreeService.ListRandomPublicTrees:output_type -> familytree.ListRandomPublicTreesResponse
+	18, // 70: familytree.FamilyTreeService.AddParent:output_type -> familytree.AddParentResponse
+	20, // 71: familytree.FamilyTreeService.AddChild:output_type -> familytree.AddChildResponse
+	22, // 72: familytree.FamilyTreeService.AddPartner:output_type -> familytree.AddPartnerResponse
+	24, // 73: familytree.FamilyTreeService.UpdatePersonName:output_type -> familytree.UpdatePersonNameResponse
+	26, // 74: familytree.FamilyTreeService.UpdatePersonAvatarPhoto:output_type -> familytree.UpdatePersonAvatarPhotoResponse
+	28, // 75: familytree.FamilyTreeService.DeletePersonInTree:output_type -> familytree.DeletePersonInTreeResponse
+	30, // 76: familytree.FamilyTreeService.CreatePerson:output_type -> familytree.CreatePersonResponse
+	32, // 77: familytree.FamilyTreeService.GetPerson:output_type -> familytree.GetPersonResponse
+	34, // 78: familytree.FamilyTreeService.ListPersonsByTree:output_type -> familytree.ListPersonsByTreeResponse
+	36, // 79: familytree.FamilyTreeService.UpdatePerson:output_type -> familytree.UpdatePersonResponse
+	38, // 80: familytree.FamilyTreeService.DeletePerson:output_type -> familytree.DeletePersonResponse
+	40, // 81: familytree.FamilyTreeService.AddRelationship:output_type -> familytree.AddRelationshipResponse
+	42, // 82: familytree.FamilyTreeService.RemoveRelationship:output_type -> familytree.RemoveRelationshipResponse
+	44, // 83: familytree.FamilyTreeService.GetRelatives:output_type -> familytree.GetRelativesResponse
+	46, // 84: familytree.FamilyTreeService.GetTree:output_type -> familytree.GetTreeResponse
+	49, // 85: familytree.FamilyTreeService.GetTreeContent:output_type -> familytree.GetTreeContentResponse
+	49, // 86: familytree.FamilyTreeService.GetTreeContentWithinDepth:output_type -> familytree.GetTreeContentResponse
+	51, // 87: familytree.FamilyTreeService.GetTreeAccessInfo:output_type -> familytree.GetTreeAccessInfoResponse
+	53, // 88: familytree.FamilyTreeService.IsTreeAccessEmailAllowed:output_type -> familytree.IsTreeAccessEmailAllowedResponse
+	55, // 89: familytree.FamilyTreeService.AddTreeAccessEmail:output_type -> familytree.AddTreeAccessEmailResponse
+	57, // 90: familytree.FamilyTreeService.ListTreeAccessEmails:output_type -> familytree.ListTreeAccessEmailsResponse
+	59, // 91: familytree.FamilyTreeService.DeleteTreeAccessEmail:output_type -> familytree.DeleteTreeAccessEmailResponse
+	61, // 92: familytree.FamilyTreeService.ValidatePersonsInTree:output_type -> familytree.ValidatePersonsInTreeResponse
+	63, // 93: familytree.FamilyTreeService.UpdatePartnerRelationshipStatus:output_type -> familytree.UpdatePartnerRelationshipStatusResponse
+	65, // 94: familytree.FamilyTreeService.UpdateTreeSettings:output_type -> familytree.UpdateTreeSettingsResponse
+	67, // 95: familytree.FamilyTreeService.ExportTreeGEDCOM:output_type -> familytree.ExportTreeGEDCOMResponse
+	69, // 96: familytree.FamilyTreeService.ImportTreeGEDCOM:output_type -> familytree.ImportTreeGEDCOMResponse
+	66, // [66:97] is the sub-list for method output_type
+	35, // [35:66] is the sub-list for method input_type
+	35, // [35:35] is the sub-list for extension type_name
+	35, // [35:35] is the sub-list for extension extendee
+	0,  // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_familytree_familytree_proto_init() }
@@ -3872,7 +4180,7 @@ func file_familytree_familytree_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_familytree_familytree_proto_rawDesc), len(file_familytree_familytree_proto_rawDesc)),
 			NumEnums:      5,
-			NumMessages:   60,
+			NumMessages:   65,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

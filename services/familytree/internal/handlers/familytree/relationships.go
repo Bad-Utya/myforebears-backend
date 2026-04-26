@@ -59,6 +59,19 @@ func (h *Handler) GetTreeContent(ctx context.Context, req *familytreepb.GetTreeC
 		return nil, grpcerr.Map(err)
 	}
 
+	return toProtoTreeContent(persons, relationships), nil
+}
+
+func (h *Handler) GetTreeContentWithinDepth(ctx context.Context, req *familytreepb.GetTreeContentWithinDepthRequest) (*familytreepb.GetTreeContentResponse, error) {
+	persons, relationships, err := h.service.GetTreeContentWithinDepth(ctx, req.GetTreeId(), req.GetRootPersonId(), int(req.GetMaxDepth()))
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return toProtoTreeContent(persons, relationships), nil
+}
+
+func toProtoTreeContent(persons []models.Person, relationships []models.Relationship) *familytreepb.GetTreeContentResponse {
 	protoPersons := make([]*familytreepb.Person, 0, len(persons))
 	for _, person := range persons {
 		protoPersons = append(protoPersons, toProtoPerson(person))
@@ -73,7 +86,7 @@ func (h *Handler) GetTreeContent(ctx context.Context, req *familytreepb.GetTreeC
 		})
 	}
 
-	return &familytreepb.GetTreeContentResponse{Persons: protoPersons, Relationships: protoRelationships}, nil
+	return &familytreepb.GetTreeContentResponse{Persons: protoPersons, Relationships: protoRelationships}
 }
 
 func (h *Handler) UpdatePartnerRelationshipStatus(ctx context.Context, req *familytreepb.UpdatePartnerRelationshipStatusRequest) (*familytreepb.UpdatePartnerRelationshipStatusResponse, error) {

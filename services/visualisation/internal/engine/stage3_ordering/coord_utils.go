@@ -1,4 +1,4 @@
-﻿package stage3_ordering
+package stage3_ordering
 
 // calculateTotalDistance РІС‹С‡РёСЃР»СЏРµС‚ СЃСѓРјРјСѓ РљР’РђР”Р РђРўРћР’ СЂР°СЃСЃС‚РѕСЏРЅРёР№ РґРѕ СЂРѕРґРёС‚РµР»РµР№, РґРµС‚РµР№ Рё РїР°СЂС‚РЅС‘СЂРѕРІ
 // Р¤РѕСЂРјСѓР»Р°: 5*(СЂР°СЃСЃС‚РѕСЏРЅРёСЏ РґРѕ СЂРѕРґРёС‚РµР»РµР№ Рё РґРµС‚РµР№) + (СЂР°СЃСЃС‚РѕСЏРЅРёСЏ РґРѕ РїР°СЂС‚РЅС‘СЂРѕРІ РёР· РґСЂСѓРіРёС… РІРµСЂС€РёРЅ)
@@ -231,7 +231,7 @@ func getParentCoordinateForPerson(parent *CoordNode, personIndex int) int {
 	return (parent.Left + parent.Right) / 2
 }
 
-// getParentCoordinate РІРѕР·РІСЂР°С‰Р°РµС‚ РєРѕРѕСЂРґРёРЅР°С‚Сѓ СЂРѕРґРёС‚РµР»СЏ (legacy - С†РµРЅС‚СЂ РІРµСЂС€РёРЅС‹)
+// getParentCoordinate РІРѕР·РІСЂР°С‰Р°РµС‚ РєРѕРѕСЂРґРёРЅР°С‚Сѓ СЂРѕРґРёС‚РµР»СЏ (С†РµРЅС‚СЂ РІРµСЂС€РёРЅС‹)
 func getParentCoordinate(parent *CoordNode) int {
 	// Р•СЃР»Рё СЂРѕРґРёС‚РµР»СЊ вЂ” СЃРєР»РµРµРЅРЅР°СЏ РІРµСЂС€РёРЅР° (2 С‡РµР»РѕРІРµРєР°), С‚Рѕ СЃСЂРµРґРЅРµРµ
 	if len(parent.People) == 2 {
@@ -326,12 +326,12 @@ func placeNodeAtCoord(cn *CoordNode, coord int, cm *CoordMatrix) {
 	cm.AddNode(cn)
 }
 
-// placeChain СЂР°Р·РјРµС‰Р°РµС‚ РІСЃСЋ С†РµРїРѕС‡РєСѓ РЅР° Р·Р°РґР°РЅРЅРѕР№ РєРѕРѕСЂРґРёРЅР°С‚Рµ (legacy)
+// placeChain СЂР°Р·РјРµС‰Р°РµС‚ РІСЃСЋ С†РµРїРѕС‡РєСѓ РЅР° Р·Р°РґР°РЅРЅРѕР№ РєРѕРѕСЂРґРёРЅР°С‚Рµ
 func placeChain(cn *CoordNode, coord int, cm *CoordMatrix, chainMap map[*CoordNode]*int, layerPaused map[int]bool) {
 	placeChainAtCoord(cn, coord, cm, chainMap, layerPaused)
 }
 
-// placeNode СЂР°Р·РјРµС‰Р°РµС‚ РѕРґРЅСѓ РІРµСЂС€РёРЅСѓ РЅР° Р·Р°РґР°РЅРЅРѕР№ РєРѕРѕСЂРґРёРЅР°С‚Рµ (legacy)
+// placeNode СЂР°Р·РјРµС‰Р°РµС‚ РѕРґРЅСѓ РІРµСЂС€РёРЅСѓ РЅР° Р·Р°РґР°РЅРЅРѕР№ РєРѕРѕСЂРґРёРЅР°С‚Рµ
 func placeNode(cn *CoordNode, coord int, cm *CoordMatrix) {
 	placeNodeAtCoord(cn, coord, cm)
 }

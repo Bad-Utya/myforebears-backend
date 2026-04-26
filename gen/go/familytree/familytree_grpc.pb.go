@@ -39,6 +39,7 @@ const (
 	FamilyTreeService_GetRelatives_FullMethodName                    = "/familytree.FamilyTreeService/GetRelatives"
 	FamilyTreeService_GetTree_FullMethodName                         = "/familytree.FamilyTreeService/GetTree"
 	FamilyTreeService_GetTreeContent_FullMethodName                  = "/familytree.FamilyTreeService/GetTreeContent"
+	FamilyTreeService_GetTreeContentWithinDepth_FullMethodName       = "/familytree.FamilyTreeService/GetTreeContentWithinDepth"
 	FamilyTreeService_GetTreeAccessInfo_FullMethodName               = "/familytree.FamilyTreeService/GetTreeAccessInfo"
 	FamilyTreeService_IsTreeAccessEmailAllowed_FullMethodName        = "/familytree.FamilyTreeService/IsTreeAccessEmailAllowed"
 	FamilyTreeService_AddTreeAccessEmail_FullMethodName              = "/familytree.FamilyTreeService/AddTreeAccessEmail"
@@ -47,6 +48,8 @@ const (
 	FamilyTreeService_ValidatePersonsInTree_FullMethodName           = "/familytree.FamilyTreeService/ValidatePersonsInTree"
 	FamilyTreeService_UpdatePartnerRelationshipStatus_FullMethodName = "/familytree.FamilyTreeService/UpdatePartnerRelationshipStatus"
 	FamilyTreeService_UpdateTreeSettings_FullMethodName              = "/familytree.FamilyTreeService/UpdateTreeSettings"
+	FamilyTreeService_ExportTreeGEDCOM_FullMethodName                = "/familytree.FamilyTreeService/ExportTreeGEDCOM"
+	FamilyTreeService_ImportTreeGEDCOM_FullMethodName                = "/familytree.FamilyTreeService/ImportTreeGEDCOM"
 )
 
 // FamilyTreeServiceClient is the client API for FamilyTreeService service.
@@ -73,6 +76,7 @@ type FamilyTreeServiceClient interface {
 	GetRelatives(ctx context.Context, in *GetRelativesRequest, opts ...grpc.CallOption) (*GetRelativesResponse, error)
 	GetTree(ctx context.Context, in *GetTreeRequest, opts ...grpc.CallOption) (*GetTreeResponse, error)
 	GetTreeContent(ctx context.Context, in *GetTreeContentRequest, opts ...grpc.CallOption) (*GetTreeContentResponse, error)
+	GetTreeContentWithinDepth(ctx context.Context, in *GetTreeContentWithinDepthRequest, opts ...grpc.CallOption) (*GetTreeContentResponse, error)
 	GetTreeAccessInfo(ctx context.Context, in *GetTreeAccessInfoRequest, opts ...grpc.CallOption) (*GetTreeAccessInfoResponse, error)
 	IsTreeAccessEmailAllowed(ctx context.Context, in *IsTreeAccessEmailAllowedRequest, opts ...grpc.CallOption) (*IsTreeAccessEmailAllowedResponse, error)
 	AddTreeAccessEmail(ctx context.Context, in *AddTreeAccessEmailRequest, opts ...grpc.CallOption) (*AddTreeAccessEmailResponse, error)
@@ -81,6 +85,8 @@ type FamilyTreeServiceClient interface {
 	ValidatePersonsInTree(ctx context.Context, in *ValidatePersonsInTreeRequest, opts ...grpc.CallOption) (*ValidatePersonsInTreeResponse, error)
 	UpdatePartnerRelationshipStatus(ctx context.Context, in *UpdatePartnerRelationshipStatusRequest, opts ...grpc.CallOption) (*UpdatePartnerRelationshipStatusResponse, error)
 	UpdateTreeSettings(ctx context.Context, in *UpdateTreeSettingsRequest, opts ...grpc.CallOption) (*UpdateTreeSettingsResponse, error)
+	ExportTreeGEDCOM(ctx context.Context, in *ExportTreeGEDCOMRequest, opts ...grpc.CallOption) (*ExportTreeGEDCOMResponse, error)
+	ImportTreeGEDCOM(ctx context.Context, in *ImportTreeGEDCOMRequest, opts ...grpc.CallOption) (*ImportTreeGEDCOMResponse, error)
 }
 
 type familyTreeServiceClient struct {
@@ -291,6 +297,16 @@ func (c *familyTreeServiceClient) GetTreeContent(ctx context.Context, in *GetTre
 	return out, nil
 }
 
+func (c *familyTreeServiceClient) GetTreeContentWithinDepth(ctx context.Context, in *GetTreeContentWithinDepthRequest, opts ...grpc.CallOption) (*GetTreeContentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetTreeContentResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_GetTreeContentWithinDepth_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *familyTreeServiceClient) GetTreeAccessInfo(ctx context.Context, in *GetTreeAccessInfoRequest, opts ...grpc.CallOption) (*GetTreeAccessInfoResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetTreeAccessInfoResponse)
@@ -371,6 +387,26 @@ func (c *familyTreeServiceClient) UpdateTreeSettings(ctx context.Context, in *Up
 	return out, nil
 }
 
+func (c *familyTreeServiceClient) ExportTreeGEDCOM(ctx context.Context, in *ExportTreeGEDCOMRequest, opts ...grpc.CallOption) (*ExportTreeGEDCOMResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ExportTreeGEDCOMResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_ExportTreeGEDCOM_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *familyTreeServiceClient) ImportTreeGEDCOM(ctx context.Context, in *ImportTreeGEDCOMRequest, opts ...grpc.CallOption) (*ImportTreeGEDCOMResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ImportTreeGEDCOMResponse)
+	err := c.cc.Invoke(ctx, FamilyTreeService_ImportTreeGEDCOM_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FamilyTreeServiceServer is the server API for FamilyTreeService service.
 // All implementations must embed UnimplementedFamilyTreeServiceServer
 // for forward compatibility.
@@ -395,6 +431,7 @@ type FamilyTreeServiceServer interface {
 	GetRelatives(context.Context, *GetRelativesRequest) (*GetRelativesResponse, error)
 	GetTree(context.Context, *GetTreeRequest) (*GetTreeResponse, error)
 	GetTreeContent(context.Context, *GetTreeContentRequest) (*GetTreeContentResponse, error)
+	GetTreeContentWithinDepth(context.Context, *GetTreeContentWithinDepthRequest) (*GetTreeContentResponse, error)
 	GetTreeAccessInfo(context.Context, *GetTreeAccessInfoRequest) (*GetTreeAccessInfoResponse, error)
 	IsTreeAccessEmailAllowed(context.Context, *IsTreeAccessEmailAllowedRequest) (*IsTreeAccessEmailAllowedResponse, error)
 	AddTreeAccessEmail(context.Context, *AddTreeAccessEmailRequest) (*AddTreeAccessEmailResponse, error)
@@ -403,6 +440,8 @@ type FamilyTreeServiceServer interface {
 	ValidatePersonsInTree(context.Context, *ValidatePersonsInTreeRequest) (*ValidatePersonsInTreeResponse, error)
 	UpdatePartnerRelationshipStatus(context.Context, *UpdatePartnerRelationshipStatusRequest) (*UpdatePartnerRelationshipStatusResponse, error)
 	UpdateTreeSettings(context.Context, *UpdateTreeSettingsRequest) (*UpdateTreeSettingsResponse, error)
+	ExportTreeGEDCOM(context.Context, *ExportTreeGEDCOMRequest) (*ExportTreeGEDCOMResponse, error)
+	ImportTreeGEDCOM(context.Context, *ImportTreeGEDCOMRequest) (*ImportTreeGEDCOMResponse, error)
 	mustEmbedUnimplementedFamilyTreeServiceServer()
 }
 
@@ -473,6 +512,9 @@ func (UnimplementedFamilyTreeServiceServer) GetTree(context.Context, *GetTreeReq
 func (UnimplementedFamilyTreeServiceServer) GetTreeContent(context.Context, *GetTreeContentRequest) (*GetTreeContentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTreeContent not implemented")
 }
+func (UnimplementedFamilyTreeServiceServer) GetTreeContentWithinDepth(context.Context, *GetTreeContentWithinDepthRequest) (*GetTreeContentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTreeContentWithinDepth not implemented")
+}
 func (UnimplementedFamilyTreeServiceServer) GetTreeAccessInfo(context.Context, *GetTreeAccessInfoRequest) (*GetTreeAccessInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTreeAccessInfo not implemented")
 }
@@ -496,6 +538,12 @@ func (UnimplementedFamilyTreeServiceServer) UpdatePartnerRelationshipStatus(cont
 }
 func (UnimplementedFamilyTreeServiceServer) UpdateTreeSettings(context.Context, *UpdateTreeSettingsRequest) (*UpdateTreeSettingsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTreeSettings not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) ExportTreeGEDCOM(context.Context, *ExportTreeGEDCOMRequest) (*ExportTreeGEDCOMResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExportTreeGEDCOM not implemented")
+}
+func (UnimplementedFamilyTreeServiceServer) ImportTreeGEDCOM(context.Context, *ImportTreeGEDCOMRequest) (*ImportTreeGEDCOMResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ImportTreeGEDCOM not implemented")
 }
 func (UnimplementedFamilyTreeServiceServer) mustEmbedUnimplementedFamilyTreeServiceServer() {}
 func (UnimplementedFamilyTreeServiceServer) testEmbeddedByValue()                           {}
@@ -878,6 +926,24 @@ func _FamilyTreeService_GetTreeContent_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FamilyTreeService_GetTreeContentWithinDepth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTreeContentWithinDepthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).GetTreeContentWithinDepth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_GetTreeContentWithinDepth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).GetTreeContentWithinDepth(ctx, req.(*GetTreeContentWithinDepthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _FamilyTreeService_GetTreeAccessInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetTreeAccessInfoRequest)
 	if err := dec(in); err != nil {
@@ -1022,6 +1088,42 @@ func _FamilyTreeService_UpdateTreeSettings_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FamilyTreeService_ExportTreeGEDCOM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExportTreeGEDCOMRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).ExportTreeGEDCOM(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_ExportTreeGEDCOM_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).ExportTreeGEDCOM(ctx, req.(*ExportTreeGEDCOMRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FamilyTreeService_ImportTreeGEDCOM_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImportTreeGEDCOMRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FamilyTreeServiceServer).ImportTreeGEDCOM(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FamilyTreeService_ImportTreeGEDCOM_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FamilyTreeServiceServer).ImportTreeGEDCOM(ctx, req.(*ImportTreeGEDCOMRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FamilyTreeService_ServiceDesc is the grpc.ServiceDesc for FamilyTreeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1110,6 +1212,10 @@ var FamilyTreeService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _FamilyTreeService_GetTreeContent_Handler,
 		},
 		{
+			MethodName: "GetTreeContentWithinDepth",
+			Handler:    _FamilyTreeService_GetTreeContentWithinDepth_Handler,
+		},
+		{
 			MethodName: "GetTreeAccessInfo",
 			Handler:    _FamilyTreeService_GetTreeAccessInfo_Handler,
 		},
@@ -1140,6 +1246,14 @@ var FamilyTreeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateTreeSettings",
 			Handler:    _FamilyTreeService_UpdateTreeSettings_Handler,
+		},
+		{
+			MethodName: "ExportTreeGEDCOM",
+			Handler:    _FamilyTreeService_ExportTreeGEDCOM_Handler,
+		},
+		{
+			MethodName: "ImportTreeGEDCOM",
+			Handler:    _FamilyTreeService_ImportTreeGEDCOM_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

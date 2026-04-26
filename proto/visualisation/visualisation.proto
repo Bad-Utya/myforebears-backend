@@ -46,6 +46,7 @@ service VisualisationService {
     rpc ListTreeVisualisations (ListTreeVisualisationsRequest) returns (ListTreeVisualisationsResponse);
     rpc GetVisualisationByID (GetVisualisationByIDRequest) returns (GetVisualisationContentResponse);
     rpc DeleteVisualisationByID (DeleteVisualisationByIDRequest) returns (DeleteVisualisationByIDResponse);
+    rpc RenderCoordinatesForClient (RenderCoordinatesForClientRequest) returns (RenderCoordinatesForClientResponse);
 }
 
 message CreateLineageVisualisationRequest {
@@ -88,3 +89,13 @@ message DeleteVisualisationByIDRequest {
 }
 
 message DeleteVisualisationByIDResponse {}
+
+message RenderCoordinatesForClientRequest {
+    string tree_id = 1;
+    string root_person_id = 2;
+    int32 max_depth = 3;
+}
+
+message RenderCoordinatesForClientResponse {
+    bytes coordinates_json = 1;
+}

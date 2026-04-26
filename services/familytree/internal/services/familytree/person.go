@@ -38,6 +38,7 @@ var (
 	ErrInvalidEmail            = errors.New("invalid email")
 	ErrTreeAccessEmailExists   = errors.New("tree access email already exists")
 	ErrTreeAccessEmailNotFound = errors.New("tree access email not found")
+	ErrInvalidMaxDepth         = errors.New("invalid max depth")
 )
 
 type Service struct {

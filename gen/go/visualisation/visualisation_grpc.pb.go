@@ -26,6 +26,7 @@ const (
 	VisualisationService_ListTreeVisualisations_FullMethodName                     = "/visualisation.VisualisationService/ListTreeVisualisations"
 	VisualisationService_GetVisualisationByID_FullMethodName                       = "/visualisation.VisualisationService/GetVisualisationByID"
 	VisualisationService_DeleteVisualisationByID_FullMethodName                    = "/visualisation.VisualisationService/DeleteVisualisationByID"
+	VisualisationService_RenderCoordinatesForClient_FullMethodName                 = "/visualisation.VisualisationService/RenderCoordinatesForClient"
 )
 
 // VisualisationServiceClient is the client API for VisualisationService service.
@@ -39,6 +40,7 @@ type VisualisationServiceClient interface {
 	ListTreeVisualisations(ctx context.Context, in *ListTreeVisualisationsRequest, opts ...grpc.CallOption) (*ListTreeVisualisationsResponse, error)
 	GetVisualisationByID(ctx context.Context, in *GetVisualisationByIDRequest, opts ...grpc.CallOption) (*GetVisualisationContentResponse, error)
 	DeleteVisualisationByID(ctx context.Context, in *DeleteVisualisationByIDRequest, opts ...grpc.CallOption) (*DeleteVisualisationByIDResponse, error)
+	RenderCoordinatesForClient(ctx context.Context, in *RenderCoordinatesForClientRequest, opts ...grpc.CallOption) (*RenderCoordinatesForClientResponse, error)
 }
 
 type visualisationServiceClient struct {
@@ -119,6 +121,16 @@ func (c *visualisationServiceClient) DeleteVisualisationByID(ctx context.Context
 	return out, nil
 }
 
+func (c *visualisationServiceClient) RenderCoordinatesForClient(ctx context.Context, in *RenderCoordinatesForClientRequest, opts ...grpc.CallOption) (*RenderCoordinatesForClientResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RenderCoordinatesForClientResponse)
+	err := c.cc.Invoke(ctx, VisualisationService_RenderCoordinatesForClient_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VisualisationServiceServer is the server API for VisualisationService service.
 // All implementations must embed UnimplementedVisualisationServiceServer
 // for forward compatibility.
@@ -130,6 +142,7 @@ type VisualisationServiceServer interface {
 	ListTreeVisualisations(context.Context, *ListTreeVisualisationsRequest) (*ListTreeVisualisationsResponse, error)
 	GetVisualisationByID(context.Context, *GetVisualisationByIDRequest) (*GetVisualisationContentResponse, error)
 	DeleteVisualisationByID(context.Context, *DeleteVisualisationByIDRequest) (*DeleteVisualisationByIDResponse, error)
+	RenderCoordinatesForClient(context.Context, *RenderCoordinatesForClientRequest) (*RenderCoordinatesForClientResponse, error)
 	mustEmbedUnimplementedVisualisationServiceServer()
 }
 
@@ -160,6 +173,9 @@ func (UnimplementedVisualisationServiceServer) GetVisualisationByID(context.Cont
 }
 func (UnimplementedVisualisationServiceServer) DeleteVisualisationByID(context.Context, *DeleteVisualisationByIDRequest) (*DeleteVisualisationByIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteVisualisationByID not implemented")
+}
+func (UnimplementedVisualisationServiceServer) RenderCoordinatesForClient(context.Context, *RenderCoordinatesForClientRequest) (*RenderCoordinatesForClientResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenderCoordinatesForClient not implemented")
 }
 func (UnimplementedVisualisationServiceServer) mustEmbedUnimplementedVisualisationServiceServer() {}
 func (UnimplementedVisualisationServiceServer) testEmbeddedByValue()                              {}
@@ -308,6 +324,24 @@ func _VisualisationService_DeleteVisualisationByID_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VisualisationService_RenderCoordinatesForClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenderCoordinatesForClientRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VisualisationServiceServer).RenderCoordinatesForClient(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VisualisationService_RenderCoordinatesForClient_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VisualisationServiceServer).RenderCoordinatesForClient(ctx, req.(*RenderCoordinatesForClientRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VisualisationService_ServiceDesc is the grpc.ServiceDesc for VisualisationService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -342,6 +376,10 @@ var VisualisationService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteVisualisationByID",
 			Handler:    _VisualisationService_DeleteVisualisationByID_Handler,
+		},
+		{
+			MethodName: "RenderCoordinatesForClient",
+			Handler:    _VisualisationService_RenderCoordinatesForClient_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

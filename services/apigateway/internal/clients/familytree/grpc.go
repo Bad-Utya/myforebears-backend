@@ -263,3 +263,31 @@ func (c *Client) DeletePersonInTree(ctx context.Context, req *familytreepb.Delet
 
 	return nil
 }
+
+func (c *Client) ExportTreeGEDCOM(ctx context.Context, requestUserID int, treeID string) (*familytreepb.ExportTreeGEDCOMResponse, error) {
+	const op = "clients.familytree.ExportTreeGEDCOM"
+
+	resp, err := c.api.ExportTreeGEDCOM(ctx, &familytreepb.ExportTreeGEDCOMRequest{
+		TreeId:        treeID,
+		RequestUserId: int32(requestUserID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) ImportTreeGEDCOM(ctx context.Context, requestUserID int, gedcomContent string) (*familytreepb.ImportTreeGEDCOMResponse, error) {
+	const op = "clients.familytree.ImportTreeGEDCOM"
+
+	resp, err := c.api.ImportTreeGEDCOM(ctx, &familytreepb.ImportTreeGEDCOMRequest{
+		GedcomContent: gedcomContent,
+		RequestUserId: int32(requestUserID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}

@@ -140,9 +140,51 @@ func main() {
 	absPath, err := filepath.Abs(outputFileName)
 	if err != nil {
 		fmt.Printf("SVG saved to %s\n", outputFileName)
-		return
+	} else {
+		fmt.Printf("SVG saved to %s\n", absPath)
 	}
-	fmt.Printf("SVG saved to %s\n", absPath)
+
+	// Test RenderCoordinates with different parameters
+	fmt.Println("\n\n=== Testing RenderCoordinates ===")
+
+	// Test with maxDepth = 0 (unlimited)
+	fmt.Println("\n--- Test 1: maxDepth=0 (unlimited), allowLayerShift=true ---")
+	coordBytes, err := engine.RenderCoordinates(
+		models.VisualisationTypeAncestorsAndDescendants,
+		rootID,
+		nil,
+		content,
+		0,    // maxDepth = 0 (unlimited)
+		true, // allowLayerShift = true
+	)
+	if err != nil {
+		panic(fmt.Errorf("render coordinates failed: %w", err))
+	}
+	fmt.Printf("Coordinates output (%d bytes): %s\n", len(coordBytes), string(coordBytes[:min(len(coordBytes), 200)]))
+
+	// Test with maxDepth = 1, allowLayerShift = false
+	fmt.Println("\n--- Test 2: maxDepth=1, allowLayerShift=false ---")
+	coordBytes, err = engine.RenderCoordinates(
+		models.VisualisationTypeAncestorsAndDescendants,
+		rootID,
+		nil,
+		content,
+		1,     // maxDepth = 1
+		false, // allowLayerShift = false
+	)
+	if err != nil {
+		panic(fmt.Errorf("render coordinates failed: %w", err))
+	}
+	fmt.Printf("Coordinates output (%d bytes): %s\n", len(coordBytes), string(coordBytes[:min(len(coordBytes), 200)]))
+
+	fmt.Println("\nDebug run completed successfully!")
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func parseGender(raw string) familytreepb.Gender {

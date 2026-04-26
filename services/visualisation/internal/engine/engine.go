@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -17,16 +16,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const (
-	pdfPageMargin = 48.0
-	pdfCoordScale = 16.0
-	pdfLayerStep  = 140.0
-
-	pdfSingleNodeWidth = 180.0
-	pdfPairNodeWidth   = 300.0
-	pdfNodeHeight      = 76.0
-)
-
 var errRootNotFound = errors.New("root person not found in tree content")
 
 type relationView struct {
@@ -39,6 +28,7 @@ type personView struct {
 	id     uuid.UUID
 	label  string
 	gender stage1_input.Gender
+	person familytreepb.Person
 }
 
 func RenderPDF(visType models.VisualisationType, rootPersonID uuid.UUID, includedPersonIDs []uuid.UUID, content *familytreepb.GetTreeContentResponse) ([]byte, error) {
@@ -93,7 +83,7 @@ func renderSVGInternal(visType models.VisualisationType, rootPersonID uuid.UUID,
 		return nil, errRootNotFound
 	}
 
-	tree, idToInt, err := buildStageTree(filteredPeople, filteredRelations)
+	tree, idToInt, _, err := buildStageTree(filteredPeople, filteredRelations)
 	if err != nil {
 		return nil, err
 	}
@@ -150,10 +140,10 @@ func renderSVGInternal(visType models.VisualisationType, rootPersonID uuid.UUID,
 	renderResult := stage4_render.BuildCoordRenderResult(cm, tree)
 	debugf(out, "[stage4_render] nodes=%d edges=%d", len(renderResult.Nodes), len(renderResult.Edges))
 
-	return renderLegacyLayoutToSVG(renderResult, tree), nil
+	return renderSVG(renderResult, tree), nil
 }
 
-func renderLegacyLayoutToSVG(result *stage4_render.CoordRenderResult, tree *stage1_input.FamilyTree) []byte {
+func renderSVG(result *stage4_render.CoordRenderResult, tree *stage1_input.FamilyTree) []byte {
 	if result == nil {
 		return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\"?><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"></svg>")
 	}
@@ -264,10 +254,12 @@ func normalizeInput(content *familytreepb.GetTreeContentResponse) (map[uuid.UUID
 		if err != nil {
 			continue
 		}
+		personCopy := *person
 		people[id] = personView{
 			id:     id,
 			label:  buildLabel(person),
 			gender: mapGender(person.GetGender()),
+			person: personCopy,
 		}
 	}
 
@@ -413,7 +405,7 @@ func keepRelationsWithin(relations []relationView, keep map[uuid.UUID]struct{}) 
 	return result
 }
 
-func buildStageTree(people map[uuid.UUID]personView, relations []relationView) (*stage1_input.FamilyTree, map[uuid.UUID]int, error) {
+func buildStageTree(people map[uuid.UUID]personView, relations []relationView) (*stage1_input.FamilyTree, map[uuid.UUID]int, map[int]familytreepb.Person, error) {
 	ids := make([]uuid.UUID, 0, len(people))
 	for id := range people {
 		ids = append(ids, id)
@@ -424,11 +416,13 @@ func buildStageTree(people map[uuid.UUID]personView, relations []relationView) (
 
 	tree := stage1_input.NewFamilyTree()
 	idToInt := make(map[uuid.UUID]int, len(ids))
+	internalPersons := make(map[int]familytreepb.Person, len(ids))
 	for i, id := range ids {
 		pid := i + 1
 		idToInt[id] = pid
 		p := people[id]
 		tree.AddPerson(stage1_input.NewPerson(pid, p.label, p.gender))
+		internalPersons[pid] = p.person
 	}
 
 	parentsByChild := make(map[uuid.UUID][]uuid.UUID)
@@ -457,7 +451,7 @@ func buildStageTree(people map[uuid.UUID]personView, relations []relationView) (
 		motherInt := idToInt[motherID]
 		fatherInt := idToInt[fatherID]
 		if err := tree.SetParents(childInt, motherInt, fatherInt); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
@@ -486,11 +480,11 @@ func buildStageTree(people map[uuid.UUID]personView, relations []relationView) (
 		left := idToInt[edge.left]
 		right := idToInt[edge.right]
 		if err := tree.AddPartnership(left, right); err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 	}
 
-	return tree, idToInt, nil
+	return tree, idToInt, internalPersons, nil
 }
 
 func dropParents(tree *stage1_input.FamilyTree) {
@@ -584,211 +578,19 @@ func buildLabel(person *familytreepb.Person) string {
 	return strings.Join(parts, " ")
 }
 
-func renderLegacyLayoutToPDF(result *stage4_render.CoordRenderResult, rootIntID int) []byte {
-	if result == nil {
-		return buildPDF(420, 320, nil)
+func buildPersonDisplayName(firstName, lastName, patronymic, fallback string) string {
+	parts := make([]string, 0, 3)
+	if first := strings.TrimSpace(firstName); first != "" {
+		parts = append(parts, first)
 	}
-
-	nodeX := make([]float64, len(result.Nodes))
-	nodeY := make([]float64, len(result.Nodes))
-	nodeW := make([]float64, len(result.Nodes))
-	maxRight := 0.0
-	for i, node := range result.Nodes {
-		x := pdfPageMargin + float64(node.Left)*pdfCoordScale
-		w := pdfSingleNodeWidth
-		if len(node.People) == 2 {
-			w = pdfPairNodeWidth
-		}
-		y := pdfPageMargin + float64(result.MaxLayer-node.Layer)*pdfLayerStep
-		nodeX[i] = x
-		nodeY[i] = y
-		nodeW[i] = w
-		if x+w > maxRight {
-			maxRight = x + w
-		}
+	if last := strings.TrimSpace(lastName); last != "" {
+		parts = append(parts, last)
 	}
-
-	pageWidth := maxRight + pdfPageMargin
-	if pageWidth < 640 {
-		pageWidth = 640
+	if middle := strings.TrimSpace(patronymic); middle != "" {
+		parts = append(parts, middle)
 	}
-	layerCount := float64(result.MaxLayer - result.MinLayer + 1)
-	if layerCount < 1 {
-		layerCount = 1
-	}
-	pageHeight := pdfPageMargin*2 + layerCount*pdfLayerStep + pdfNodeHeight
-	if pageHeight < 420 {
-		pageHeight = 420
-	}
-
-	var content bytes.Buffer
-	content.WriteString("0 0 0 RG\n")
-
-	for _, edge := range result.Edges {
-		switch edge.EdgeType {
-		case "partner":
-			content.WriteString("0.35 0.35 0.35 RG\n")
-			y := pdfPageMargin + float64(result.MaxLayer-edge.FromY)*pdfLayerStep + pdfNodeHeight/2
-			x1 := pdfPageMargin + float64(edge.FromX)*pdfCoordScale
-			x2 := pdfPageMargin + float64(edge.ToX)*pdfCoordScale
-			content.WriteString(fmt.Sprintf("%.2f %.2f m %.2f %.2f l S\n", x1, y, x2, y))
-		case "parent-child":
-			content.WriteString("0.25 0.25 0.25 RG\n")
-			fromY := pdfPageMargin + float64(result.MaxLayer-edge.FromY)*pdfLayerStep + pdfNodeHeight
-			toY := pdfPageMargin + float64(result.MaxLayer-edge.ToY)*pdfLayerStep
-			midY := fromY + (toY-fromY)/2
-
-			fromX := pdfPageMargin + float64(edge.FromX)*pdfCoordScale
-			toX := pdfPageMargin + float64(edge.ToX)*pdfCoordScale
-			if edge.ParentsAdjacent {
-				fromX = pdfPageMargin + float64(edge.AdjacentCenterX)*pdfCoordScale
-				content.WriteString(fmt.Sprintf("%.2f %.2f m %.2f %.2f l %.2f %.2f l %.2f %.2f l S\n", fromX, fromY, fromX, midY, toX, midY, toX, toY))
-			} else {
-				offset := 1.0
-				if edge.ParentAddedLeft {
-					offset = fromX + pdfCoordScale
-				} else {
-					offset = fromX - pdfCoordScale
-				}
-				content.WriteString(fmt.Sprintf("%.2f %.2f m %.2f %.2f l %.2f %.2f l %.2f %.2f l %.2f %.2f l S\n", fromX, fromY, offset, fromY, offset, midY, toX, midY, toX, toY))
-			}
-		}
-	}
-
-	for idx, node := range result.Nodes {
-		x := nodeX[idx]
-		y := nodeY[idx]
-		w := nodeW[idx]
-
-		fillR, fillG, fillB := 0.94, 0.94, 0.96
-		if containsPerson(node.People, rootIntID) {
-			fillR, fillG, fillB = 0.85, 0.92, 1.0
-		} else if len(node.People) > 0 {
-			if node.People[0].Gender == stage1_input.Female {
-				fillR, fillG, fillB = 1.0, 0.90, 0.93
-			} else {
-				fillR, fillG, fillB = 0.86, 0.92, 1.0
-			}
-		}
-
-		content.WriteString(fmt.Sprintf("%.3f %.3f %.3f rg\n", fillR, fillG, fillB))
-		content.WriteString(fmt.Sprintf("%.2f %.2f %.2f %.2f re f\n", x, y, w, pdfNodeHeight))
-		content.WriteString("0 0 0 RG\n")
-		content.WriteString(fmt.Sprintf("%.2f %.2f %.2f %.2f re S\n", x, y, w, pdfNodeHeight))
-
-		if len(node.People) == 1 {
-			content.WriteString(drawCenteredText(x, y, w, pdfNodeHeight, node.People[0].Name))
-		} else if len(node.People) == 2 {
-			half := w / 2
-			content.WriteString(drawCenteredText(x, y, half, pdfNodeHeight, node.People[0].Name))
-			content.WriteString(drawCenteredText(x+half, y, half, pdfNodeHeight, node.People[1].Name))
-		}
-	}
-
-	return buildPDF(pageWidth, pageHeight, content.Bytes())
-}
-
-func containsPerson(people []*stage1_input.Person, id int) bool {
-	for _, person := range people {
-		if person.ID == id {
-			return true
-		}
-	}
-	return false
-}
-
-func drawCenteredText(x, y, width, height float64, text string) string {
-	text = sanitizePDFText(text)
-	lines := splitText(text, 24)
-	if len(lines) == 0 {
-		return ""
-	}
-
-	fontSize := 10.0
-	lineHeight := 12.0
-	blockHeight := float64(len(lines)-1) * lineHeight
-	startY := y + height/2 + blockHeight/2 + fontSize/2 - 2
-
-	var out strings.Builder
-	for i, line := range lines {
-		textWidth := estimateTextWidth(line, fontSize)
-		textX := x + (width-textWidth)/2
-		textY := startY - float64(i)*lineHeight
-		out.WriteString(fmt.Sprintf("BT /F1 %.1f Tf %.2f %.2f Td (%s) Tj ET\n", fontSize, textX, textY, escapePDF(line)))
-	}
-	return out.String()
-}
-
-func splitText(text string, maxLen int) []string {
-	if text == "" {
-		return nil
-	}
-
-	parts := strings.Fields(text)
 	if len(parts) == 0 {
-		return []string{text}
+		return fallback
 	}
-
-	lines := make([]string, 0)
-	current := parts[0]
-	for _, part := range parts[1:] {
-		if len(current)+1+len(part) <= maxLen {
-			current += " " + part
-			continue
-		}
-		lines = append(lines, current)
-		current = part
-	}
-	lines = append(lines, current)
-	if len(lines) > 3 {
-		return lines[:3]
-	}
-	return lines
-}
-
-func estimateTextWidth(text string, fontSize float64) float64 {
-	return float64(len(text)) * fontSize * 0.55
-}
-
-func sanitizePDFText(text string) string {
-	text = strings.ReplaceAll(text, "\r", " ")
-	text = strings.ReplaceAll(text, "\n", " ")
-	text = strings.ReplaceAll(text, "\t", " ")
-	return text
-}
-
-func escapePDF(text string) string {
-	text = strings.ReplaceAll(text, "\\", "\\\\")
-	text = strings.ReplaceAll(text, "(", "\\(")
-	text = strings.ReplaceAll(text, ")", "\\)")
-	return text
-}
-
-func buildPDF(width, height float64, content []byte) []byte {
-	objects := make([][]byte, 0, 5)
-	objects = append(objects, []byte("<< /Type /Catalog /Pages 2 0 R >>"))
-	objects = append(objects, []byte("<< /Type /Pages /Kids [3 0 R] /Count 1 >>"))
-	objects = append(objects, []byte(fmt.Sprintf("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2f %.2f] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>", width, height)))
-	objects = append(objects, []byte("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"))
-	stream := append([]byte(fmt.Sprintf("<< /Length %d >>\nstream\n", len(content))), content...)
-	stream = append(stream, []byte("endstream")...)
-	objects = append(objects, stream)
-
-	var buf bytes.Buffer
-	buf.WriteString("%PDF-1.4\n%EOF\n")
-	offsets := make([]int, len(objects)+1)
-	for i, obj := range objects {
-		offsets[i+1] = buf.Len()
-		buf.WriteString(fmt.Sprintf("%d 0 obj\n", i+1))
-		buf.Write(obj)
-		buf.WriteString("\nendobj\n")
-	}
-	xrefStart := buf.Len()
-	buf.WriteString(fmt.Sprintf("xref\n0 %d\n", len(objects)+1))
-	buf.WriteString("0000000000 65535 f \n")
-	for i := 1; i <= len(objects); i++ {
-		buf.WriteString(fmt.Sprintf("%010d 00000 n \n", offsets[i]))
-	}
-	buf.WriteString(fmt.Sprintf("trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF", len(objects)+1, xrefStart))
-	return buf.Bytes()
+	return strings.Join(parts, " ")
 }

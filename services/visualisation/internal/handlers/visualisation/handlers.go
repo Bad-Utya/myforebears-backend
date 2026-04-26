@@ -17,6 +17,7 @@ type VisualisationService interface {
 	ListTreeVisualisations(ctx context.Context, treeID string) ([]models.Visualisation, error)
 	GetVisualisationByID(ctx context.Context, treeID string, visualisationID string) (models.Visualisation, []byte, error)
 	DeleteVisualisationByID(ctx context.Context, treeID string, visualisationID string) error
+	RenderCoordinatesForClient(ctx context.Context, treeID string, rootPersonID string, maxDepth int) ([]byte, error)
 }
 
 type Handler struct {
@@ -97,6 +98,20 @@ func (h *Handler) DeleteVisualisationByID(ctx context.Context, req *visualisatio
 	}
 
 	return &visualisationpb.DeleteVisualisationByIDResponse{}, nil
+}
+
+func (h *Handler) RenderCoordinatesForClient(ctx context.Context, req *visualisationpb.RenderCoordinatesForClientRequest) (*visualisationpb.RenderCoordinatesForClientResponse, error) {
+	coordBytes, err := h.service.RenderCoordinatesForClient(
+		ctx,
+		req.GetTreeId(),
+		req.GetRootPersonId(),
+		int(req.GetMaxDepth()),
+	)
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &visualisationpb.RenderCoordinatesForClientResponse{CoordinatesJson: coordBytes}, nil
 }
 
 func toProtoVisualisation(vis models.Visualisation) *visualisationpb.Visualisation {

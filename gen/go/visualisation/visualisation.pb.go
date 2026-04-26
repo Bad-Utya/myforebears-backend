@@ -723,6 +723,110 @@ func (*DeleteVisualisationByIDResponse) Descriptor() ([]byte, []int) {
 	return file_visualisation_visualisation_proto_rawDescGZIP(), []int{9}
 }
 
+type RenderCoordinatesForClientRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
+	RootPersonId  string                 `protobuf:"bytes,2,opt,name=root_person_id,json=rootPersonId,proto3" json:"root_person_id,omitempty"`
+	MaxDepth      int32                  `protobuf:"varint,3,opt,name=max_depth,json=maxDepth,proto3" json:"max_depth,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RenderCoordinatesForClientRequest) Reset() {
+	*x = RenderCoordinatesForClientRequest{}
+	mi := &file_visualisation_visualisation_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RenderCoordinatesForClientRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenderCoordinatesForClientRequest) ProtoMessage() {}
+
+func (x *RenderCoordinatesForClientRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_visualisation_visualisation_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenderCoordinatesForClientRequest.ProtoReflect.Descriptor instead.
+func (*RenderCoordinatesForClientRequest) Descriptor() ([]byte, []int) {
+	return file_visualisation_visualisation_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *RenderCoordinatesForClientRequest) GetTreeId() string {
+	if x != nil {
+		return x.TreeId
+	}
+	return ""
+}
+
+func (x *RenderCoordinatesForClientRequest) GetRootPersonId() string {
+	if x != nil {
+		return x.RootPersonId
+	}
+	return ""
+}
+
+func (x *RenderCoordinatesForClientRequest) GetMaxDepth() int32 {
+	if x != nil {
+		return x.MaxDepth
+	}
+	return 0
+}
+
+type RenderCoordinatesForClientResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	CoordinatesJson []byte                 `protobuf:"bytes,1,opt,name=coordinates_json,json=coordinatesJson,proto3" json:"coordinates_json,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *RenderCoordinatesForClientResponse) Reset() {
+	*x = RenderCoordinatesForClientResponse{}
+	mi := &file_visualisation_visualisation_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RenderCoordinatesForClientResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RenderCoordinatesForClientResponse) ProtoMessage() {}
+
+func (x *RenderCoordinatesForClientResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_visualisation_visualisation_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RenderCoordinatesForClientResponse.ProtoReflect.Descriptor instead.
+func (*RenderCoordinatesForClientResponse) Descriptor() ([]byte, []int) {
+	return file_visualisation_visualisation_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *RenderCoordinatesForClientResponse) GetCoordinatesJson() []byte {
+	if x != nil {
+		return x.CoordinatesJson
+	}
+	return nil
+}
+
 var File_visualisation_visualisation_proto protoreflect.FileDescriptor
 
 const file_visualisation_visualisation_proto_rawDesc = "" +
@@ -768,7 +872,13 @@ const file_visualisation_visualisation_proto_rawDesc = "" +
 	"\x1eDeleteVisualisationByIDRequest\x12\x17\n" +
 	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12)\n" +
 	"\x10visualisation_id\x18\x02 \x01(\tR\x0fvisualisationId\"!\n" +
-	"\x1fDeleteVisualisationByIDResponse*\xcc\x01\n" +
+	"\x1fDeleteVisualisationByIDResponse\"\x7f\n" +
+	"!RenderCoordinatesForClientRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12$\n" +
+	"\x0eroot_person_id\x18\x02 \x01(\tR\frootPersonId\x12\x1b\n" +
+	"\tmax_depth\x18\x03 \x01(\x05R\bmaxDepth\"O\n" +
+	"\"RenderCoordinatesForClientResponse\x12)\n" +
+	"\x10coordinates_json\x18\x01 \x01(\fR\x0fcoordinatesJson*\xcc\x01\n" +
 	"\x11VisualisationType\x12\"\n" +
 	"\x1eVISUALISATION_TYPE_UNSPECIFIED\x10\x00\x12 \n" +
 	"\x1cVISUALISATION_TYPE_ANCESTORS\x10\x01\x12\"\n" +
@@ -780,7 +890,7 @@ const file_visualisation_visualisation_proto_rawDesc = "" +
 	"\x1cVISUALISATION_STATUS_PENDING\x10\x01\x12#\n" +
 	"\x1fVISUALISATION_STATUS_PROCESSING\x10\x02\x12\x1e\n" +
 	"\x1aVISUALISATION_STATUS_READY\x10\x03\x12\x1f\n" +
-	"\x1bVISUALISATION_STATUS_FAILED\x10\x042\xfc\x06\n" +
+	"\x1bVISUALISATION_STATUS_FAILED\x10\x042\x80\b\n" +
 	"\x14VisualisationService\x12|\n" +
 	"\x1cCreateAncestorsVisualisation\x120.visualisation.CreateLineageVisualisationRequest\x1a*.visualisation.CreateVisualisationResponse\x12~\n" +
 	"\x1eCreateDescendantsVisualisation\x120.visualisation.CreateLineageVisualisationRequest\x1a*.visualisation.CreateVisualisationResponse\x12\x8a\x01\n" +
@@ -788,7 +898,8 @@ const file_visualisation_visualisation_proto_rawDesc = "" +
 	"\x17CreateFullVisualisation\x12-.visualisation.CreateFullVisualisationRequest\x1a*.visualisation.CreateVisualisationResponse\x12u\n" +
 	"\x16ListTreeVisualisations\x12,.visualisation.ListTreeVisualisationsRequest\x1a-.visualisation.ListTreeVisualisationsResponse\x12r\n" +
 	"\x14GetVisualisationByID\x12*.visualisation.GetVisualisationByIDRequest\x1a..visualisation.GetVisualisationContentResponse\x12x\n" +
-	"\x17DeleteVisualisationByID\x12-.visualisation.DeleteVisualisationByIDRequest\x1a..visualisation.DeleteVisualisationByIDResponseBNZLgithub.com/Bad-Utya/myforebears-backend/gen/go/visualisation;visualisationpbb\x06proto3"
+	"\x17DeleteVisualisationByID\x12-.visualisation.DeleteVisualisationByIDRequest\x1a..visualisation.DeleteVisualisationByIDResponse\x12\x81\x01\n" +
+	"\x1aRenderCoordinatesForClient\x120.visualisation.RenderCoordinatesForClientRequest\x1a1.visualisation.RenderCoordinatesForClientResponseBNZLgithub.com/Bad-Utya/myforebears-backend/gen/go/visualisation;visualisationpbb\x06proto3"
 
 var (
 	file_visualisation_visualisation_proto_rawDescOnce sync.Once
@@ -803,20 +914,22 @@ func file_visualisation_visualisation_proto_rawDescGZIP() []byte {
 }
 
 var file_visualisation_visualisation_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_visualisation_visualisation_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_visualisation_visualisation_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_visualisation_visualisation_proto_goTypes = []any{
-	(VisualisationType)(0),                    // 0: visualisation.VisualisationType
-	(VisualisationStatus)(0),                  // 1: visualisation.VisualisationStatus
-	(*Visualisation)(nil),                     // 2: visualisation.Visualisation
-	(*CreateLineageVisualisationRequest)(nil), // 3: visualisation.CreateLineageVisualisationRequest
-	(*CreateFullVisualisationRequest)(nil),    // 4: visualisation.CreateFullVisualisationRequest
-	(*CreateVisualisationResponse)(nil),       // 5: visualisation.CreateVisualisationResponse
-	(*ListTreeVisualisationsRequest)(nil),     // 6: visualisation.ListTreeVisualisationsRequest
-	(*ListTreeVisualisationsResponse)(nil),    // 7: visualisation.ListTreeVisualisationsResponse
-	(*GetVisualisationByIDRequest)(nil),       // 8: visualisation.GetVisualisationByIDRequest
-	(*GetVisualisationContentResponse)(nil),   // 9: visualisation.GetVisualisationContentResponse
-	(*DeleteVisualisationByIDRequest)(nil),    // 10: visualisation.DeleteVisualisationByIDRequest
-	(*DeleteVisualisationByIDResponse)(nil),   // 11: visualisation.DeleteVisualisationByIDResponse
+	(VisualisationType)(0),                     // 0: visualisation.VisualisationType
+	(VisualisationStatus)(0),                   // 1: visualisation.VisualisationStatus
+	(*Visualisation)(nil),                      // 2: visualisation.Visualisation
+	(*CreateLineageVisualisationRequest)(nil),  // 3: visualisation.CreateLineageVisualisationRequest
+	(*CreateFullVisualisationRequest)(nil),     // 4: visualisation.CreateFullVisualisationRequest
+	(*CreateVisualisationResponse)(nil),        // 5: visualisation.CreateVisualisationResponse
+	(*ListTreeVisualisationsRequest)(nil),      // 6: visualisation.ListTreeVisualisationsRequest
+	(*ListTreeVisualisationsResponse)(nil),     // 7: visualisation.ListTreeVisualisationsResponse
+	(*GetVisualisationByIDRequest)(nil),        // 8: visualisation.GetVisualisationByIDRequest
+	(*GetVisualisationContentResponse)(nil),    // 9: visualisation.GetVisualisationContentResponse
+	(*DeleteVisualisationByIDRequest)(nil),     // 10: visualisation.DeleteVisualisationByIDRequest
+	(*DeleteVisualisationByIDResponse)(nil),    // 11: visualisation.DeleteVisualisationByIDResponse
+	(*RenderCoordinatesForClientRequest)(nil),  // 12: visualisation.RenderCoordinatesForClientRequest
+	(*RenderCoordinatesForClientResponse)(nil), // 13: visualisation.RenderCoordinatesForClientResponse
 }
 var file_visualisation_visualisation_proto_depIdxs = []int32{
 	0,  // 0: visualisation.Visualisation.type:type_name -> visualisation.VisualisationType
@@ -831,15 +944,17 @@ var file_visualisation_visualisation_proto_depIdxs = []int32{
 	6,  // 9: visualisation.VisualisationService.ListTreeVisualisations:input_type -> visualisation.ListTreeVisualisationsRequest
 	8,  // 10: visualisation.VisualisationService.GetVisualisationByID:input_type -> visualisation.GetVisualisationByIDRequest
 	10, // 11: visualisation.VisualisationService.DeleteVisualisationByID:input_type -> visualisation.DeleteVisualisationByIDRequest
-	5,  // 12: visualisation.VisualisationService.CreateAncestorsVisualisation:output_type -> visualisation.CreateVisualisationResponse
-	5,  // 13: visualisation.VisualisationService.CreateDescendantsVisualisation:output_type -> visualisation.CreateVisualisationResponse
-	5,  // 14: visualisation.VisualisationService.CreateAncestorsAndDescendantsVisualisation:output_type -> visualisation.CreateVisualisationResponse
-	5,  // 15: visualisation.VisualisationService.CreateFullVisualisation:output_type -> visualisation.CreateVisualisationResponse
-	7,  // 16: visualisation.VisualisationService.ListTreeVisualisations:output_type -> visualisation.ListTreeVisualisationsResponse
-	9,  // 17: visualisation.VisualisationService.GetVisualisationByID:output_type -> visualisation.GetVisualisationContentResponse
-	11, // 18: visualisation.VisualisationService.DeleteVisualisationByID:output_type -> visualisation.DeleteVisualisationByIDResponse
-	12, // [12:19] is the sub-list for method output_type
-	5,  // [5:12] is the sub-list for method input_type
+	12, // 12: visualisation.VisualisationService.RenderCoordinatesForClient:input_type -> visualisation.RenderCoordinatesForClientRequest
+	5,  // 13: visualisation.VisualisationService.CreateAncestorsVisualisation:output_type -> visualisation.CreateVisualisationResponse
+	5,  // 14: visualisation.VisualisationService.CreateDescendantsVisualisation:output_type -> visualisation.CreateVisualisationResponse
+	5,  // 15: visualisation.VisualisationService.CreateAncestorsAndDescendantsVisualisation:output_type -> visualisation.CreateVisualisationResponse
+	5,  // 16: visualisation.VisualisationService.CreateFullVisualisation:output_type -> visualisation.CreateVisualisationResponse
+	7,  // 17: visualisation.VisualisationService.ListTreeVisualisations:output_type -> visualisation.ListTreeVisualisationsResponse
+	9,  // 18: visualisation.VisualisationService.GetVisualisationByID:output_type -> visualisation.GetVisualisationContentResponse
+	11, // 19: visualisation.VisualisationService.DeleteVisualisationByID:output_type -> visualisation.DeleteVisualisationByIDResponse
+	13, // 20: visualisation.VisualisationService.RenderCoordinatesForClient:output_type -> visualisation.RenderCoordinatesForClientResponse
+	13, // [13:21] is the sub-list for method output_type
+	5,  // [5:13] is the sub-list for method input_type
 	5,  // [5:5] is the sub-list for extension type_name
 	5,  // [5:5] is the sub-list for extension extendee
 	0,  // [0:5] is the sub-list for field type_name
@@ -856,7 +971,7 @@ func file_visualisation_visualisation_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_visualisation_visualisation_proto_rawDesc), len(file_visualisation_visualisation_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

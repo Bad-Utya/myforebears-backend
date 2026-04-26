@@ -60,6 +60,21 @@ func (c *Client) GetTreeContent(ctx context.Context, treeID string) (*familytree
 	return resp, nil
 }
 
+func (c *Client) GetTreeContentWithinDepth(ctx context.Context, treeID string, rootPersonID string, maxDepth int32) (*familytreepb.GetTreeContentResponse, error) {
+	const op = "clients.familytree.GetTreeContentWithinDepth"
+
+	resp, err := c.api.GetTreeContentWithinDepth(ctx, &familytreepb.GetTreeContentWithinDepthRequest{
+		TreeId:       treeID,
+		RootPersonId: rootPersonID,
+		MaxDepth:     maxDepth,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) GetTreeCreatorID(ctx context.Context, treeID string) (int, error) {
 	const op = "clients.familytree.GetTreeCreatorID"
 

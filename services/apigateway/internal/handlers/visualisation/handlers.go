@@ -27,6 +27,11 @@ type createVisualisationRequest struct {
 	IncludedPersonIDs []string `json:"included_person_ids,omitempty"`
 }
 
+type renderCoordinatesForClientRequest struct {
+	RootPersonID string `json:"root_person_id"`
+	MaxDepth     int32  `json:"max_depth"`
+}
+
 // CreateAncestorsVisualisation enqueues an ancestors visualisation.
 // @Summary Create ancestors visualisation
 // @Tags visualisations
@@ -251,6 +256,62 @@ func (h *Handler) GetVisualisationByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.writeBinaryVisualisation(w, resp)
+}
+
+// RenderCoordinatesForClient renders family tree as JSON coordinates for client-side rendering.
+// @Summary Render coordinates for client
+// @Tags visualisations
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param request body renderCoordinatesForClientRequest true "Render coordinates request"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/visualisations/{tree_id}/coordinates [post]
+func (h *Handler) RenderCoordinatesForClient(w http.ResponseWriter, r *http.Request) {
+	treeID := strings.TrimSpace(chi.URLParam(r, "tree_id"))
+	if treeID == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
+		return
+	}
+
+	var req renderCoordinatesForClientRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid json body")
+		return
+	}
+
+	if strings.TrimSpace(req.RootPersonID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "root_person_id is required")
+		return
+	}
+	if req.MaxDepth < 0 {
+		response.Error(w, http.StatusBadRequest, "bad_request", "max_depth must be >= 0")
+		return
+	}
+
+	resp, err := h.client.RenderCoordinatesForClient(r.Context(), &visualisationpb.RenderCoordinatesForClientRequest{
+		TreeId:       treeID,
+		RootPersonId: req.RootPersonID,
+		MaxDepth:     req.MaxDepth,
+	})
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("render coordinates for client failed", slog.String("error", err.Error()))
+		response.Error(w, status, "visualisation_error", msg)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(resp.GetCoordinatesJson())
 }
 
 // DeleteVisualisationByID deletes visualisation by ID.

@@ -175,6 +175,78 @@ func (s *Service) GetTreeContent(ctx context.Context, treeID string) ([]models.P
 	return persons, relationships, nil
 }
 
+func (s *Service) GetTreeContentWithinDepth(ctx context.Context, treeID string, rootPersonID string, maxDepth int) ([]models.Person, []models.Relationship, error) {
+	const op = "service.familytree.GetTreeContentWithinDepth"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("getting tree content within depth", slog.String("tree_id", treeID), slog.String("root_person_id", rootPersonID), slog.Int("max_depth", maxDepth))
+
+	if maxDepth < 0 {
+		log.Info("invalid max depth", slog.Int("max_depth", maxDepth))
+		return nil, nil, fmt.Errorf("%s: %w", op, ErrInvalidMaxDepth)
+	}
+
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
+	if err != nil {
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
+		return nil, nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	parsedRootPersonID, err := uuid.Parse(rootPersonID)
+	if err != nil {
+		log.Info("invalid person id", slog.String("person_id", rootPersonID))
+		return nil, nil, fmt.Errorf("%s: %w", op, ErrInvalidPersonID)
+	}
+
+	rootPerson, err := s.personStorage.GetPerson(ctx, parsedRootPersonID)
+	if err != nil {
+		if errors.Is(err, storage.ErrPersonNotFound) {
+			log.Info("person not found", slog.String("person_id", parsedRootPersonID.String()))
+			return nil, nil, fmt.Errorf("%s: %w", op, ErrPersonNotFound)
+		}
+		log.Error("failed to get root person", slog.String("error", err.Error()))
+		return nil, nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if rootPerson.TreeID != parsedTreeID {
+		log.Info("person tree mismatch", slog.String("person_tree_id", rootPerson.TreeID.String()), slog.String("requested_tree_id", parsedTreeID.String()))
+		return nil, nil, fmt.Errorf("%s: %w", op, ErrTreeMismatch)
+	}
+
+	if maxDepth == 0 {
+		return s.GetTreeContent(ctx, treeID)
+	}
+
+	relationships, err := s.relationStorage.GetTreeRelationshipsWithinDepth(ctx, parsedTreeID, parsedRootPersonID, maxDepth)
+	if err != nil {
+		log.Error("failed to load tree relationships within depth", slog.String("error", err.Error()))
+		return nil, nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	personIDSet := map[uuid.UUID]struct{}{parsedRootPersonID: {}}
+	for _, rel := range relationships {
+		personIDSet[rel.PersonIDFrom] = struct{}{}
+		personIDSet[rel.PersonIDTo] = struct{}{}
+	}
+
+	allPersons, err := s.personStorage.GetPersonsByTree(ctx, parsedTreeID)
+	if err != nil {
+		log.Error("failed to load persons by tree", slog.String("error", err.Error()))
+		return nil, nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	persons := make([]models.Person, 0, len(personIDSet))
+	for _, person := range allPersons {
+		if _, ok := personIDSet[person.ID]; ok {
+			persons = append(persons, person)
+		}
+	}
+
+	log.Info("tree content within depth loaded", slog.Int("persons_count", len(persons)), slog.Int("relationships_count", len(relationships)))
+
+	return persons, relationships, nil
+}
+
 func (s *Service) UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool, name string) (models.Tree, error) {
 	const op = "service.familytree.UpdateTreeSettings"
 	log := s.log.With(slog.String("op", op))

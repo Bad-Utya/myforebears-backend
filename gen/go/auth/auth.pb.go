@@ -1065,6 +1065,94 @@ func (x *UpdateNicknameResponse) GetUser() *User {
 	return nil
 }
 
+type GetMeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMeRequest) Reset() {
+	*x = GetMeRequest{}
+	mi := &file_auth_auth_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMeRequest) ProtoMessage() {}
+
+func (x *GetMeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_auth_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMeRequest.ProtoReflect.Descriptor instead.
+func (*GetMeRequest) Descriptor() ([]byte, []int) {
+	return file_auth_auth_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *GetMeRequest) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+type GetMeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetMeResponse) Reset() {
+	*x = GetMeResponse{}
+	mi := &file_auth_auth_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetMeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetMeResponse) ProtoMessage() {}
+
+func (x *GetMeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_auth_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetMeResponse.ProtoReflect.Descriptor instead.
+func (*GetMeResponse) Descriptor() ([]byte, []int) {
+	return file_auth_auth_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *GetMeResponse) GetUser() *User {
+	if x != nil {
+		return x.User
+	}
+	return nil
+}
+
 var File_auth_auth_proto protoreflect.FileDescriptor
 
 const file_auth_auth_proto_rawDesc = "" +
@@ -1121,7 +1209,12 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\bnickname\x18\x02 \x01(\tR\bnickname\"8\n" +
 	"\x16UpdateNicknameResponse\x12\x1e\n" +
 	"\x04user\x18\x01 \x01(\v2\n" +
-	".auth.UserR\x04user2\xcf\x06\n" +
+	".auth.UserR\x04user\"1\n" +
+	"\fGetMeRequest\x12!\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\"/\n" +
+	"\rGetMeResponse\x12\x1e\n" +
+	"\x04user\x18\x01 \x01(\v2\n" +
+	".auth.UserR\x04user2\x81\a\n" +
 	"\x04Auth\x129\n" +
 	"\bSendCode\x12\x15.auth.SendCodeRequest\x1a\x16.auth.SendCodeResponse\x129\n" +
 	"\bRegister\x12\x15.auth.RegisterRequest\x1a\x16.auth.RegisterResponse\x120\n" +
@@ -1133,7 +1226,8 @@ const file_auth_auth_proto_rawDesc = "" +
 	"\x06Logout\x12\x13.auth.LogoutRequest\x1a\x14.auth.LogoutResponse\x12]\n" +
 	"\x14LogoutFromAllDevices\x12!.auth.LogoutFromAllDevicesRequest\x1a\".auth.LogoutFromAllDevicesResponse\x12B\n" +
 	"\vGetUserInfo\x12\x18.auth.GetUserInfoRequest\x1a\x19.auth.GetUserInfoResponse\x12K\n" +
-	"\x0eUpdateNickname\x12\x1b.auth.UpdateNicknameRequest\x1a\x1c.auth.UpdateNicknameResponseB<Z:github.com/Bad-Utya/myforebears-backend/gen/go/auth;authpbb\x06proto3"
+	"\x0eUpdateNickname\x12\x1b.auth.UpdateNicknameRequest\x1a\x1c.auth.UpdateNicknameResponse\x120\n" +
+	"\x05GetMe\x12\x12.auth.GetMeRequest\x1a\x13.auth.GetMeResponseB<Z:github.com/Bad-Utya/myforebears-backend/gen/go/auth;authpbb\x06proto3"
 
 var (
 	file_auth_auth_proto_rawDescOnce sync.Once
@@ -1147,7 +1241,7 @@ func file_auth_auth_proto_rawDescGZIP() []byte {
 	return file_auth_auth_proto_rawDescData
 }
 
-var file_auth_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_auth_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_auth_auth_proto_goTypes = []any{
 	(*User)(nil),                             // 0: auth.User
 	(*SendCodeRequest)(nil),                  // 1: auth.SendCodeRequest
@@ -1172,37 +1266,42 @@ var file_auth_auth_proto_goTypes = []any{
 	(*GetUserInfoResponse)(nil),              // 20: auth.GetUserInfoResponse
 	(*UpdateNicknameRequest)(nil),            // 21: auth.UpdateNicknameRequest
 	(*UpdateNicknameResponse)(nil),           // 22: auth.UpdateNicknameResponse
+	(*GetMeRequest)(nil),                     // 23: auth.GetMeRequest
+	(*GetMeResponse)(nil),                    // 24: auth.GetMeResponse
 }
 var file_auth_auth_proto_depIdxs = []int32{
 	0,  // 0: auth.GetUserInfoResponse.user:type_name -> auth.User
 	0,  // 1: auth.UpdateNicknameResponse.user:type_name -> auth.User
-	1,  // 2: auth.Auth.SendCode:input_type -> auth.SendCodeRequest
-	3,  // 3: auth.Auth.Register:input_type -> auth.RegisterRequest
-	5,  // 4: auth.Auth.Login:input_type -> auth.LoginRequest
-	7,  // 5: auth.Auth.SendLinkForResetPassword:input_type -> auth.SendLinkForResetPasswordRequest
-	9,  // 6: auth.Auth.ResetPasswordWithLink:input_type -> auth.ResetPasswordWithLinkRequest
-	11, // 7: auth.Auth.ResetPasswordWithToken:input_type -> auth.ResetPasswordWithTokenRequest
-	13, // 8: auth.Auth.RefreshTokens:input_type -> auth.RefreshTokensRequest
-	15, // 9: auth.Auth.Logout:input_type -> auth.LogoutRequest
-	17, // 10: auth.Auth.LogoutFromAllDevices:input_type -> auth.LogoutFromAllDevicesRequest
-	19, // 11: auth.Auth.GetUserInfo:input_type -> auth.GetUserInfoRequest
-	21, // 12: auth.Auth.UpdateNickname:input_type -> auth.UpdateNicknameRequest
-	2,  // 13: auth.Auth.SendCode:output_type -> auth.SendCodeResponse
-	4,  // 14: auth.Auth.Register:output_type -> auth.RegisterResponse
-	6,  // 15: auth.Auth.Login:output_type -> auth.LoginResponse
-	8,  // 16: auth.Auth.SendLinkForResetPassword:output_type -> auth.SendLinkForResetPasswordResponse
-	10, // 17: auth.Auth.ResetPasswordWithLink:output_type -> auth.ResetPasswordWithLinkResponse
-	12, // 18: auth.Auth.ResetPasswordWithToken:output_type -> auth.ResetPasswordWithTokenResponse
-	14, // 19: auth.Auth.RefreshTokens:output_type -> auth.RefreshTokensResponse
-	16, // 20: auth.Auth.Logout:output_type -> auth.LogoutResponse
-	18, // 21: auth.Auth.LogoutFromAllDevices:output_type -> auth.LogoutFromAllDevicesResponse
-	20, // 22: auth.Auth.GetUserInfo:output_type -> auth.GetUserInfoResponse
-	22, // 23: auth.Auth.UpdateNickname:output_type -> auth.UpdateNicknameResponse
-	13, // [13:24] is the sub-list for method output_type
-	2,  // [2:13] is the sub-list for method input_type
-	2,  // [2:2] is the sub-list for extension type_name
-	2,  // [2:2] is the sub-list for extension extendee
-	0,  // [0:2] is the sub-list for field type_name
+	0,  // 2: auth.GetMeResponse.user:type_name -> auth.User
+	1,  // 3: auth.Auth.SendCode:input_type -> auth.SendCodeRequest
+	3,  // 4: auth.Auth.Register:input_type -> auth.RegisterRequest
+	5,  // 5: auth.Auth.Login:input_type -> auth.LoginRequest
+	7,  // 6: auth.Auth.SendLinkForResetPassword:input_type -> auth.SendLinkForResetPasswordRequest
+	9,  // 7: auth.Auth.ResetPasswordWithLink:input_type -> auth.ResetPasswordWithLinkRequest
+	11, // 8: auth.Auth.ResetPasswordWithToken:input_type -> auth.ResetPasswordWithTokenRequest
+	13, // 9: auth.Auth.RefreshTokens:input_type -> auth.RefreshTokensRequest
+	15, // 10: auth.Auth.Logout:input_type -> auth.LogoutRequest
+	17, // 11: auth.Auth.LogoutFromAllDevices:input_type -> auth.LogoutFromAllDevicesRequest
+	19, // 12: auth.Auth.GetUserInfo:input_type -> auth.GetUserInfoRequest
+	21, // 13: auth.Auth.UpdateNickname:input_type -> auth.UpdateNicknameRequest
+	23, // 14: auth.Auth.GetMe:input_type -> auth.GetMeRequest
+	2,  // 15: auth.Auth.SendCode:output_type -> auth.SendCodeResponse
+	4,  // 16: auth.Auth.Register:output_type -> auth.RegisterResponse
+	6,  // 17: auth.Auth.Login:output_type -> auth.LoginResponse
+	8,  // 18: auth.Auth.SendLinkForResetPassword:output_type -> auth.SendLinkForResetPasswordResponse
+	10, // 19: auth.Auth.ResetPasswordWithLink:output_type -> auth.ResetPasswordWithLinkResponse
+	12, // 20: auth.Auth.ResetPasswordWithToken:output_type -> auth.ResetPasswordWithTokenResponse
+	14, // 21: auth.Auth.RefreshTokens:output_type -> auth.RefreshTokensResponse
+	16, // 22: auth.Auth.Logout:output_type -> auth.LogoutResponse
+	18, // 23: auth.Auth.LogoutFromAllDevices:output_type -> auth.LogoutFromAllDevicesResponse
+	20, // 24: auth.Auth.GetUserInfo:output_type -> auth.GetUserInfoResponse
+	22, // 25: auth.Auth.UpdateNickname:output_type -> auth.UpdateNicknameResponse
+	24, // 26: auth.Auth.GetMe:output_type -> auth.GetMeResponse
+	15, // [15:27] is the sub-list for method output_type
+	3,  // [3:15] is the sub-list for method input_type
+	3,  // [3:3] is the sub-list for extension type_name
+	3,  // [3:3] is the sub-list for extension extendee
+	0,  // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_auth_auth_proto_init() }
@@ -1216,7 +1315,7 @@ func file_auth_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_auth_proto_rawDesc), len(file_auth_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   23,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

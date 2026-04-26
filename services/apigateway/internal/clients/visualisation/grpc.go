@@ -115,3 +115,14 @@ func (c *Client) DeleteVisualisationByID(ctx context.Context, req *visualisation
 
 	return nil
 }
+
+func (c *Client) RenderCoordinatesForClient(ctx context.Context, req *visualisationpb.RenderCoordinatesForClientRequest) (*visualisationpb.RenderCoordinatesForClientResponse, error) {
+	const op = "clients.visualisation.RenderCoordinatesForClient"
+
+	resp, err := c.api.RenderCoordinatesForClient(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}

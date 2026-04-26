@@ -18,6 +18,7 @@ type FamilyTreeService interface {
 	ListRandomPublicTrees(ctx context.Context, limit int) ([]models.Tree, error)
 	GetTree(ctx context.Context, treeID string) (models.Tree, error)
 	GetTreeContent(ctx context.Context, treeID string) ([]models.Person, []models.Relationship, error)
+	GetTreeContentWithinDepth(ctx context.Context, treeID string, rootPersonID string, maxDepth int) ([]models.Person, []models.Relationship, error)
 	GetTreeAccessInfo(ctx context.Context, treeID string) (models.Tree, error)
 	IsTreeAccessEmailAllowed(ctx context.Context, treeID string, email string) (bool, error)
 	AddTreeAccessEmail(ctx context.Context, treeID string, email string) error
@@ -41,6 +42,8 @@ type FamilyTreeService interface {
 	GetRelatives(ctx context.Context, treeID string, personID string) ([]models.Relative, error)
 	ValidatePersonsInTree(ctx context.Context, treeID string, personIDs []string) error
 	UpdatePartnerRelationshipStatus(ctx context.Context, treeID string, personID1 string, personID2 string, status models.PartnerRelationshipStatus) error
+	ExportTreeGEDCOM(ctx context.Context, requestUserID int, treeID string) (string, error)
+	ImportTreeGEDCOM(ctx context.Context, requestUserID int, gedcomContent string) (models.Tree, int, int, []string, error)
 }
 
 type Handler struct {

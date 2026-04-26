@@ -45,5 +45,6 @@ type RelationshipStorage interface {
 	RemoveRelationship(ctx context.Context, personIDFrom uuid.UUID, personIDTo uuid.UUID, relType models.RelationshipType) error
 	GetRelatives(ctx context.Context, personID uuid.UUID) ([]models.Relative, error)
 	GetTreeRelationships(ctx context.Context, treeID uuid.UUID) ([]models.Relationship, error)
+	GetTreeRelationshipsWithinDepth(ctx context.Context, treeID uuid.UUID, rootPersonID uuid.UUID, maxDepth int) ([]models.Relationship, error)
 	Close(ctx context.Context) error
 }
