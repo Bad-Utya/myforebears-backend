@@ -127,7 +127,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	treeAccessChecker := middleware.NewTreeAccessChecker(log, tokenChecker, familyTreeGRPC)
 
 	authHandler := authhandler.New(log, authGRPC)
-	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC)
+	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC, eventsGRPC)
 	eventsHandler := eventshandler.New(log, eventsGRPC)
 	photosHandler := photoshandler.New(log, photosGRPC)
 	visualisationHandler := visualisationhandler.New(log, visualisationGRPC)
