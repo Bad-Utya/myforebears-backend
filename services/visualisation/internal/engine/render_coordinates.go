@@ -15,9 +15,6 @@ import (
 	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine/stage4_render"
 )
 
-// RenderCoordinates renders tree for client-side visualization with depth limiting and optional layer shifting
-// maxDepth: 0 = unlimited; N > 0 = include people up to N hops from root
-// allowLayerShift: if false, disable layer shifting optimization (strict BFS layers)
 func RenderCoordinates(
 	visType models.VisualisationType,
 	rootPersonID uuid.UUID,
@@ -29,7 +26,6 @@ func RenderCoordinates(
 	return RenderCoordinatesWithTrace(visType, rootPersonID, includedPersonIDs, content, maxDepth, allowLayerShift, nil)
 }
 
-// RenderCoordinatesWithTrace is like RenderCoordinates but writes trace output
 func RenderCoordinatesWithTrace(
 	visType models.VisualisationType,
 	rootPersonID uuid.UUID,
@@ -117,7 +113,6 @@ func renderCoordinatesInternal(
 		debugPrintTree(out, tree)
 	}
 
-	// Stage2: Use depth-limited layout if maxDepth > 0
 	var history *stage1_input.PlacementHistory
 	if maxDepth > 0 {
 		history, err = stage2_layout.LayoutFromPersonWithDepthSimple(tree, rootIntID, maxDepth)
@@ -147,16 +142,10 @@ func renderCoordinatesInternal(
 		return nil, errRootNotFound
 	}
 
-	// Stage3: Process with optional layer shift control
 	om := stage3_ordering.ProcessPlacementHistory(history, start, start.Layout.Layer, layouts)
 	if !allowLayerShift {
 		debugf(out, "[stage3_ordering] layer shift disabled (flag set but not yet implemented)")
-		// TODO: Implement layer-shift disabling in stage3_ordering
-		// For now, we proceed with the standard algorithm
-		// To disable layer shifting, we need to:
-		// 1. Skip the lowering/raising operations
-		// 2. Keep people strictly in their BFS layers
-		// 3. This requires modifications to OrderManager.AddPersonLeft/Right and AddParentPairLeft/Right
+
 	}
 	if out != nil {
 		debugPrintOrder(out, om)
@@ -168,11 +157,9 @@ func renderCoordinatesInternal(
 	renderResult := stage4_render.BuildCoordRenderResult(cm, tree)
 	debugf(out, "[stage4_render] nodes=%d edges=%d", len(renderResult.Nodes), len(renderResult.Edges))
 
-	// Serialize to JSON instead of SVG
 	return renderResultToJSON(renderResult, internalPersons), nil
 }
 
-// CoordinateNodeJSON represents a node for client-side rendering
 type CoordinateNodeJSON struct {
 	ID         int          `json:"id"`
 	X          int          `json:"x"`
@@ -182,7 +169,6 @@ type CoordinateNodeJSON struct {
 	MergeLeft  bool         `json:"mergeLeft"`
 }
 
-// PersonJSON represents a person in a node
 type PersonJSON struct {
 	ID            string `json:"id"`
 	TreeID        string `json:"tree_id,omitempty"`
@@ -194,7 +180,6 @@ type PersonJSON struct {
 	Name          string `json:"name,omitempty"`
 }
 
-// CoordinateEdgeJSON represents an edge (relationship)
 type CoordinateEdgeJSON struct {
 	FromNodeIdx int    `json:"fromNodeIdx"`
 	ToNodeIdx   int    `json:"toNodeIdx"`
@@ -205,7 +190,6 @@ type CoordinateEdgeJSON struct {
 	EdgeType    string `json:"edgeType"`
 }
 
-// CoordinateResultJSON is the complete result for client-side rendering
 type CoordinateResultJSON struct {
 	Nodes    []CoordinateNodeJSON `json:"nodes"`
 	Edges    []CoordinateEdgeJSON `json:"edges"`
@@ -214,7 +198,6 @@ type CoordinateResultJSON struct {
 	MaxRight int                  `json:"maxRight"`
 }
 
-// renderResultToJSON converts CoordRenderResult to JSON
 func renderResultToJSON(result *stage4_render.CoordRenderResult, internalPersons map[int]familytreepb.Person) []byte {
 	if result == nil {
 		data, _ := json.Marshal(CoordinateResultJSON{
@@ -227,7 +210,6 @@ func renderResultToJSON(result *stage4_render.CoordRenderResult, internalPersons
 		return data
 	}
 
-	// Convert nodes
 	nodes := make([]CoordinateNodeJSON, len(result.Nodes))
 	for i, nodeInfo := range result.Nodes {
 		peopleJSON := make([]PersonJSON, len(nodeInfo.People))
@@ -261,7 +243,7 @@ func renderResultToJSON(result *stage4_render.CoordRenderResult, internalPersons
 
 		nodes[i] = CoordinateNodeJSON{
 			ID:         i,
-			X:          nodeInfo.Left, // Use Left as X coordinate
+			X:          nodeInfo.Left,
 			Y:          nodeInfo.Layer,
 			People:     peopleJSON,
 			PartnerIdx: nodeInfo.MergePartnerIdx,
@@ -269,7 +251,6 @@ func renderResultToJSON(result *stage4_render.CoordRenderResult, internalPersons
 		}
 	}
 
-	// Convert edges
 	edges := make([]CoordinateEdgeJSON, len(result.Edges))
 	for i, edgeInfo := range result.Edges {
 		edges[i] = CoordinateEdgeJSON{

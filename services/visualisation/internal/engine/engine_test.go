@@ -122,7 +122,6 @@ func TestRenderCoordinatesWithDepthLimit(t *testing.T) {
 		},
 	}
 
-	// Test with maxDepth = 0 (unlimited)
 	coordBytes, err := RenderCoordinates(models.VisualisationTypeAncestorsAndDescendants, rootID, nil, content, 0, true)
 	if err != nil {
 		t.Fatalf("RenderCoordinates with maxDepth=0 failed: %v", err)
@@ -131,7 +130,6 @@ func TestRenderCoordinatesWithDepthLimit(t *testing.T) {
 		t.Fatal("expected non-empty coordinates")
 	}
 
-	// Test with maxDepth = 1 (only immediate)
 	coordBytes, err = RenderCoordinates(models.VisualisationTypeAncestorsAndDescendants, rootID, nil, content, 1, true)
 	if err != nil {
 		t.Fatalf("RenderCoordinates with maxDepth=1 failed: %v", err)
@@ -160,12 +158,10 @@ func TestRenderCoordinatesBuildsJSON(t *testing.T) {
 		t.Fatalf("RenderCoordinates failed: %v", err)
 	}
 
-	// Check if output is JSON
 	if !bytes.HasPrefix(coordBytes, []byte("{")) {
 		t.Fatalf("expected JSON output starting with {, got %q", string(coordBytes[:min(len(coordBytes), 16)]))
 	}
 
-	// Check if it contains "nodes" and "edges" keys
 	jsonStr := string(coordBytes)
 	if !bytes.Contains(coordBytes, []byte("\"nodes\"")) {
 		t.Fatalf("expected 'nodes' key in JSON output")

@@ -1,8 +1,7 @@
-﻿package stage1_input
+package stage1_input
 
 import "fmt"
 
-// PlacementDirection РѕРїСЂРµРґРµР»СЏРµС‚ РЅР°РїСЂР°РІР»РµРЅРёРµ СЂР°Р·РјРµС‰РµРЅРёСЏ
 type PlacementDirection int
 
 const (
@@ -17,14 +16,13 @@ func (d PlacementDirection) String() string {
 	return "СЃРїСЂР°РІР°"
 }
 
-// RelationType РѕРїСЂРµРґРµР»СЏРµС‚ С‚РёРї СЂРѕРґСЃС‚РІРµРЅРЅРѕР№ СЃРІСЏР·Рё РїСЂРё РґРѕР±Р°РІР»РµРЅРёРё
 type RelationType int
 
 const (
-	RelationParent  RelationType = iota // Р РѕРґРёС‚РµР»СЊ (+1 СЃР»РѕР№)
-	RelationPartner                     // РџР°СЂС‚РЅС‘СЂ (С‚РѕС‚ Р¶Рµ СЃР»РѕР№)
-	RelationChild                       // Р РµР±С‘РЅРѕРє (-1 СЃР»РѕР№)
-	RelationSibling                     // Р‘СЂР°С‚/СЃРµСЃС‚СЂР° (С‚РѕС‚ Р¶Рµ СЃР»РѕР№)
+	RelationParent RelationType = iota
+	RelationPartner
+	RelationChild
+	RelationSibling
 )
 
 func (r RelationType) String() string {
@@ -42,29 +40,25 @@ func (r RelationType) String() string {
 	}
 }
 
-// PlacementRecord С…СЂР°РЅРёС‚ РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РґРѕР±Р°РІР»РµРЅРёРё РІРµСЂС€РёРЅС‹
 type PlacementRecord struct {
-	FromPerson   *Person            // РљС‚Рѕ РґРѕР±Р°РІР»СЏРµС‚
-	AddedPerson  *Person            // РљРѕРіРѕ РґРѕР±Р°РІРёР»Рё (РїРµСЂРІС‹Р№ С‡РµР»РѕРІРµРє)
-	AddedPerson2 *Person            // Р’С‚РѕСЂРѕР№ РґРѕР±Р°РІР»РµРЅРЅС‹Р№ (РґР»СЏ РїР°СЂС‹ СЂРѕРґРёС‚РµР»РµР№), РјРѕР¶РµС‚ Р±С‹С‚СЊ nil
-	LayerDiff    int                // Р Р°Р·РЅРёС†Р° СЃР»РѕС‘РІ: +1 (СЂРѕРґРёС‚РµР»СЊ), 0 (РїР°СЂС‚РЅС‘СЂ/Р±СЂР°С‚), -1 (СЂРµР±С‘РЅРѕРє)
-	Direction    PlacementDirection // РЎР»РµРІР° РёР»Рё СЃРїСЂР°РІР°
-	RelationType RelationType       // РўРёРї РѕС‚РЅРѕС€РµРЅРёСЏ
+	FromPerson   *Person
+	AddedPerson  *Person
+	AddedPerson2 *Person
+	LayerDiff    int
+	Direction    PlacementDirection
+	RelationType RelationType
 }
 
-// PlacementHistory С…СЂР°РЅРёС‚ РёСЃС‚РѕСЂРёСЋ РґРѕР±Р°РІР»РµРЅРёР№
 type PlacementHistory struct {
 	Records []*PlacementRecord
 }
 
-// NewPlacementHistory СЃРѕР·РґР°С‘С‚ РЅРѕРІСѓСЋ РёСЃС‚РѕСЂРёСЋ
 func NewPlacementHistory() *PlacementHistory {
 	return &PlacementHistory{
 		Records: make([]*PlacementRecord, 0),
 	}
 }
 
-// Add РґРѕР±Р°РІР»СЏРµС‚ Р·Р°РїРёСЃСЊ РІ РёСЃС‚РѕСЂРёСЋ
 func (h *PlacementHistory) Add(from, added *Person, layerDiff int, direction PlacementDirection, relationType RelationType) {
 	h.Records = append(h.Records, &PlacementRecord{
 		FromPerson:   from,
@@ -76,7 +70,6 @@ func (h *PlacementHistory) Add(from, added *Person, layerDiff int, direction Pla
 	})
 }
 
-// AddPair РґРѕР±Р°РІР»СЏРµС‚ Р·Р°РїРёСЃСЊ Рѕ РґРѕР±Р°РІР»РµРЅРёРё РїР°СЂС‹ (РґР»СЏ СЂРѕРґРёС‚РµР»РµР№)
 func (h *PlacementHistory) AddPair(from, added1, added2 *Person, layerDiff int, direction PlacementDirection, relationType RelationType) {
 	h.Records = append(h.Records, &PlacementRecord{
 		FromPerson:   from,
@@ -88,7 +81,6 @@ func (h *PlacementHistory) AddPair(from, added1, added2 *Person, layerDiff int, 
 	})
 }
 
-// Print РІС‹РІРѕРґРёС‚ РёСЃС‚РѕСЂРёСЋ РґРѕР±Р°РІР»РµРЅРёР№
 func (h *PlacementHistory) Print() {
 	fmt.Println("\nРСЃС‚РѕСЂРёСЏ РґРѕР±Р°РІР»РµРЅРёР№:")
 	fmt.Println("====================")
