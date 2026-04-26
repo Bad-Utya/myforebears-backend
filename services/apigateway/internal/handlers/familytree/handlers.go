@@ -1091,6 +1091,7 @@ func toTreeJSON(t *familytreepb.Tree) map[string]any {
 		"is_view_restricted":     t.GetIsViewRestricted(),
 		"is_public_on_main_page": t.GetIsPublicOnMainPage(),
 		"name":                   t.GetName(),
+		"root_person_id":         t.GetRootPersonId(),
 	}
 }
 

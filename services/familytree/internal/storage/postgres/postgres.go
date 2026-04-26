@@ -68,13 +68,14 @@ func (s *Storage) CreateTree(ctx context.Context, tree models.Tree) error {
 
 	_, err := s.pool.Exec(
 		ctx,
-		`INSERT INTO trees (id, creator_id, is_view_restricted, is_public_on_main_page, name)
-		 VALUES ($1, $2, $3, $4, $5)`,
+		`INSERT INTO trees (id, creator_id, is_view_restricted, is_public_on_main_page, name, root_person_id)
+		 VALUES ($1, $2, $3, $4, $5, $6)`,
 		tree.ID,
 		tree.CreatorID,
 		tree.IsViewRestricted,
 		tree.IsPublicOnMainPage,
 		tree.Name,
+		tree.RootPersonID,
 	)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -89,10 +90,10 @@ func (s *Storage) GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, e
 	var tree models.Tree
 	err := s.pool.QueryRow(
 		ctx,
-		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
 		 FROM trees WHERE id = $1`,
 		treeID,
-	).Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name)
+	).Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &tree.RootPersonID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.Tree{}, fmt.Errorf("%s: %w", op, storage.ErrTreeNotFound)
@@ -229,7 +230,7 @@ func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]model
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
 		 FROM trees
 		 WHERE creator_id = $1
 		 ORDER BY created_at DESC`,
@@ -243,7 +244,7 @@ func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]model
 	trees := make([]models.Tree, 0)
 	for rows.Next() {
 		var tree models.Tree
-		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name); err != nil {
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &tree.RootPersonID); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		trees = append(trees, tree)
@@ -261,7 +262,7 @@ func (s *Storage) GetPublicTreesByCreator(ctx context.Context, creatorID int) ([
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
 		 FROM trees
 		 WHERE creator_id = $1 AND is_public_on_main_page = TRUE
 		 ORDER BY created_at DESC`,
@@ -275,7 +276,7 @@ func (s *Storage) GetPublicTreesByCreator(ctx context.Context, creatorID int) ([
 	trees := make([]models.Tree, 0)
 	for rows.Next() {
 		var tree models.Tree
-		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name); err != nil {
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &tree.RootPersonID); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		trees = append(trees, tree)
@@ -293,7 +294,7 @@ func (s *Storage) GetRandomPublicTrees(ctx context.Context, limit int) ([]models
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
 		 FROM trees
 		 WHERE is_public_on_main_page = TRUE
 		 ORDER BY RANDOM()
@@ -308,7 +309,7 @@ func (s *Storage) GetRandomPublicTrees(ctx context.Context, limit int) ([]models
 	trees := make([]models.Tree, 0)
 	for rows.Next() {
 		var tree models.Tree
-		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name); err != nil {
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &tree.RootPersonID); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		trees = append(trees, tree)

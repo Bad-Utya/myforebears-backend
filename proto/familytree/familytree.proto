@@ -45,6 +45,7 @@ message Tree {
     bool is_view_restricted = 4;
     bool is_public_on_main_page = 5;
     string name = 6;
+    string root_person_id = 7;
 }
 
 message Person {

@@ -286,6 +286,7 @@ type Tree struct {
 	IsViewRestricted   bool                   `protobuf:"varint,4,opt,name=is_view_restricted,json=isViewRestricted,proto3" json:"is_view_restricted,omitempty"`
 	IsPublicOnMainPage bool                   `protobuf:"varint,5,opt,name=is_public_on_main_page,json=isPublicOnMainPage,proto3" json:"is_public_on_main_page,omitempty"`
 	Name               string                 `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`
+	RootPersonId       string                 `protobuf:"bytes,7,opt,name=root_person_id,json=rootPersonId,proto3" json:"root_person_id,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -358,6 +359,13 @@ func (x *Tree) GetIsPublicOnMainPage() bool {
 func (x *Tree) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *Tree) GetRootPersonId() string {
+	if x != nil {
+		return x.RootPersonId
 	}
 	return ""
 }
@@ -3687,7 +3695,7 @@ var File_familytree_familytree_proto protoreflect.FileDescriptor
 const file_familytree_familytree_proto_rawDesc = "" +
 	"\n" +
 	"\x1bfamilytree/familytree.proto\x12\n" +
-	"familytree\"\xd3\x01\n" +
+	"familytree\"\xf9\x01\n" +
 	"\x04Tree\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -3695,7 +3703,8 @@ const file_familytree_familytree_proto_rawDesc = "" +
 	"\x0fcreated_at_unix\x18\x03 \x01(\x03R\rcreatedAtUnix\x12,\n" +
 	"\x12is_view_restricted\x18\x04 \x01(\bR\x10isViewRestricted\x122\n" +
 	"\x16is_public_on_main_page\x18\x05 \x01(\bR\x12isPublicOnMainPage\x12\x12\n" +
-	"\x04name\x18\x06 \x01(\tR\x04name\"\xe1\x01\n" +
+	"\x04name\x18\x06 \x01(\tR\x04name\x12$\n" +
+	"\x0eroot_person_id\x18\a \x01(\tR\frootPersonId\"\xe1\x01\n" +
 	"\x06Person\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\atree_id\x18\x02 \x01(\tR\x06treeId\x12\x1d\n" +

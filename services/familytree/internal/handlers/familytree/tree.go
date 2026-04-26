@@ -225,5 +225,6 @@ func toProtoTree(tree models.Tree) *familytreepb.Tree {
 		IsViewRestricted:   tree.IsViewRestricted,
 		IsPublicOnMainPage: tree.IsPublicOnMainPage,
 		Name:               tree.Name,
+		RootPersonId:       tree.RootPersonID.String(),
 	}
 }
