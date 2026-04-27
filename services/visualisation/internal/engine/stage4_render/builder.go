@@ -162,6 +162,9 @@ func BuildCoordRenderResult(cm *stage3_ordering.CoordMatrix, tree *stage1_input.
 			if node.MergePartner != nil {
 				partnerIdx, ok := nodeToIndex[node.MergePartner]
 				if ok {
+					if nodeIdx > partnerIdx {
+						continue
+					}
 
 					if node.Right <= node.MergePartner.Left {
 						key := fmt.Sprintf("merge-partner-%d-%d", nodeIdx, partnerIdx)

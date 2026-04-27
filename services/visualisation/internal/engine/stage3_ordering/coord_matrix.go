@@ -2,6 +2,8 @@ package stage3_ordering
 
 import (
 	"fmt"
+	"sort"
+
 	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine/stage1_input"
 )
 
@@ -156,6 +158,8 @@ func (om *OrderManager) BuildCoordMatrix() *CoordMatrix {
 	splitMergedNodes(cm)
 
 	buildPersonToNode(cm)
+
+	alignChildrenToFamilyCenters(cm)
 
 	normalizeCoordinates(cm)
 
@@ -644,6 +648,83 @@ func normalizeCoordinates(cm *CoordMatrix) {
 			}
 		}
 	}
+}
+
+func alignChildrenToFamilyCenters(cm *CoordMatrix) {
+	for layerNum := cm.MinLayer; layerNum <= cm.MaxLayer; layerNum++ {
+		for _, node := range cm.Layers[layerNum] {
+			if node.IsPseudo || len(node.ParentNodes) < 2 {
+				continue
+			}
+
+			parentLeft := node.ParentNodes[0]
+			parentRight := node.ParentNodes[1]
+			if parentLeft == nil || parentRight == nil {
+				continue
+			}
+			if parentLeft.MergePartner != parentRight && parentRight.MergePartner != parentLeft {
+				continue
+			}
+
+			targetCenter := familyCenter(parentLeft, parentRight)
+			moveNodeCenterWithinLayer(cm, node, targetCenter)
+		}
+
+		sortLayerByLeft(cm.Layers[layerNum])
+	}
+}
+
+func familyCenter(leftNode, rightNode *CoordNode) int {
+	left := leftNode.Left
+	if rightNode.Left < left {
+		left = rightNode.Left
+	}
+
+	right := leftNode.Right
+	if rightNode.Right > right {
+		right = rightNode.Right
+	}
+
+	return (left + right) / 2
+}
+
+func moveNodeCenterWithinLayer(cm *CoordMatrix, node *CoordNode, targetCenter int) {
+	leftNeighbor, rightNeighbor := getNeighbors(cm, node)
+	width := node.Right - node.Left
+	targetLeft := targetCenter - width/2
+	targetRight := targetLeft + width
+
+	if leftNeighbor != nil && targetLeft < leftNeighbor.Right {
+		targetLeft = leftNeighbor.Right
+		targetRight = targetLeft + width
+	}
+	if rightNeighbor != nil && targetRight > rightNeighbor.Left {
+		targetRight = rightNeighbor.Left
+		targetLeft = targetRight - width
+	}
+	if leftNeighbor != nil && targetLeft < leftNeighbor.Right {
+		return
+	}
+	if rightNeighbor != nil && targetRight > rightNeighbor.Left {
+		return
+	}
+
+	delta := targetLeft - node.Left
+	if delta == 0 {
+		return
+	}
+
+	node.Left += delta
+	node.Right += delta
+}
+
+func sortLayerByLeft(nodes []*CoordNode) {
+	sort.SliceStable(nodes, func(i, j int) bool {
+		if nodes[i].Left == nodes[j].Left {
+			return nodes[i].Right < nodes[j].Right
+		}
+		return nodes[i].Left < nodes[j].Left
+	})
 }
 
 func (cm *CoordMatrix) PrintCoordinates() {

@@ -1,6 +1,7 @@
 package familytree
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -10,6 +11,7 @@ import (
 
 	eventspb "github.com/Bad-Utya/myforebears-backend/gen/go/events"
 	familytreepb "github.com/Bad-Utya/myforebears-backend/gen/go/familytree"
+	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
 	eventsclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/events"
 	familytreeclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/familytree"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/lib/grpcerr"
@@ -24,10 +26,11 @@ type Handler struct {
 	log          *slog.Logger
 	client       *familytreeclient.Client
 	eventsClient *eventsclient.Client
+	authClient   *authclient.Client
 }
 
-func New(log *slog.Logger, client *familytreeclient.Client, eventsClient *eventsclient.Client) *Handler {
-	return &Handler{log: log, client: client, eventsClient: eventsClient}
+func New(log *slog.Logger, client *familytreeclient.Client, eventsClient *eventsclient.Client, authClient *authclient.Client) *Handler {
+	return &Handler{log: log, client: client, eventsClient: eventsClient, authClient: authClient}
 }
 
 type addParentRequest struct {
@@ -60,6 +63,10 @@ type updatePersonNameRequest struct {
 	Patronymic string `json:"patronymic"`
 }
 
+type updatePersonGenderRequest struct {
+	Gender string `json:"gender" enums:"MALE,FEMALE"`
+}
+
 type updateTreeSettingsRequest struct {
 	IsViewRestricted   bool   `json:"is_view_restricted"`
 	IsPublicOnMainPage bool   `json:"is_public_on_main_page"`
@@ -73,6 +80,7 @@ type treeAccessEmailRequest struct {
 type familyTreeJSON struct {
 	ID                 string `json:"id"`
 	CreatorID          int32  `json:"creator_id"`
+	CreatorNickname    string `json:"creator_nickname,omitempty"`
 	CreatedAtUnix      int64  `json:"created_at_unix"`
 	IsViewRestricted   bool   `json:"is_view_restricted"`
 	IsPublicOnMainPage bool   `json:"is_public_on_main_page"`
@@ -392,7 +400,15 @@ func (h *Handler) GetTree(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.OK(w, map[string]any{"tree": toTreeJSON(resp.GetTree())})
+	treeJSON, err := h.toTreeJSONWithCreator(r.Context(), resp.GetTree())
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("get tree creator info failed", slog.String("error", err.Error()))
+		response.Error(w, status, "auth_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"tree": treeJSON})
 }
 
 // GetTreeContent returns persons and relationships of a tree.
@@ -906,6 +922,70 @@ func (h *Handler) UpdatePersonName(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"person": toPersonJSON(resp.GetPerson())})
 }
 
+// UpdatePersonGender updates person gender.
+// @Summary Update person gender
+// @Tags familytree
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param person_id path string true "Person ID"
+// @Param request body updatePersonGenderRequest true "Request body"
+// @Success 200 {object} personSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/familytree/{tree_id}/persons/{person_id}/gender [patch]
+func (h *Handler) UpdatePersonGender(w http.ResponseWriter, r *http.Request) {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
+		return
+	}
+
+	personID := chi.URLParam(r, "person_id")
+	if strings.TrimSpace(personID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "person_id is required")
+		return
+	}
+
+	var req updatePersonGenderRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid request body")
+		return
+	}
+
+	existingResp, err := h.client.GetPerson(r.Context(), treeID, personID)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("get person for gender update failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	existing := existingResp.GetPerson()
+	updateResp, err := h.client.UpdatePerson(r.Context(), &familytreepb.UpdatePersonRequest{
+		TreeId:     treeID,
+		PersonId:   personID,
+		FirstName:  existing.GetFirstName(),
+		LastName:   existing.GetLastName(),
+		Patronymic: existing.GetPatronymic(),
+		Gender:     parseGender(req.Gender),
+	})
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("update person gender failed", slog.String("error", err.Error()))
+		response.Error(w, status, "familytree_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"person": toPersonJSON(updateResp.GetPerson())})
+}
+
 // DeletePerson deletes a person from tree.
 // @Summary Delete person
 // @Tags familytree
@@ -1093,6 +1173,21 @@ func toTreeJSON(t *familytreepb.Tree) map[string]any {
 		"name":                   t.GetName(),
 		"root_person_id":         t.GetRootPersonId(),
 	}
+}
+
+func (h *Handler) toTreeJSONWithCreator(ctx context.Context, t *familytreepb.Tree) (map[string]any, error) {
+	treeJSON := toTreeJSON(t)
+	if t == nil || h.authClient == nil {
+		return treeJSON, nil
+	}
+
+	userResp, err := h.authClient.GetUserInfo(ctx, int(t.GetCreatorId()))
+	if err != nil {
+		return nil, err
+	}
+
+	treeJSON["creator_nickname"] = userResp.GetUser().GetNickname()
+	return treeJSON, nil
 }
 
 func findBirthEventForPerson(events []*eventspb.Event, personID string) *eventspb.Event {

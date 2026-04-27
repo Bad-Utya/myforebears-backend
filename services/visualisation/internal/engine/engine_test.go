@@ -173,6 +173,107 @@ func TestRenderCoordinatesBuildsJSON(t *testing.T) {
 	t.Logf("Coordinates JSON sample:\n%s", jsonStr[:min(len(jsonStr), 200)])
 }
 
+func TestRenderCoordinatesCentersChildUnderPartnerPair(t *testing.T) {
+	rootID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	partnerID := uuid.MustParse("22222222-2222-2222-2222-222222222222")
+	childID := uuid.MustParse("33333333-3333-3333-3333-333333333333")
+
+	content := &familytreepb.GetTreeContentResponse{
+		Persons: []*familytreepb.Person{
+			{Id: rootID.String(), FirstName: "Root", Gender: familytreepb.Gender_GENDER_MALE},
+			{Id: partnerID.String(), FirstName: "Partner", Gender: familytreepb.Gender_GENDER_FEMALE},
+			{Id: childID.String(), FirstName: "Child", Gender: familytreepb.Gender_GENDER_UNSPECIFIED},
+		},
+		Relationships: []*familytreepb.Relationship{
+			{PersonIdFrom: rootID.String(), PersonIdTo: partnerID.String(), Type: familytreepb.RelationshipType_RELATIONSHIP_PARTNER_MARRIED},
+			{PersonIdFrom: rootID.String(), PersonIdTo: childID.String(), Type: familytreepb.RelationshipType_RELATIONSHIP_PARENT_CHILD},
+			{PersonIdFrom: partnerID.String(), PersonIdTo: childID.String(), Type: familytreepb.RelationshipType_RELATIONSHIP_PARENT_CHILD},
+		},
+	}
+
+	coordBytes, err := RenderCoordinates(models.VisualisationTypeAncestorsAndDescendants, rootID, nil, content, 0, true)
+	if err != nil {
+		t.Fatalf("RenderCoordinates failed: %v", err)
+	}
+
+	var actual CoordinateResultJSON
+	if err := json.Unmarshal(coordBytes, &actual); err != nil {
+		t.Fatalf("failed to parse coordinate json: %v", err)
+	}
+
+	rootNode := findNodeByPersonID(t, actual.Nodes, rootID.String())
+	partnerNode := findNodeByPersonID(t, actual.Nodes, partnerID.String())
+	childNode := findNodeByPersonID(t, actual.Nodes, childID.String())
+
+	if rootNode.PartnerIdx != partnerNode.ID {
+		t.Fatalf("expected root to be merged with partner, got partner idx %d", rootNode.PartnerIdx)
+	}
+	if partnerNode.PartnerIdx != rootNode.ID {
+		t.Fatalf("expected partner to be merged with root, got partner idx %d", partnerNode.PartnerIdx)
+	}
+
+	expectedFamilyCenter := (rootNode.X + partnerNode.X + 2) / 2
+
+	var parentChildEdge *CoordinateEdgeJSON
+	for i := range actual.Edges {
+		edge := &actual.Edges[i]
+		if edge.EdgeType == "parent-child" && edge.ToNodeIdx == childNode.ID {
+			parentChildEdge = edge
+			break
+		}
+	}
+	if parentChildEdge == nil {
+		t.Fatal("expected parent-child edge for child")
+	}
+	if parentChildEdge.FromX != expectedFamilyCenter {
+		t.Fatalf("expected child edge to start from family center %d, got %d", expectedFamilyCenter, parentChildEdge.FromX)
+	}
+	if childNode.Y >= rootNode.Y {
+		t.Fatalf("expected child layer to be below parents, got childY=%d parentY=%d", childNode.Y, rootNode.Y)
+	}
+}
+
+func TestRenderCoordinatesMergesPartnerWithSharedChildrenFirst(t *testing.T) {
+	rootID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
+	partnerWithChildID := uuid.MustParse("22222222-2222-2222-2222-222222222222")
+	partnerWithoutChildID := uuid.MustParse("33333333-3333-3333-3333-333333333333")
+	childID := uuid.MustParse("44444444-4444-4444-4444-444444444444")
+
+	content := &familytreepb.GetTreeContentResponse{
+		Persons: []*familytreepb.Person{
+			{Id: rootID.String(), FirstName: "Root", Gender: familytreepb.Gender_GENDER_MALE},
+			{Id: partnerWithoutChildID.String(), FirstName: "Outer", Gender: familytreepb.Gender_GENDER_FEMALE},
+			{Id: partnerWithChildID.String(), FirstName: "Inner", Gender: familytreepb.Gender_GENDER_FEMALE},
+			{Id: childID.String(), FirstName: "Child", Gender: familytreepb.Gender_GENDER_UNSPECIFIED},
+		},
+		Relationships: []*familytreepb.Relationship{
+			{PersonIdFrom: rootID.String(), PersonIdTo: partnerWithoutChildID.String(), Type: familytreepb.RelationshipType_RELATIONSHIP_PARTNER_MARRIED},
+			{PersonIdFrom: rootID.String(), PersonIdTo: partnerWithChildID.String(), Type: familytreepb.RelationshipType_RELATIONSHIP_PARTNER_MARRIED},
+			{PersonIdFrom: rootID.String(), PersonIdTo: childID.String(), Type: familytreepb.RelationshipType_RELATIONSHIP_PARENT_CHILD},
+			{PersonIdFrom: partnerWithChildID.String(), PersonIdTo: childID.String(), Type: familytreepb.RelationshipType_RELATIONSHIP_PARENT_CHILD},
+		},
+	}
+
+	coordBytes, err := RenderCoordinates(models.VisualisationTypeAncestorsAndDescendants, rootID, nil, content, 0, true)
+	if err != nil {
+		t.Fatalf("RenderCoordinates failed: %v", err)
+	}
+
+	var actual CoordinateResultJSON
+	if err := json.Unmarshal(coordBytes, &actual); err != nil {
+		t.Fatalf("failed to parse coordinate json: %v", err)
+	}
+
+	rootNode := findNodeByPersonID(t, actual.Nodes, rootID.String())
+	mergedPartner := actual.Nodes[rootNode.PartnerIdx]
+	if len(mergedPartner.People) != 1 {
+		t.Fatalf("expected merged partner node to contain one person, got %d", len(mergedPartner.People))
+	}
+	if mergedPartner.People[0].ID != partnerWithChildID.String() {
+		t.Fatalf("expected partner with shared child to be merged with root, got %s", mergedPartner.People[0].ID)
+	}
+}
+
 func TestRenderCoordinatesIncludesFullPeopleAndMatchingEdges(t *testing.T) {
 	rootID := uuid.MustParse("11111111-1111-1111-1111-111111111111")
 	partnerID := uuid.MustParse("22222222-2222-2222-2222-222222222222")
@@ -263,4 +364,19 @@ func TestRenderCoordinatesIncludesFullPeopleAndMatchingEdges(t *testing.T) {
 			t.Fatalf("edge %d mismatch: got %+v, want %+v", i, got, expected)
 		}
 	}
+}
+
+func findNodeByPersonID(t *testing.T, nodes []CoordinateNodeJSON, personID string) CoordinateNodeJSON {
+	t.Helper()
+
+	for _, node := range nodes {
+		for _, person := range node.People {
+			if person.ID == personID {
+				return node
+			}
+		}
+	}
+
+	t.Fatalf("node with person %s not found", personID)
+	return CoordinateNodeJSON{}
 }

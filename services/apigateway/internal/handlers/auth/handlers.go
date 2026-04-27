@@ -73,6 +73,7 @@ type tokensResponse struct {
 type userInfoResponse struct {
 	ID       int32  `json:"id"`
 	Nickname string `json:"nickname"`
+	Email    string `json:"email,omitempty"`
 }
 
 type authStatusData struct {
@@ -526,6 +527,12 @@ func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	email, err := middleware.EmailFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
 	resp, err := h.client.GetUserInfo(r.Context(), userID)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
@@ -537,6 +544,7 @@ func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"user": map[string]any{
 		"id":       resp.GetUser().GetId(),
 		"nickname": resp.GetUser().GetNickname(),
+		"email":    email,
 	}})
 }
 

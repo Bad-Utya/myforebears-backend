@@ -104,6 +104,28 @@ func (s *Storage) GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, e
 	return tree, nil
 }
 
+func (s *Storage) UpdateTreeRootPersonID(ctx context.Context, treeID uuid.UUID, rootPersonID uuid.UUID) error {
+	const op = "storage.postgres.UpdateTreeRootPersonID"
+
+	cmdTag, err := s.pool.Exec(
+		ctx,
+		`UPDATE trees
+		 SET root_person_id = $1
+		 WHERE id = $2`,
+		rootPersonID,
+		treeID,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrTreeNotFound)
+	}
+
+	return nil
+}
+
 func (s *Storage) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool, name string) error {
 	const op = "storage.postgres.UpdateTreeSettings"
 

@@ -20,6 +20,7 @@ var (
 type PersonStorage interface {
 	CreateTree(ctx context.Context, tree models.Tree) error
 	GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, error)
+	UpdateTreeRootPersonID(ctx context.Context, treeID uuid.UUID, rootPersonID uuid.UUID) error
 	UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool, name string) error
 	AddTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error
 	ListTreeAccessEmails(ctx context.Context, treeID uuid.UUID) ([]string, error)

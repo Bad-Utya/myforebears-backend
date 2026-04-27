@@ -53,6 +53,13 @@ func (s *Service) CreateTree(ctx context.Context, requestUserID int) (models.Tre
 		return models.Tree{}, models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 
+	if err := s.personStorage.UpdateTreeRootPersonID(ctx, tree.ID, root.ID); err != nil {
+		log.Error("failed to update tree root person id", slog.String("error", err.Error()))
+		return models.Tree{}, models.Person{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	tree.RootPersonID = root.ID
+
 	log.Info("tree created", slog.String("tree_id", tree.ID.String()), slog.String("root_person_id", root.ID.String()))
 
 	return tree, root, nil

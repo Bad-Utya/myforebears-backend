@@ -198,6 +198,21 @@ func segmentOverlap(a1, a2, b1, b2 int) int {
 }
 
 func getParentCoordinateForPerson(parent *CoordNode, personIndex int) int {
+	if parent == nil {
+		return 0
+	}
+
+	if parent.MergePartner != nil {
+		left := parent.Left
+		right := parent.Right
+		if parent.MergePartner.Left < left {
+			left = parent.MergePartner.Left
+		}
+		if parent.MergePartner.Right > right {
+			right = parent.MergePartner.Right
+		}
+		return (left + right) / 2
+	}
 
 	return (parent.Left + parent.Right) / 2
 }

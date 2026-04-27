@@ -127,7 +127,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	treeAccessChecker := middleware.NewTreeAccessChecker(log, tokenChecker, familyTreeGRPC)
 
 	authHandler := authhandler.New(log, authGRPC)
-	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC, eventsGRPC)
+	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC, eventsGRPC, authGRPC)
 	eventsHandler := eventshandler.New(log, eventsGRPC)
 	photosHandler := photoshandler.New(log, photosGRPC)
 	visualisationHandler := visualisationhandler.New(log, visualisationGRPC)
@@ -192,6 +192,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 			r.Post("/{tree_id}/children", familyTreeHandler.AddChild)
 			r.Post("/{tree_id}/partners", familyTreeHandler.AddPartner)
 			r.Patch("/{tree_id}/persons/{person_id}", familyTreeHandler.UpdatePersonName)
+			r.Patch("/{tree_id}/persons/{person_id}/gender", familyTreeHandler.UpdatePersonGender)
 			r.Delete("/{tree_id}/persons/{person_id}", familyTreeHandler.DeletePerson)
 		})
 	})

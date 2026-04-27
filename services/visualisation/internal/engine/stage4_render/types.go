@@ -117,6 +117,7 @@ func addParentChildEdge(result *CoordRenderResult, parentNode, childNode *stage3
 			right = parentNode.MergePartner.Right
 		}
 		adjacentCenterX = (left + right) / 2
+		fromX = adjacentCenterX
 	}
 
 	result.Edges = append(result.Edges, EdgeInfo{

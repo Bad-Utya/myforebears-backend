@@ -253,6 +253,17 @@ func (c *Client) UpdatePersonName(ctx context.Context, req *familytreepb.UpdateP
 	return resp, nil
 }
 
+func (c *Client) UpdatePerson(ctx context.Context, req *familytreepb.UpdatePersonRequest) (*familytreepb.UpdatePersonResponse, error) {
+	const op = "clients.familytree.UpdatePerson"
+
+	resp, err := c.api.UpdatePerson(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) DeletePersonInTree(ctx context.Context, req *familytreepb.DeletePersonInTreeRequest) error {
 	const op = "clients.familytree.DeletePersonInTree"
 

@@ -37,7 +37,19 @@ func IsCurrentPartner(person, partner *stage1_input.Person) bool {
 	if len(person.Partners) == 0 {
 		return false
 	}
-	return person.Partners[0].ID == partner.ID
+
+	bestPartner := person.Partners[0]
+	bestScore := countSharedChildren(person, bestPartner)
+
+	for _, candidate := range person.Partners[1:] {
+		score := countSharedChildren(person, candidate)
+		if score > bestScore || (score == bestScore && candidate.ID < bestPartner.ID) {
+			bestPartner = candidate
+			bestScore = score
+		}
+	}
+
+	return bestPartner.ID == partner.ID
 }
 
 func ShouldAddPartnerLeft(person, partner *stage1_input.Person, dirConstraint stage1_input.DirectionConstraint) bool {
@@ -64,4 +76,12 @@ func ShouldAddPartnerLeft(person, partner *stage1_input.Person, dirConstraint st
 		}
 		return false
 	}
+}
+
+func countSharedChildren(person, partner *stage1_input.Person) int {
+	if person == nil || partner == nil {
+		return 0
+	}
+
+	return len(GetCommonChildren(person, partner))
 }
