@@ -379,7 +379,14 @@ func (h *Handler) ListRandomPublicTrees(w http.ResponseWriter, r *http.Request) 
 
 	trees := make([]map[string]any, 0, len(resp.GetTrees()))
 	for _, t := range resp.GetTrees() {
-		trees = append(trees, toTreeJSON(t))
+		treeJSON, err := h.toTreeJSONWithCreator(r.Context(), t)
+		if err != nil {
+			status, msg := grpcerr.HTTPStatus(err)
+			h.log.Error("enrich random public tree with creator failed", slog.String("error", err.Error()))
+			response.Error(w, status, "familytree_error", msg)
+			return
+		}
+		trees = append(trees, treeJSON)
 	}
 
 	response.OK(w, map[string]any{"trees": trees})
