@@ -124,6 +124,89 @@ func (s *Service) GetUserAvatar(ctx context.Context, requestUserID int) (models.
 	return photo, data, nil
 }
 
+func (s *Service) UploadTreeAvatar(ctx context.Context, treeID string, fileName string, mimeType string, content []byte) (models.Photo, error) {
+	const op = "service.photos.UploadTreeAvatar"
+	log := s.log.With(slog.String("op", op), slog.String("tree_id", treeID))
+
+	if err := validateFileInput(fileName, mimeType, content); err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	ownerUserID, err := s.familyTree.GetTreeCreatorID(ctx, parsedTreeID.String())
+	if err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	oldAvatar, err := s.meta.GetTreeAvatar(ctx, parsedTreeID)
+	if err == nil {
+		if err := s.objects.DeleteObject(ctx, oldAvatar.ObjectKey); err != nil {
+			log.Error("failed to delete previous tree avatar object", slog.String("error", err.Error()))
+			return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+		}
+		if _, err := s.meta.DeletePhotoByID(ctx, oldAvatar.ID); err != nil {
+			log.Error("failed to delete previous tree avatar metadata", slog.String("error", err.Error()))
+			return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+		}
+	} else if !errors.Is(err, storage.ErrPhotoNotFound) {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	photo := models.Photo{
+		ID:           uuid.New(),
+		OwnerUserID:  ownerUserID,
+		TreeID:       &parsedTreeID,
+		IsTreeAvatar: true,
+		FileName:     normalizeFileName(fileName),
+		MIMEType:     mimeType,
+		SizeBytes:    int64(len(content)),
+		ObjectKey:    buildObjectKey("trees", parsedTreeID.String(), "avatar", fileName),
+		CreatedAt:    time.Now(),
+	}
+
+	if err := s.objects.PutObject(ctx, photo.ObjectKey, content, photo.MIMEType); err != nil {
+		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+	}
+	if err := s.meta.CreatePhoto(ctx, photo); err != nil {
+		_ = s.objects.DeleteObject(ctx, photo.ObjectKey)
+		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return photo, nil
+}
+
+func (s *Service) GetTreeAvatar(ctx context.Context, treeID string) (models.Photo, []byte, error) {
+	const op = "service.photos.GetTreeAvatar"
+
+	parsedTreeID, err := uuid.Parse(treeID)
+	if err != nil {
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+	}
+
+	if _, err := s.familyTree.GetTreeCreatorID(ctx, parsedTreeID.String()); err != nil {
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	photo, err := s.meta.GetTreeAvatar(ctx, parsedTreeID)
+	if err != nil {
+		if errors.Is(err, storage.ErrPhotoNotFound) {
+			return models.Photo{}, nil, fmt.Errorf("%s: %w", op, ErrPhotoNotFound)
+		}
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	data, err := s.objects.GetObject(ctx, photo.ObjectKey)
+	if err != nil {
+		return models.Photo{}, nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return photo, data, nil
+}
+
 func (s *Service) UploadPersonAvatar(ctx context.Context, treeID string, personID string, fileName string, mimeType string, content []byte) (models.Photo, error) {
 	const op = "service.photos.UploadPersonAvatar"
 

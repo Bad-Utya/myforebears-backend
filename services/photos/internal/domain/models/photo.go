@@ -13,6 +13,7 @@ type Photo struct {
 	PersonID       *uuid.UUID
 	EventID        *uuid.UUID
 	IsUserAvatar   bool
+	IsTreeAvatar   bool
 	IsPersonAvatar bool
 	FileName       string
 	MIMEType       string

@@ -61,6 +61,28 @@ func (c *Client) GetUserAvatar(ctx context.Context, req *photospb.GetUserAvatarR
 	return resp, nil
 }
 
+func (c *Client) UploadTreeAvatar(ctx context.Context, req *photospb.UploadTreeAvatarRequest) (*photospb.UploadTreeAvatarResponse, error) {
+	const op = "clients.photos.UploadTreeAvatar"
+
+	resp, err := c.api.UploadTreeAvatar(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) GetTreeAvatar(ctx context.Context, req *photospb.GetTreeAvatarRequest) (*photospb.GetPhotoContentResponse, error) {
+	const op = "clients.photos.GetTreeAvatar"
+
+	resp, err := c.api.GetTreeAvatar(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) UploadPersonAvatar(ctx context.Context, req *photospb.UploadPersonAvatarRequest) (*photospb.UploadPersonAvatarResponse, error) {
 	const op = "clients.photos.UploadPersonAvatar"
 

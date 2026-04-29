@@ -12,6 +12,8 @@ import (
 type PhotosService interface {
 	UploadUserAvatar(ctx context.Context, requestUserID int, fileName string, mimeType string, content []byte) (models.Photo, error)
 	GetUserAvatar(ctx context.Context, requestUserID int) (models.Photo, []byte, error)
+	UploadTreeAvatar(ctx context.Context, treeID string, fileName string, mimeType string, content []byte) (models.Photo, error)
+	GetTreeAvatar(ctx context.Context, treeID string) (models.Photo, []byte, error)
 	UploadPersonAvatar(ctx context.Context, treeID string, personID string, fileName string, mimeType string, content []byte) (models.Photo, error)
 	GetPersonAvatar(ctx context.Context, treeID string, personID string) (models.Photo, []byte, error)
 	UploadPersonPhoto(ctx context.Context, treeID string, personID string, fileName string, mimeType string, content []byte) (models.Photo, error)
@@ -52,6 +54,30 @@ func (h *Handler) UploadUserAvatar(ctx context.Context, req *photospb.UploadUser
 
 func (h *Handler) GetUserAvatar(ctx context.Context, req *photospb.GetUserAvatarRequest) (*photospb.GetPhotoContentResponse, error) {
 	photo, content, err := h.service.GetUserAvatar(ctx, int(req.GetRequestUserId()))
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &photospb.GetPhotoContentResponse{Photo: toProtoPhoto(photo), Content: content}, nil
+}
+
+func (h *Handler) UploadTreeAvatar(ctx context.Context, req *photospb.UploadTreeAvatarRequest) (*photospb.UploadTreeAvatarResponse, error) {
+	photo, err := h.service.UploadTreeAvatar(
+		ctx,
+		req.GetTreeId(),
+		req.GetFileName(),
+		req.GetMimeType(),
+		req.GetContent(),
+	)
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &photospb.UploadTreeAvatarResponse{Photo: toProtoPhoto(photo)}, nil
+}
+
+func (h *Handler) GetTreeAvatar(ctx context.Context, req *photospb.GetTreeAvatarRequest) (*photospb.GetPhotoContentResponse, error) {
+	photo, content, err := h.service.GetTreeAvatar(ctx, req.GetTreeId())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}

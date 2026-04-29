@@ -1,0 +1,2 @@
+ALTER TABLE trees
+    ADD COLUMN IF NOT EXISTS description TEXT NULL;

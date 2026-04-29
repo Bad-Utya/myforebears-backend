@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -68,13 +69,14 @@ func (s *Storage) CreateTree(ctx context.Context, tree models.Tree) error {
 
 	_, err := s.pool.Exec(
 		ctx,
-		`INSERT INTO trees (id, creator_id, is_view_restricted, is_public_on_main_page, name, root_person_id)
-		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		`INSERT INTO trees (id, creator_id, is_view_restricted, is_public_on_main_page, name, description, root_person_id)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		tree.ID,
 		tree.CreatorID,
 		tree.IsViewRestricted,
 		tree.IsPublicOnMainPage,
 		tree.Name,
+		tree.Description,
 		tree.RootPersonID,
 	)
 	if err != nil {
@@ -88,17 +90,22 @@ func (s *Storage) GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, e
 	const op = "storage.postgres.GetTree"
 
 	var tree models.Tree
+	var description sql.NullString
 	err := s.pool.QueryRow(
 		ctx,
-		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, description, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
 		 FROM trees WHERE id = $1`,
 		treeID,
-	).Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &tree.RootPersonID)
+	).Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &description, &tree.RootPersonID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.Tree{}, fmt.Errorf("%s: %w", op, storage.ErrTreeNotFound)
 		}
 		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if description.Valid {
+		tree.Description = &description.String
 	}
 
 	return tree, nil
@@ -126,7 +133,7 @@ func (s *Storage) UpdateTreeRootPersonID(ctx context.Context, treeID uuid.UUID, 
 	return nil
 }
 
-func (s *Storage) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool, name string) error {
+func (s *Storage) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool, name string, description *string) error {
 	const op = "storage.postgres.UpdateTreeSettings"
 
 	cmdTag, err := s.pool.Exec(
@@ -134,11 +141,13 @@ func (s *Storage) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isVi
 		`UPDATE trees
 		 SET is_view_restricted = $1,
 		     is_public_on_main_page = $2,
-		     name = $3
-		 WHERE id = $4`,
+		     name = $3,
+		     description = $4
+		 WHERE id = $5`,
 		isViewRestricted,
 		isPublicOnMainPage,
 		name,
+		description,
 		treeID,
 	)
 	if err != nil {
@@ -252,7 +261,7 @@ func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]model
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, description, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
 		 FROM trees
 		 WHERE creator_id = $1
 		 ORDER BY created_at DESC`,
@@ -266,8 +275,12 @@ func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]model
 	trees := make([]models.Tree, 0)
 	for rows.Next() {
 		var tree models.Tree
-		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &tree.RootPersonID); err != nil {
+		var description sql.NullString
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &description, &tree.RootPersonID); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		if description.Valid {
+			tree.Description = &description.String
 		}
 		trees = append(trees, tree)
 	}
@@ -284,7 +297,7 @@ func (s *Storage) GetPublicTreesByCreator(ctx context.Context, creatorID int) ([
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, description, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
 		 FROM trees
 		 WHERE creator_id = $1 AND is_public_on_main_page = TRUE
 		 ORDER BY created_at DESC`,
@@ -298,8 +311,12 @@ func (s *Storage) GetPublicTreesByCreator(ctx context.Context, creatorID int) ([
 	trees := make([]models.Tree, 0)
 	for rows.Next() {
 		var tree models.Tree
-		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &tree.RootPersonID); err != nil {
+		var description sql.NullString
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &description, &tree.RootPersonID); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		if description.Valid {
+			tree.Description = &description.String
 		}
 		trees = append(trees, tree)
 	}
@@ -316,7 +333,7 @@ func (s *Storage) GetRandomPublicTrees(ctx context.Context, limit int) ([]models
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, description, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
 		 FROM trees
 		 WHERE is_public_on_main_page = TRUE
 		 ORDER BY RANDOM()
@@ -331,8 +348,12 @@ func (s *Storage) GetRandomPublicTrees(ctx context.Context, limit int) ([]models
 	trees := make([]models.Tree, 0)
 	for rows.Next() {
 		var tree models.Tree
-		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &tree.RootPersonID); err != nil {
+		var description sql.NullString
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &description, &tree.RootPersonID); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		if description.Valid {
+			tree.Description = &description.String
 		}
 		trees = append(trees, tree)
 	}

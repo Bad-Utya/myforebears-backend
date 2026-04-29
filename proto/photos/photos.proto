@@ -22,6 +22,9 @@ service PhotosService {
     rpc UploadUserAvatar (UploadUserAvatarRequest) returns (UploadUserAvatarResponse);
     rpc GetUserAvatar (GetUserAvatarRequest) returns (GetPhotoContentResponse);
 
+    rpc UploadTreeAvatar (UploadTreeAvatarRequest) returns (UploadTreeAvatarResponse);
+    rpc GetTreeAvatar (GetTreeAvatarRequest) returns (GetPhotoContentResponse);
+
     rpc UploadPersonAvatar (UploadPersonAvatarRequest) returns (UploadPersonAvatarResponse);
     rpc GetPersonAvatar (GetPersonAvatarRequest) returns (GetPhotoContentResponse);
     rpc UploadPersonPhoto (UploadPersonPhotoRequest) returns (UploadPersonPhotoResponse);
@@ -47,6 +50,21 @@ message UploadUserAvatarResponse {
 
 message GetUserAvatarRequest {
     int32 request_user_id = 1;
+}
+
+message UploadTreeAvatarRequest {
+    string tree_id = 1;
+    string file_name = 2;
+    string mime_type = 3;
+    bytes content = 4;
+}
+
+message UploadTreeAvatarResponse {
+    Photo photo = 1;
+}
+
+message GetTreeAvatarRequest {
+    string tree_id = 1;
 }
 
 message UploadPersonAvatarRequest {

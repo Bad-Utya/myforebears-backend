@@ -46,11 +46,11 @@ func (s *Storage) CreatePhoto(ctx context.Context, photo models.Photo) error {
 	_, err := s.pool.Exec(
 		ctx,
 		`INSERT INTO photos (
-			id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_person_avatar,
-			file_name, mime_type, size_bytes, object_key, created_at
+			id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_tree_avatar,
+			is_person_avatar, file_name, mime_type, size_bytes, object_key, created_at
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7,
-			$8, $9, $10, $11, $12
+			$8, $9, $10, $11, $12, $13
 		)`,
 		photo.ID,
 		photo.OwnerUserID,
@@ -58,6 +58,7 @@ func (s *Storage) CreatePhoto(ctx context.Context, photo models.Photo) error {
 		photo.PersonID,
 		photo.EventID,
 		photo.IsUserAvatar,
+		photo.IsTreeAvatar,
 		photo.IsPersonAvatar,
 		photo.FileName,
 		photo.MIMEType,
@@ -77,7 +78,7 @@ func (s *Storage) GetPhotoByID(ctx context.Context, photoID uuid.UUID) (models.P
 
 	photo, err := s.scanPhoto(
 		ctx,
-		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_person_avatar,
+		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_tree_avatar, is_person_avatar,
 			file_name, mime_type, size_bytes, object_key, created_at
 		 FROM photos
 		 WHERE id = $1`,
@@ -98,7 +99,7 @@ func (s *Storage) GetUserAvatar(ctx context.Context, ownerUserID int) (models.Ph
 
 	photo, err := s.scanPhoto(
 		ctx,
-		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_person_avatar,
+		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_tree_avatar, is_person_avatar,
 			file_name, mime_type, size_bytes, object_key, created_at
 		 FROM photos
 		 WHERE owner_user_id = $1 AND is_user_avatar = TRUE
@@ -115,12 +116,34 @@ func (s *Storage) GetUserAvatar(ctx context.Context, ownerUserID int) (models.Ph
 	return photo, nil
 }
 
+func (s *Storage) GetTreeAvatar(ctx context.Context, treeID uuid.UUID) (models.Photo, error) {
+	const op = "storage.postgres.GetTreeAvatar"
+
+	photo, err := s.scanPhoto(
+		ctx,
+		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_tree_avatar, is_person_avatar,
+			file_name, mime_type, size_bytes, object_key, created_at
+		 FROM photos
+		 WHERE tree_id = $1 AND is_tree_avatar = TRUE
+		 LIMIT 1`,
+		treeID,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Photo{}, fmt.Errorf("%s: %w", op, storage.ErrPhotoNotFound)
+		}
+		return models.Photo{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return photo, nil
+}
+
 func (s *Storage) GetPersonAvatar(ctx context.Context, personID uuid.UUID) (models.Photo, error) {
 	const op = "storage.postgres.GetPersonAvatar"
 
 	photo, err := s.scanPhoto(
 		ctx,
-		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_person_avatar,
+		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_tree_avatar, is_person_avatar,
 			file_name, mime_type, size_bytes, object_key, created_at
 		 FROM photos
 		 WHERE person_id = $1 AND is_person_avatar = TRUE
@@ -135,6 +158,23 @@ func (s *Storage) GetPersonAvatar(ctx context.Context, personID uuid.UUID) (mode
 	}
 
 	return photo, nil
+}
+
+func (s *Storage) UnsetTreeAvatar(ctx context.Context, treeID uuid.UUID) error {
+	const op = "storage.postgres.UnsetTreeAvatar"
+
+	_, err := s.pool.Exec(
+		ctx,
+		`UPDATE photos
+		 SET is_tree_avatar = FALSE
+		 WHERE tree_id = $1 AND is_tree_avatar = TRUE`,
+		treeID,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
 }
 
 func (s *Storage) UnsetPersonAvatar(ctx context.Context, personID uuid.UUID) error {
@@ -159,7 +199,7 @@ func (s *Storage) ListPersonPhotos(ctx context.Context, personID uuid.UUID) ([]m
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_person_avatar,
+		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_tree_avatar, is_person_avatar,
 			file_name, mime_type, size_bytes, object_key, created_at
 		 FROM photos
 		 WHERE person_id = $1
@@ -192,7 +232,7 @@ func (s *Storage) ListEventPhotos(ctx context.Context, eventID uuid.UUID) ([]mod
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_person_avatar,
+		`SELECT id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_tree_avatar, is_person_avatar,
 			file_name, mime_type, size_bytes, object_key, created_at
 		 FROM photos
 		 WHERE event_id = $1
@@ -227,7 +267,7 @@ func (s *Storage) DeletePhotoByID(ctx context.Context, photoID uuid.UUID) (model
 		ctx,
 		`DELETE FROM photos
 		 WHERE id = $1
-		 RETURNING id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_person_avatar,
+		 RETURNING id, owner_user_id, tree_id, person_id, event_id, is_user_avatar, is_tree_avatar, is_person_avatar,
 			file_name, mime_type, size_bytes, object_key, created_at`,
 		photoID,
 	)
@@ -263,6 +303,7 @@ func scanPhotoFromRow(row interface {
 		&personID,
 		&eventID,
 		&photo.IsUserAvatar,
+		&photo.IsTreeAvatar,
 		&photo.IsPersonAvatar,
 		&photo.FileName,
 		&photo.MIMEType,

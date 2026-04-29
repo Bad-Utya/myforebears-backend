@@ -9,6 +9,7 @@ import (
 	"time"
 
 	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
+	familytreeclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/familytree"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/lib/grpcerr"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/lib/response"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/middleware"
@@ -21,14 +22,16 @@ const (
 )
 
 type Handler struct {
-	log    *slog.Logger
-	client *authclient.Client
+	log              *slog.Logger
+	client           *authclient.Client
+	familyTreeClient *familytreeclient.Client
 }
 
-func New(log *slog.Logger, client *authclient.Client) *Handler {
+func New(log *slog.Logger, client *authclient.Client, familyTreeClient *familytreeclient.Client) *Handler {
 	return &Handler{
-		log:    log,
-		client: client,
+		log:              log,
+		client:           client,
+		familyTreeClient: familyTreeClient,
 	}
 }
 
@@ -71,9 +74,10 @@ type tokensResponse struct {
 }
 
 type userInfoResponse struct {
-	ID       int32  `json:"id"`
-	Nickname string `json:"nickname"`
-	Email    string `json:"email,omitempty"`
+	ID            int32  `json:"id"`
+	Nickname      string `json:"nickname"`
+	CreatedAtUnix int64  `json:"created_at_unix"`
+	Email         string `json:"email,omitempty"`
 }
 
 type authStatusData struct {
@@ -86,6 +90,14 @@ type authStatusSuccessResponse struct {
 
 type authTokensSuccessResponse struct {
 	Data tokensResponse `json:"data"`
+}
+
+type usersInfoData struct {
+	Users []userInfoResponse `json:"users"`
+}
+
+type usersInfoSuccessResponse struct {
+	Data usersInfoData `json:"data"`
 }
 
 // --- Handlers ---
@@ -464,9 +476,92 @@ func (h *Handler) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, map[string]any{"user": map[string]any{
-		"id":       resp.GetUser().GetId(),
-		"nickname": resp.GetUser().GetNickname(),
+		"id":              resp.GetUser().GetId(),
+		"nickname":        resp.GetUser().GetNickname(),
+		"created_at_unix": resp.GetUser().GetCreatedAtUnix(),
 	}})
+}
+
+// ListRandomPublicUsers returns random users who have at least one public tree.
+// @Summary List random public users
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param limit query int true "Users count"
+// @Success 200 {object} usersInfoSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/users/public/random [get]
+func (h *Handler) ListRandomPublicUsers(w http.ResponseWriter, r *http.Request) {
+	limitRaw := strings.TrimSpace(r.URL.Query().Get("limit"))
+	if limitRaw == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "limit is required")
+		return
+	}
+
+	limit, err := strconv.Atoi(limitRaw)
+	if err != nil || limit <= 0 {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid limit")
+		return
+	}
+
+	const maxAttempts = 5
+
+	uniqueUserIDs := make([]int, 0, limit)
+	seenUserIDs := make(map[int]struct{}, limit)
+
+	for attempt := 0; attempt < maxAttempts && len(uniqueUserIDs) < limit; attempt++ {
+		batchLimit := (limit - len(uniqueUserIDs)) * 4
+		if batchLimit < limit {
+			batchLimit = limit
+		}
+
+		treesResp, err := h.familyTreeClient.ListRandomPublicTrees(r.Context(), batchLimit)
+		if err != nil {
+			status, msg := grpcerr.HTTPStatus(err)
+			h.log.Error("list random public trees for users failed", slog.String("error", err.Error()))
+			response.Error(w, status, "familytree_error", msg)
+			return
+		}
+
+		trees := treesResp.GetTrees()
+		for _, tree := range trees {
+			userID := int(tree.GetCreatorId())
+			if _, exists := seenUserIDs[userID]; exists {
+				continue
+			}
+
+			seenUserIDs[userID] = struct{}{}
+			uniqueUserIDs = append(uniqueUserIDs, userID)
+
+			if len(uniqueUserIDs) == limit {
+				break
+			}
+		}
+
+		if len(trees) < batchLimit {
+			break
+		}
+	}
+
+	users := make([]userInfoResponse, 0, len(uniqueUserIDs))
+	for _, userID := range uniqueUserIDs {
+		userResp, err := h.client.GetUserInfo(r.Context(), userID)
+		if err != nil {
+			status, msg := grpcerr.HTTPStatus(err)
+			h.log.Error("get random public user info failed", slog.String("user_id", strconv.Itoa(userID)), slog.String("error", err.Error()))
+			response.Error(w, status, "auth_error", msg)
+			return
+		}
+
+		users = append(users, toUserInfoResponse(userResp.GetUser(), ""))
+	}
+
+	response.OK(w, map[string]any{"users": users})
 }
 
 // UpdateNickname updates nickname for authenticated user.
@@ -504,8 +599,9 @@ func (h *Handler) UpdateNickname(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, map[string]any{"user": map[string]any{
-		"id":       resp.GetUser().GetId(),
-		"nickname": resp.GetUser().GetNickname(),
+		"id":              resp.GetUser().GetId(),
+		"nickname":        resp.GetUser().GetNickname(),
+		"created_at_unix": resp.GetUser().GetCreatedAtUnix(),
 	}})
 }
 
@@ -542,10 +638,24 @@ func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, map[string]any{"user": map[string]any{
-		"id":       resp.GetUser().GetId(),
-		"nickname": resp.GetUser().GetNickname(),
-		"email":    email,
+		"id":              resp.GetUser().GetId(),
+		"nickname":        resp.GetUser().GetNickname(),
+		"created_at_unix": resp.GetUser().GetCreatedAtUnix(),
+		"email":           email,
 	}})
+}
+
+func toUserInfoResponse(user interface {
+	GetId() int32
+	GetNickname() string
+	GetCreatedAtUnix() int64
+}, email string) userInfoResponse {
+	return userInfoResponse{
+		ID:            user.GetId(),
+		Nickname:      user.GetNickname(),
+		CreatedAtUnix: user.GetCreatedAtUnix(),
+		Email:         email,
+	}
 }
 
 // setRefreshTokenCookie sets the refresh token as an HttpOnly cookie.

@@ -126,7 +126,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	tokenChecker := middleware.NewTokenChecker(redisClient, cfg.JWTSecret, log)
 	treeAccessChecker := middleware.NewTreeAccessChecker(log, tokenChecker, familyTreeGRPC)
 
-	authHandler := authhandler.New(log, authGRPC)
+	authHandler := authhandler.New(log, authGRPC, familyTreeGRPC)
 	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC, eventsGRPC, authGRPC)
 	eventsHandler := eventshandler.New(log, eventsGRPC)
 	photosHandler := photoshandler.New(log, photosGRPC)
@@ -159,6 +159,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 			r.Get("/me", authHandler.GetMe)
 		})
 
+		r.Get("/public/random", authHandler.ListRandomPublicUsers)
 		r.Get("/{user_id}", authHandler.GetUserInfo)
 	})
 
@@ -232,6 +233,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 
 		r.Group(func(r chi.Router) {
 			r.Use(treeAccessChecker.ReadAccessMiddleware)
+			r.Get("/{tree_id}/avatar", photosHandler.GetTreeAvatar)
 			r.Get("/{tree_id}/persons/{person_id}/avatar", photosHandler.GetPersonAvatar)
 			r.Get("/{tree_id}/persons/{person_id}", photosHandler.ListPersonPhotos)
 			r.Get("/{tree_id}/events/{event_id}", photosHandler.ListEventPhotos)
@@ -240,6 +242,8 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 
 		r.Group(func(r chi.Router) {
 			r.Use(treeAccessChecker.OwnerOnlyMiddleware)
+			r.Post("/{tree_id}/avatar", photosHandler.UploadTreeAvatar)
+			r.Put("/{tree_id}/avatar", photosHandler.UpdateTreeAvatar)
 			r.Post("/{tree_id}/persons/{person_id}/avatar", photosHandler.UploadPersonAvatar)
 			r.Post("/{tree_id}/persons/{person_id}", photosHandler.UploadPersonPhoto)
 			r.Post("/{tree_id}/events/{event_id}", photosHandler.UploadEventPhoto)

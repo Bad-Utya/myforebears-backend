@@ -21,6 +21,7 @@ service Auth {
 message User {
     int32 id = 1;
     string nickname = 2;
+    int64 created_at_unix = 3;
 }
 
 message SendCodeRequest {

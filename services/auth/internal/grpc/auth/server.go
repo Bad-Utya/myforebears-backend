@@ -185,8 +185,9 @@ func (s *ServerAPI) UpdateNickname(ctx context.Context, req *authpb.UpdateNickna
 
 func toProtoUser(user models.User) *authpb.User {
 	return &authpb.User{
-		Id:       int32(user.ID),
-		Nickname: user.Nickname,
+		Id:            int32(user.ID),
+		Nickname:      user.Nickname,
+		CreatedAtUnix: user.CreatedAt.Unix(),
 	}
 }
 

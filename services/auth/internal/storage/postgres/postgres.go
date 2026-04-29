@@ -59,9 +59,9 @@ func (s *Storage) GetUser(ctx context.Context, email string) (models.User, error
 
 	var user models.User
 	err := s.pool.QueryRow(ctx,
-		"SELECT id, email, pass_hash, nickname FROM users WHERE email = $1",
+		"SELECT id, email, pass_hash, nickname, created_at FROM users WHERE email = $1",
 		email,
-	).Scan(&user.ID, &user.Email, &user.PassHash, &user.Nickname)
+	).Scan(&user.ID, &user.Email, &user.PassHash, &user.Nickname, &user.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
@@ -95,9 +95,9 @@ func (s *Storage) GetUserByID(ctx context.Context, userID int) (models.User, err
 
 	var user models.User
 	err := s.pool.QueryRow(ctx,
-		"SELECT id, email, pass_hash, nickname FROM users WHERE id = $1",
+		"SELECT id, email, pass_hash, nickname, created_at FROM users WHERE id = $1",
 		userID,
-	).Scan(&user.ID, &user.Email, &user.PassHash, &user.Nickname)
+	).Scan(&user.ID, &user.Email, &user.PassHash, &user.Nickname, &user.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
