@@ -65,10 +65,26 @@ definitions:
     type: object
   auth.userInfoResponse:
     properties:
+      created_at_unix:
+        type: integer
+      email:
+        type: string
       id:
         type: integer
       nickname:
         type: string
+    type: object
+  auth.usersInfoData:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/auth.userInfoResponse'
+        type: array
+    type: object
+  auth.usersInfoSuccessResponse:
+    properties:
+      data:
+        $ref: '#/definitions/auth.usersInfoData'
     type: object
   events.createEventTypeRequest:
     properties:
@@ -412,8 +428,14 @@ definitions:
     properties:
       created_at_unix:
         type: integer
+      creator_created_at_unix:
+        type: integer
       creator_id:
         type: integer
+      creator_nickname:
+        type: string
+      description:
+        type: string
       id:
         type: string
       is_public_on_main_page:
@@ -422,6 +444,8 @@ definitions:
         type: boolean
       name:
         type: string
+      node_count:
+        type: integer
     type: object
   familytree.personSuccessData:
     properties:
@@ -500,6 +524,14 @@ definitions:
       data:
         $ref: '#/definitions/familytree.treesSuccessData'
     type: object
+  familytree.updatePersonGenderRequest:
+    properties:
+      gender:
+        enum:
+        - MALE
+        - FEMALE
+        type: string
+    type: object
   familytree.updatePersonNameRequest:
     properties:
       first_name:
@@ -511,6 +543,8 @@ definitions:
     type: object
   familytree.updateTreeSettingsRequest:
     properties:
+      description:
+        type: string
       is_public_on_main_page:
         type: boolean
       is_view_restricted:
@@ -2284,6 +2318,67 @@ paths:
       summary: Update person name
       tags:
       - familytree
+  /api/familytree/{tree_id}/persons/{person_id}/gender:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Person ID
+        in: path
+        name: person_id
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/familytree.updatePersonGenderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.personSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update person gender
+      tags:
+      - familytree
   /api/familytree/import/gedcom:
     post:
       consumes:
@@ -2513,6 +2608,162 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get photo by ID
+      tags:
+      - photos
+  /api/photos/{tree_id}/avatar:
+    get:
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get tree avatar
+      tags:
+      - photos
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Avatar file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/photos.photoSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Upload tree avatar
+      tags:
+      - photos
+    put:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Avatar file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/photos.photoSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update tree avatar
       tags:
       - photos
   /api/photos/{tree_id}/events/{event_id}:
@@ -3045,6 +3296,50 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Update my nickname
+      tags:
+      - users
+  /api/users/public/random:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Users count
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.usersInfoSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List random public users
       tags:
       - users
   /api/visualisations/{tree_id}:
