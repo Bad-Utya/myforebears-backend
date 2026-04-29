@@ -10,7 +10,7 @@ import (
 )
 
 func (h *Handler) CreateTree(ctx context.Context, req *familytreepb.CreateTreeRequest) (*familytreepb.CreateTreeResponse, error) {
-	tree, root, err := h.service.CreateTree(ctx, int(req.GetRequestUserId()))
+	tree, root, err := h.service.CreateTree(ctx, int(req.GetRequestUserId()), req.GetDescription())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -225,6 +225,15 @@ func toProtoTree(tree models.Tree) *familytreepb.Tree {
 		IsViewRestricted:   tree.IsViewRestricted,
 		IsPublicOnMainPage: tree.IsPublicOnMainPage,
 		Name:               tree.Name,
+		Description:        protoTreeDescription(tree.Description),
 		RootPersonId:       tree.RootPersonID.String(),
 	}
+}
+
+func protoTreeDescription(description *string) string {
+	if description == nil {
+		return ""
+	}
+
+	return *description
 }

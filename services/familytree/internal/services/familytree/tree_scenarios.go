@@ -23,7 +23,7 @@ const (
 	marriageEventTypeID string     = "2c2f5f12-5476-4ef4-89df-85d0a6f4a6bc"
 )
 
-func (s *Service) CreateTree(ctx context.Context, requestUserID int) (models.Tree, models.Person, error) {
+func (s *Service) CreateTree(ctx context.Context, requestUserID int, description string) (models.Tree, models.Person, error) {
 	const op = "service.familytree.CreateTree"
 	log := s.log.With(slog.String("op", op))
 
@@ -33,6 +33,8 @@ func (s *Service) CreateTree(ctx context.Context, requestUserID int) (models.Tre
 		return models.Tree{}, models.Person{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
 	}
 
+	descriptionPtr := normalizeTreeDescription(description)
+
 	tree := models.Tree{
 		ID:                 uuid.New(),
 		CreatorID:          requestUserID,
@@ -40,6 +42,7 @@ func (s *Service) CreateTree(ctx context.Context, requestUserID int) (models.Tre
 		IsViewRestricted:   true,
 		IsPublicOnMainPage: false,
 		Name:               "New tree",
+		Description:        descriptionPtr,
 	}
 
 	if err := s.personStorage.CreateTree(ctx, tree); err != nil {
@@ -254,11 +257,12 @@ func (s *Service) GetTreeContentWithinDepth(ctx context.Context, treeID string, 
 	return persons, relationships, nil
 }
 
-func (s *Service) UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool, name string) (models.Tree, error) {
+func (s *Service) UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool, name string, description string) (models.Tree, error) {
 	const op = "service.familytree.UpdateTreeSettings"
 	log := s.log.With(slog.String("op", op))
 
 	name = strings.TrimSpace(name)
+	descriptionPtr := normalizeTreeDescription(description)
 
 	log.Info(
 		"updating tree settings",
@@ -266,6 +270,7 @@ func (s *Service) UpdateTreeSettings(ctx context.Context, treeID string, isViewR
 		slog.Bool("is_view_restricted", isViewRestricted),
 		slog.Bool("is_public_on_main_page", isPublicOnMainPage),
 		slog.String("name", name),
+		slog.Any("description", descriptionPtr),
 	)
 
 	parsedTreeID, err := s.authorizeTree(ctx, treeID)
@@ -274,7 +279,7 @@ func (s *Service) UpdateTreeSettings(ctx context.Context, treeID string, isViewR
 		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	if err := s.personStorage.UpdateTreeSettings(ctx, parsedTreeID, isViewRestricted, isPublicOnMainPage, name); err != nil {
+	if err := s.personStorage.UpdateTreeSettings(ctx, parsedTreeID, isViewRestricted, isPublicOnMainPage, name, descriptionPtr); err != nil {
 		if errors.Is(err, storage.ErrTreeNotFound) {
 			log.Info("tree not found", slog.String("tree_id", parsedTreeID.String()))
 			return models.Tree{}, fmt.Errorf("%s: %w", op, ErrTreeNotFound)
@@ -294,6 +299,15 @@ func (s *Service) UpdateTreeSettings(ctx context.Context, treeID string, isViewR
 	}
 
 	return tree, nil
+}
+
+func normalizeTreeDescription(description string) *string {
+	description = strings.TrimSpace(description)
+	if description == "" {
+		return nil
+	}
+
+	return &description
 }
 
 func (s *Service) ListPersonsByTree(ctx context.Context, treeID string) ([]models.Person, error) {

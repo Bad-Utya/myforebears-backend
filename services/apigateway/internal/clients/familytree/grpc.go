@@ -39,10 +39,13 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) CreateTree(ctx context.Context, requestUserID int) (*familytreepb.CreateTreeResponse, error) {
+func (c *Client) CreateTree(ctx context.Context, requestUserID int, description *string) (*familytreepb.CreateTreeResponse, error) {
 	const op = "clients.familytree.CreateTree"
 
-	resp, err := c.api.CreateTree(ctx, &familytreepb.CreateTreeRequest{RequestUserId: int32(requestUserID)})
+	resp, err := c.api.CreateTree(ctx, &familytreepb.CreateTreeRequest{
+		RequestUserId: int32(requestUserID),
+		Description:   stringOrEmpty(description),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -168,7 +171,7 @@ func (c *Client) DeleteTreeAccessEmail(ctx context.Context, treeID string, email
 	return nil
 }
 
-func (c *Client) UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool, name string) (*familytreepb.UpdateTreeSettingsResponse, error) {
+func (c *Client) UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool, name string, description *string) (*familytreepb.UpdateTreeSettingsResponse, error) {
 	const op = "clients.familytree.UpdateTreeSettings"
 
 	resp, err := c.api.UpdateTreeSettings(ctx, &familytreepb.UpdateTreeSettingsRequest{
@@ -176,12 +179,21 @@ func (c *Client) UpdateTreeSettings(ctx context.Context, treeID string, isViewRe
 		IsViewRestricted:   isViewRestricted,
 		IsPublicOnMainPage: isPublicOnMainPage,
 		Name:               name,
+		Description:        stringOrEmpty(description),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return resp, nil
+}
+
+func stringOrEmpty(value *string) string {
+	if value == nil {
+		return ""
+	}
+
+	return *value
 }
 
 func (c *Client) ListPersonsByTree(ctx context.Context, treeID string) (*familytreepb.ListPersonsByTreeResponse, error) {

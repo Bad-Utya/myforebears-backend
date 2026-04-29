@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	PhotosService_UploadUserAvatar_FullMethodName   = "/photos.PhotosService/UploadUserAvatar"
 	PhotosService_GetUserAvatar_FullMethodName      = "/photos.PhotosService/GetUserAvatar"
+	PhotosService_UploadTreeAvatar_FullMethodName   = "/photos.PhotosService/UploadTreeAvatar"
+	PhotosService_GetTreeAvatar_FullMethodName      = "/photos.PhotosService/GetTreeAvatar"
 	PhotosService_UploadPersonAvatar_FullMethodName = "/photos.PhotosService/UploadPersonAvatar"
 	PhotosService_GetPersonAvatar_FullMethodName    = "/photos.PhotosService/GetPersonAvatar"
 	PhotosService_UploadPersonPhoto_FullMethodName  = "/photos.PhotosService/UploadPersonPhoto"
@@ -37,6 +39,8 @@ const (
 type PhotosServiceClient interface {
 	UploadUserAvatar(ctx context.Context, in *UploadUserAvatarRequest, opts ...grpc.CallOption) (*UploadUserAvatarResponse, error)
 	GetUserAvatar(ctx context.Context, in *GetUserAvatarRequest, opts ...grpc.CallOption) (*GetPhotoContentResponse, error)
+	UploadTreeAvatar(ctx context.Context, in *UploadTreeAvatarRequest, opts ...grpc.CallOption) (*UploadTreeAvatarResponse, error)
+	GetTreeAvatar(ctx context.Context, in *GetTreeAvatarRequest, opts ...grpc.CallOption) (*GetPhotoContentResponse, error)
 	UploadPersonAvatar(ctx context.Context, in *UploadPersonAvatarRequest, opts ...grpc.CallOption) (*UploadPersonAvatarResponse, error)
 	GetPersonAvatar(ctx context.Context, in *GetPersonAvatarRequest, opts ...grpc.CallOption) (*GetPhotoContentResponse, error)
 	UploadPersonPhoto(ctx context.Context, in *UploadPersonPhotoRequest, opts ...grpc.CallOption) (*UploadPersonPhotoResponse, error)
@@ -69,6 +73,26 @@ func (c *photosServiceClient) GetUserAvatar(ctx context.Context, in *GetUserAvat
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetPhotoContentResponse)
 	err := c.cc.Invoke(ctx, PhotosService_GetUserAvatar_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *photosServiceClient) UploadTreeAvatar(ctx context.Context, in *UploadTreeAvatarRequest, opts ...grpc.CallOption) (*UploadTreeAvatarResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UploadTreeAvatarResponse)
+	err := c.cc.Invoke(ctx, PhotosService_UploadTreeAvatar_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *photosServiceClient) GetTreeAvatar(ctx context.Context, in *GetTreeAvatarRequest, opts ...grpc.CallOption) (*GetPhotoContentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetPhotoContentResponse)
+	err := c.cc.Invoke(ctx, PhotosService_GetTreeAvatar_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +185,8 @@ func (c *photosServiceClient) DeletePhotoByID(ctx context.Context, in *DeletePho
 type PhotosServiceServer interface {
 	UploadUserAvatar(context.Context, *UploadUserAvatarRequest) (*UploadUserAvatarResponse, error)
 	GetUserAvatar(context.Context, *GetUserAvatarRequest) (*GetPhotoContentResponse, error)
+	UploadTreeAvatar(context.Context, *UploadTreeAvatarRequest) (*UploadTreeAvatarResponse, error)
+	GetTreeAvatar(context.Context, *GetTreeAvatarRequest) (*GetPhotoContentResponse, error)
 	UploadPersonAvatar(context.Context, *UploadPersonAvatarRequest) (*UploadPersonAvatarResponse, error)
 	GetPersonAvatar(context.Context, *GetPersonAvatarRequest) (*GetPhotoContentResponse, error)
 	UploadPersonPhoto(context.Context, *UploadPersonPhotoRequest) (*UploadPersonPhotoResponse, error)
@@ -184,6 +210,12 @@ func (UnimplementedPhotosServiceServer) UploadUserAvatar(context.Context, *Uploa
 }
 func (UnimplementedPhotosServiceServer) GetUserAvatar(context.Context, *GetUserAvatarRequest) (*GetPhotoContentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserAvatar not implemented")
+}
+func (UnimplementedPhotosServiceServer) UploadTreeAvatar(context.Context, *UploadTreeAvatarRequest) (*UploadTreeAvatarResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadTreeAvatar not implemented")
+}
+func (UnimplementedPhotosServiceServer) GetTreeAvatar(context.Context, *GetTreeAvatarRequest) (*GetPhotoContentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTreeAvatar not implemented")
 }
 func (UnimplementedPhotosServiceServer) UploadPersonAvatar(context.Context, *UploadPersonAvatarRequest) (*UploadPersonAvatarResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadPersonAvatar not implemented")
@@ -262,6 +294,42 @@ func _PhotosService_GetUserAvatar_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PhotosServiceServer).GetUserAvatar(ctx, req.(*GetUserAvatarRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PhotosService_UploadTreeAvatar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadTreeAvatarRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PhotosServiceServer).UploadTreeAvatar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PhotosService_UploadTreeAvatar_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PhotosServiceServer).UploadTreeAvatar(ctx, req.(*UploadTreeAvatarRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PhotosService_GetTreeAvatar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTreeAvatarRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PhotosServiceServer).GetTreeAvatar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PhotosService_GetTreeAvatar_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PhotosServiceServer).GetTreeAvatar(ctx, req.(*GetTreeAvatarRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -424,6 +492,14 @@ var PhotosService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserAvatar",
 			Handler:    _PhotosService_GetUserAvatar_Handler,
+		},
+		{
+			MethodName: "UploadTreeAvatar",
+			Handler:    _PhotosService_UploadTreeAvatar_Handler,
+		},
+		{
+			MethodName: "GetTreeAvatar",
+			Handler:    _PhotosService_GetTreeAvatar_Handler,
 		},
 		{
 			MethodName: "UploadPersonAvatar",

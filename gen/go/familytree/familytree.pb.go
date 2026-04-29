@@ -287,6 +287,7 @@ type Tree struct {
 	IsPublicOnMainPage bool                   `protobuf:"varint,5,opt,name=is_public_on_main_page,json=isPublicOnMainPage,proto3" json:"is_public_on_main_page,omitempty"`
 	Name               string                 `protobuf:"bytes,6,opt,name=name,proto3" json:"name,omitempty"`
 	RootPersonId       string                 `protobuf:"bytes,7,opt,name=root_person_id,json=rootPersonId,proto3" json:"root_person_id,omitempty"`
+	Description        string                 `protobuf:"bytes,8,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -366,6 +367,13 @@ func (x *Tree) GetName() string {
 func (x *Tree) GetRootPersonId() string {
 	if x != nil {
 		return x.RootPersonId
+	}
+	return ""
+}
+
+func (x *Tree) GetDescription() string {
+	if x != nil {
+		return x.Description
 	}
 	return ""
 }
@@ -585,6 +593,7 @@ func (x *Relative) GetDirection() RelationDirection {
 type CreateTreeRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	RequestUserId int32                  `protobuf:"varint,1,opt,name=request_user_id,json=requestUserId,proto3" json:"request_user_id,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -624,6 +633,13 @@ func (x *CreateTreeRequest) GetRequestUserId() int32 {
 		return x.RequestUserId
 	}
 	return 0
+}
+
+func (x *CreateTreeRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
 }
 
 type CreateTreeResponse struct {
@@ -3368,6 +3384,7 @@ type UpdateTreeSettingsRequest struct {
 	IsViewRestricted   bool                   `protobuf:"varint,2,opt,name=is_view_restricted,json=isViewRestricted,proto3" json:"is_view_restricted,omitempty"`
 	IsPublicOnMainPage bool                   `protobuf:"varint,3,opt,name=is_public_on_main_page,json=isPublicOnMainPage,proto3" json:"is_public_on_main_page,omitempty"`
 	Name               string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
+	Description        string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -3426,6 +3443,13 @@ func (x *UpdateTreeSettingsRequest) GetIsPublicOnMainPage() bool {
 func (x *UpdateTreeSettingsRequest) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *UpdateTreeSettingsRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
 	}
 	return ""
 }
@@ -3693,299 +3717,655 @@ func (x *ImportTreeGEDCOMResponse) GetErrors() []string {
 var File_familytree_familytree_proto protoreflect.FileDescriptor
 
 const file_familytree_familytree_proto_rawDesc = "" +
-	"\n" +
-	"\x1bfamilytree/familytree.proto\x12\n" +
-	"familytree\"\xf9\x01\n" +
-	"\x04Tree\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
-	"\n" +
-	"creator_id\x18\x02 \x01(\x05R\tcreatorId\x12&\n" +
-	"\x0fcreated_at_unix\x18\x03 \x01(\x03R\rcreatedAtUnix\x12,\n" +
-	"\x12is_view_restricted\x18\x04 \x01(\bR\x10isViewRestricted\x122\n" +
-	"\x16is_public_on_main_page\x18\x05 \x01(\bR\x12isPublicOnMainPage\x12\x12\n" +
-	"\x04name\x18\x06 \x01(\tR\x04name\x12$\n" +
-	"\x0eroot_person_id\x18\a \x01(\tR\frootPersonId\"\xe1\x01\n" +
-	"\x06Person\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
-	"\atree_id\x18\x02 \x01(\tR\x06treeId\x12\x1d\n" +
-	"\n" +
-	"first_name\x18\x03 \x01(\tR\tfirstName\x12\x1b\n" +
-	"\tlast_name\x18\x04 \x01(\tR\blastName\x12\x1e\n" +
-	"\n" +
-	"patronymic\x18\x05 \x01(\tR\n" +
-	"patronymic\x12*\n" +
-	"\x06gender\x18\x06 \x01(\x0e2\x12.familytree.GenderR\x06gender\x12&\n" +
-	"\x0favatar_photo_id\x18\a \x01(\tR\ravatarPhotoId\"\x88\x01\n" +
-	"\fRelationship\x12$\n" +
-	"\x0eperson_id_from\x18\x01 \x01(\tR\fpersonIdFrom\x12 \n" +
-	"\fperson_id_to\x18\x02 \x01(\tR\n" +
-	"personIdTo\x120\n" +
-	"\x04type\x18\x03 \x01(\x0e2\x1c.familytree.RelationshipTypeR\x04type\"\xbe\x01\n" +
-	"\bRelative\x12*\n" +
-	"\x06person\x18\x01 \x01(\v2\x12.familytree.PersonR\x06person\x12I\n" +
-	"\x11relationship_type\x18\x02 \x01(\x0e2\x1c.familytree.RelationshipTypeR\x10relationshipType\x12;\n" +
-	"\tdirection\x18\x03 \x01(\x0e2\x1d.familytree.RelationDirectionR\tdirection\";\n" +
-	"\x11CreateTreeRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\"o\n" +
-	"\x12CreateTreeResponse\x12$\n" +
-	"\x04tree\x18\x01 \x01(\v2\x10.familytree.TreeR\x04tree\x123\n" +
-	"\vroot_person\x18\x02 \x01(\v2\x12.familytree.PersonR\n" +
-	"rootPerson\"C\n" +
-	"\x19ListTreesByCreatorRequest\x12&\n" +
-	"\x0frequest_user_id\x18\x01 \x01(\x05R\rrequestUserId\"D\n" +
-	"\x1aListTreesByCreatorResponse\x12&\n" +
-	"\x05trees\x18\x01 \x03(\v2\x10.familytree.TreeR\x05trees\"@\n" +
-	"\x1fListPublicTreesByCreatorRequest\x12\x1d\n" +
-	"\n" +
-	"creator_id\x18\x01 \x01(\x05R\tcreatorId\"J\n" +
-	" ListPublicTreesByCreatorResponse\x12&\n" +
-	"\x05trees\x18\x01 \x03(\v2\x10.familytree.TreeR\x05trees\"4\n" +
-	"\x1cListRandomPublicTreesRequest\x12\x14\n" +
-	"\x05limit\x18\x01 \x01(\x05R\x05limit\"G\n" +
-	"\x1dListRandomPublicTreesResponse\x12&\n" +
-	"\x05trees\x18\x01 \x03(\v2\x10.familytree.TreeR\x05trees\"\xce\x01\n" +
-	"\x10AddParentRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x19\n" +
-	"\bchild_id\x18\x02 \x01(\tR\achildId\x12*\n" +
-	"\x04role\x18\x03 \x01(\x0e2\x16.familytree.ParentRoleR\x04role\x12\x1d\n" +
-	"\n" +
-	"first_name\x18\x04 \x01(\tR\tfirstName\x12\x1b\n" +
-	"\tlast_name\x18\x05 \x01(\tR\blastName\x12\x1e\n" +
-	"\n" +
-	"patronymic\x18\x06 \x01(\tR\n" +
-	"patronymic\"\x90\x01\n" +
-	"\x11AddParentResponse\x12*\n" +
-	"\x06parent\x18\x01 \x01(\v2\x12.familytree.PersonR\x06parent\x12O\n" +
-	"\x1aauto_created_second_parent\x18\x02 \x01(\v2\x12.familytree.PersonR\x17autoCreatedSecondParent\"\xf0\x01\n" +
-	"\x0fAddChildRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1d\n" +
-	"\n" +
-	"parent1_id\x18\x02 \x01(\tR\tparent1Id\x12\x1d\n" +
-	"\n" +
-	"parent2_id\x18\x03 \x01(\tR\tparent2Id\x12\x1d\n" +
-	"\n" +
-	"first_name\x18\x04 \x01(\tR\tfirstName\x12\x1b\n" +
-	"\tlast_name\x18\x05 \x01(\tR\blastName\x12\x1e\n" +
-	"\n" +
-	"patronymic\x18\x06 \x01(\tR\n" +
-	"patronymic\x12*\n" +
-	"\x06gender\x18\a \x01(\x0e2\x12.familytree.GenderR\x06gender\"\x80\x01\n" +
-	"\x10AddChildResponse\x12(\n" +
-	"\x05child\x18\x01 \x01(\v2\x12.familytree.PersonR\x05child\x12B\n" +
-	"\x13auto_created_parent\x18\x02 \x01(\v2\x12.familytree.PersonR\x11autoCreatedParent\"\xa5\x01\n" +
-	"\x11AddPartnerRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
-	"\tperson_id\x18\x02 \x01(\tR\bpersonId\x12\x1d\n" +
-	"\n" +
-	"first_name\x18\x03 \x01(\tR\tfirstName\x12\x1b\n" +
-	"\tlast_name\x18\x04 \x01(\tR\blastName\x12\x1e\n" +
-	"\n" +
-	"patronymic\x18\x05 \x01(\tR\n" +
-	"patronymic\"B\n" +
-	"\x12AddPartnerResponse\x12,\n" +
-	"\apartner\x18\x01 \x01(\v2\x12.familytree.PersonR\apartner\"\xab\x01\n" +
-	"\x17UpdatePersonNameRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
-	"\tperson_id\x18\x02 \x01(\tR\bpersonId\x12\x1d\n" +
-	"\n" +
-	"first_name\x18\x03 \x01(\tR\tfirstName\x12\x1b\n" +
-	"\tlast_name\x18\x04 \x01(\tR\blastName\x12\x1e\n" +
-	"\n" +
-	"patronymic\x18\x05 \x01(\tR\n" +
-	"patronymic\"F\n" +
-	"\x18UpdatePersonNameResponse\x12*\n" +
-	"\x06person\x18\x01 \x01(\v2\x12.familytree.PersonR\x06person\"e\n" +
-	"\x1eUpdatePersonAvatarPhotoRequest\x12\x1b\n" +
-	"\tperson_id\x18\x01 \x01(\tR\bpersonId\x12&\n" +
-	"\x0favatar_photo_id\x18\x02 \x01(\tR\ravatarPhotoId\"M\n" +
-	"\x1fUpdatePersonAvatarPhotoResponse\x12*\n" +
-	"\x06person\x18\x01 \x01(\v2\x12.familytree.PersonR\x06person\"Q\n" +
-	"\x19DeletePersonInTreeRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
-	"\tperson_id\x18\x02 \x01(\tR\bpersonId\"\x1c\n" +
-	"\x1aDeletePersonInTreeResponse\"\xb6\x01\n" +
-	"\x13CreatePersonRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1d\n" +
-	"\n" +
-	"first_name\x18\x02 \x01(\tR\tfirstName\x12\x1b\n" +
-	"\tlast_name\x18\x03 \x01(\tR\blastName\x12\x1e\n" +
-	"\n" +
-	"patronymic\x18\x04 \x01(\tR\n" +
-	"patronymic\x12*\n" +
-	"\x06gender\x18\x05 \x01(\x0e2\x12.familytree.GenderR\x06gender\"B\n" +
-	"\x14CreatePersonResponse\x12*\n" +
-	"\x06person\x18\x01 \x01(\v2\x12.familytree.PersonR\x06person\"H\n" +
-	"\x10GetPersonRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
-	"\tperson_id\x18\x02 \x01(\tR\bpersonId\"?\n" +
-	"\x11GetPersonResponse\x12*\n" +
-	"\x06person\x18\x01 \x01(\v2\x12.familytree.PersonR\x06person\"3\n" +
-	"\x18ListPersonsByTreeRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\"I\n" +
-	"\x19ListPersonsByTreeResponse\x12,\n" +
-	"\apersons\x18\x01 \x03(\v2\x12.familytree.PersonR\apersons\"\xd3\x01\n" +
-	"\x13UpdatePersonRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
-	"\tperson_id\x18\x02 \x01(\tR\bpersonId\x12\x1d\n" +
-	"\n" +
-	"first_name\x18\x03 \x01(\tR\tfirstName\x12\x1b\n" +
-	"\tlast_name\x18\x04 \x01(\tR\blastName\x12\x1e\n" +
-	"\n" +
-	"patronymic\x18\x05 \x01(\tR\n" +
-	"patronymic\x12*\n" +
-	"\x06gender\x18\x06 \x01(\x0e2\x12.familytree.GenderR\x06gender\"B\n" +
-	"\x14UpdatePersonResponse\x12*\n" +
-	"\x06person\x18\x01 \x01(\v2\x12.familytree.PersonR\x06person\"K\n" +
-	"\x13DeletePersonRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
-	"\tperson_id\x18\x02 \x01(\tR\bpersonId\"\x16\n" +
-	"\x14DeletePersonResponse\"\xab\x01\n" +
-	"\x16AddRelationshipRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12$\n" +
-	"\x0eperson_id_from\x18\x02 \x01(\tR\fpersonIdFrom\x12 \n" +
-	"\fperson_id_to\x18\x03 \x01(\tR\n" +
-	"personIdTo\x120\n" +
-	"\x04type\x18\x04 \x01(\x0e2\x1c.familytree.RelationshipTypeR\x04type\"\x19\n" +
-	"\x17AddRelationshipResponse\"\xae\x01\n" +
-	"\x19RemoveRelationshipRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12$\n" +
-	"\x0eperson_id_from\x18\x02 \x01(\tR\fpersonIdFrom\x12 \n" +
-	"\fperson_id_to\x18\x03 \x01(\tR\n" +
-	"personIdTo\x120\n" +
-	"\x04type\x18\x04 \x01(\x0e2\x1c.familytree.RelationshipTypeR\x04type\"\x1c\n" +
-	"\x1aRemoveRelationshipResponse\"K\n" +
-	"\x13GetRelativesRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1b\n" +
-	"\tperson_id\x18\x02 \x01(\tR\bpersonId\"J\n" +
-	"\x14GetRelativesResponse\x122\n" +
-	"\trelatives\x18\x01 \x03(\v2\x14.familytree.RelativeR\trelatives\")\n" +
-	"\x0eGetTreeRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\"7\n" +
-	"\x0fGetTreeResponse\x12$\n" +
-	"\x04tree\x18\x01 \x01(\v2\x10.familytree.TreeR\x04tree\"0\n" +
-	"\x15GetTreeContentRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\"~\n" +
-	" GetTreeContentWithinDepthRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12$\n" +
-	"\x0eroot_person_id\x18\x02 \x01(\tR\frootPersonId\x12\x1b\n" +
-	"\tmax_depth\x18\x03 \x01(\x05R\bmaxDepth\"\x9f\x01\n" +
-	"\x16GetTreeContentResponse\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12,\n" +
-	"\apersons\x18\x02 \x03(\v2\x12.familytree.PersonR\apersons\x12>\n" +
-	"\rrelationships\x18\x03 \x03(\v2\x18.familytree.RelationshipR\rrelationships\"3\n" +
-	"\x18GetTreeAccessInfoRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\"A\n" +
-	"\x19GetTreeAccessInfoResponse\x12$\n" +
-	"\x04tree\x18\x01 \x01(\v2\x10.familytree.TreeR\x04tree\"P\n" +
-	"\x1fIsTreeAccessEmailAllowedRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\"<\n" +
-	" IsTreeAccessEmailAllowedResponse\x12\x18\n" +
-	"\aallowed\x18\x01 \x01(\bR\aallowed\"J\n" +
-	"\x19AddTreeAccessEmailRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\"\x1c\n" +
-	"\x1aAddTreeAccessEmailResponse\"6\n" +
-	"\x1bListTreeAccessEmailsRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\"6\n" +
-	"\x1cListTreeAccessEmailsResponse\x12\x16\n" +
-	"\x06emails\x18\x01 \x03(\tR\x06emails\"M\n" +
-	"\x1cDeleteTreeAccessEmailRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\"\x1f\n" +
-	"\x1dDeleteTreeAccessEmailResponse\"V\n" +
-	"\x1cValidatePersonsInTreeRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1d\n" +
-	"\n" +
-	"person_ids\x18\x02 \x03(\tR\tpersonIds\"\x1f\n" +
-	"\x1dValidatePersonsInTreeResponse\"\xbe\x01\n" +
-	"&UpdatePartnerRelationshipStatusRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x1d\n" +
-	"\n" +
-	"person_id1\x18\x02 \x01(\tR\tpersonId1\x12\x1d\n" +
-	"\n" +
-	"person_id2\x18\x03 \x01(\tR\tpersonId2\x12=\n" +
-	"\x06status\x18\x04 \x01(\x0e2%.familytree.PartnerRelationshipStatusR\x06status\")\n" +
-	"'UpdatePartnerRelationshipStatusResponse\"\xaa\x01\n" +
-	"\x19UpdateTreeSettingsRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12,\n" +
-	"\x12is_view_restricted\x18\x02 \x01(\bR\x10isViewRestricted\x122\n" +
-	"\x16is_public_on_main_page\x18\x03 \x01(\bR\x12isPublicOnMainPage\x12\x12\n" +
-	"\x04name\x18\x04 \x01(\tR\x04name\"B\n" +
-	"\x1aUpdateTreeSettingsResponse\x12$\n" +
-	"\x04tree\x18\x01 \x01(\v2\x10.familytree.TreeR\x04tree\"Z\n" +
-	"\x17ExportTreeGEDCOMRequest\x12\x17\n" +
-	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12&\n" +
-	"\x0frequest_user_id\x18\x02 \x01(\x05R\rrequestUserId\"A\n" +
-	"\x18ExportTreeGEDCOMResponse\x12%\n" +
-	"\x0egedcom_content\x18\x01 \x01(\tR\rgedcomContent\"h\n" +
-	"\x17ImportTreeGEDCOMRequest\x12%\n" +
-	"\x0egedcom_content\x18\x01 \x01(\tR\rgedcomContent\x12&\n" +
-	"\x0frequest_user_id\x18\x02 \x01(\x05R\rrequestUserId\"\xba\x01\n" +
-	"\x18ImportTreeGEDCOMResponse\x12$\n" +
-	"\x04tree\x18\x01 \x01(\v2\x10.familytree.TreeR\x04tree\x12)\n" +
-	"\x10persons_imported\x18\x02 \x01(\x05R\x0fpersonsImported\x125\n" +
-	"\x16relationships_imported\x18\x03 \x01(\x05R\x15relationshipsImported\x12\x16\n" +
-	"\x06errors\x18\x04 \x03(\tR\x06errors*D\n" +
-	"\x06Gender\x12\x16\n" +
-	"\x12GENDER_UNSPECIFIED\x10\x00\x12\x0f\n" +
-	"\vGENDER_MALE\x10\x01\x12\x11\n" +
-	"\rGENDER_FEMALE\x10\x02*\xd7\x01\n" +
-	"\x10RelationshipType\x12!\n" +
-	"\x1dRELATIONSHIP_TYPE_UNSPECIFIED\x10\x00\x12\x1d\n" +
-	"\x19RELATIONSHIP_PARENT_CHILD\x10\x01\x12\x18\n" +
-	"\x14RELATIONSHIP_PARTNER\x10\x02\x12\"\n" +
-	"\x1eRELATIONSHIP_PARTNER_UNMARRIED\x10\x03\x12 \n" +
-	"\x1cRELATIONSHIP_PARTNER_MARRIED\x10\x04\x12!\n" +
-	"\x1dRELATIONSHIP_PARTNER_DIVORCED\x10\x05*\xc6\x01\n" +
-	"\x19PartnerRelationshipStatus\x12+\n" +
-	"'PARTNER_RELATIONSHIP_STATUS_UNSPECIFIED\x10\x00\x12)\n" +
-	"%PARTNER_RELATIONSHIP_STATUS_UNMARRIED\x10\x01\x12'\n" +
-	"#PARTNER_RELATIONSHIP_STATUS_MARRIED\x10\x02\x12(\n" +
-	"$PARTNER_RELATIONSHIP_STATUS_DIVORCED\x10\x03*y\n" +
-	"\x11RelationDirection\x12\"\n" +
-	"\x1eRELATION_DIRECTION_UNSPECIFIED\x10\x00\x12\x1f\n" +
-	"\x1bRELATION_DIRECTION_OUTGOING\x10\x01\x12\x1f\n" +
-	"\x1bRELATION_DIRECTION_INCOMING\x10\x02*Y\n" +
-	"\n" +
-	"ParentRole\x12\x1b\n" +
-	"\x17PARENT_ROLE_UNSPECIFIED\x10\x00\x12\x16\n" +
-	"\x12PARENT_ROLE_FATHER\x10\x01\x12\x16\n" +
-	"\x12PARENT_ROLE_MOTHER\x10\x022\xba\x17\n" +
-	"\x11FamilyTreeService\x12K\n" +
-	"\n" +
-	"CreateTree\x12\x1d.familytree.CreateTreeRequest\x1a\x1e.familytree.CreateTreeResponse\x12c\n" +
-	"\x12ListTreesByCreator\x12%.familytree.ListTreesByCreatorRequest\x1a&.familytree.ListTreesByCreatorResponse\x12u\n" +
-	"\x18ListPublicTreesByCreator\x12+.familytree.ListPublicTreesByCreatorRequest\x1a,.familytree.ListPublicTreesByCreatorResponse\x12l\n" +
-	"\x15ListRandomPublicTrees\x12(.familytree.ListRandomPublicTreesRequest\x1a).familytree.ListRandomPublicTreesResponse\x12H\n" +
-	"\tAddParent\x12\x1c.familytree.AddParentRequest\x1a\x1d.familytree.AddParentResponse\x12E\n" +
-	"\bAddChild\x12\x1b.familytree.AddChildRequest\x1a\x1c.familytree.AddChildResponse\x12K\n" +
-	"\n" +
-	"AddPartner\x12\x1d.familytree.AddPartnerRequest\x1a\x1e.familytree.AddPartnerResponse\x12]\n" +
-	"\x10UpdatePersonName\x12#.familytree.UpdatePersonNameRequest\x1a$.familytree.UpdatePersonNameResponse\x12r\n" +
-	"\x17UpdatePersonAvatarPhoto\x12*.familytree.UpdatePersonAvatarPhotoRequest\x1a+.familytree.UpdatePersonAvatarPhotoResponse\x12c\n" +
-	"\x12DeletePersonInTree\x12%.familytree.DeletePersonInTreeRequest\x1a&.familytree.DeletePersonInTreeResponse\x12Q\n" +
-	"\fCreatePerson\x12\x1f.familytree.CreatePersonRequest\x1a .familytree.CreatePersonResponse\x12H\n" +
-	"\tGetPerson\x12\x1c.familytree.GetPersonRequest\x1a\x1d.familytree.GetPersonResponse\x12`\n" +
-	"\x11ListPersonsByTree\x12$.familytree.ListPersonsByTreeRequest\x1a%.familytree.ListPersonsByTreeResponse\x12Q\n" +
-	"\fUpdatePerson\x12\x1f.familytree.UpdatePersonRequest\x1a .familytree.UpdatePersonResponse\x12Q\n" +
-	"\fDeletePerson\x12\x1f.familytree.DeletePersonRequest\x1a .familytree.DeletePersonResponse\x12Z\n" +
-	"\x0fAddRelationship\x12\".familytree.AddRelationshipRequest\x1a#.familytree.AddRelationshipResponse\x12c\n" +
-	"\x12RemoveRelationship\x12%.familytree.RemoveRelationshipRequest\x1a&.familytree.RemoveRelationshipResponse\x12Q\n" +
-	"\fGetRelatives\x12\x1f.familytree.GetRelativesRequest\x1a .familytree.GetRelativesResponse\x12B\n" +
-	"\aGetTree\x12\x1a.familytree.GetTreeRequest\x1a\x1b.familytree.GetTreeResponse\x12W\n" +
-	"\x0eGetTreeContent\x12!.familytree.GetTreeContentRequest\x1a\".familytree.GetTreeContentResponse\x12m\n" +
-	"\x19GetTreeContentWithinDepth\x12,.familytree.GetTreeContentWithinDepthRequest\x1a\".familytree.GetTreeContentResponse\x12`\n" +
-	"\x11GetTreeAccessInfo\x12$.familytree.GetTreeAccessInfoRequest\x1a%.familytree.GetTreeAccessInfoResponse\x12u\n" +
-	"\x18IsTreeAccessEmailAllowed\x12+.familytree.IsTreeAccessEmailAllowedRequest\x1a,.familytree.IsTreeAccessEmailAllowedResponse\x12c\n" +
-	"\x12AddTreeAccessEmail\x12%.familytree.AddTreeAccessEmailRequest\x1a&.familytree.AddTreeAccessEmailResponse\x12i\n" +
-	"\x14ListTreeAccessEmails\x12'.familytree.ListTreeAccessEmailsRequest\x1a(.familytree.ListTreeAccessEmailsResponse\x12l\n" +
-	"\x15DeleteTreeAccessEmail\x12(.familytree.DeleteTreeAccessEmailRequest\x1a).familytree.DeleteTreeAccessEmailResponse\x12l\n" +
-	"\x15ValidatePersonsInTree\x12(.familytree.ValidatePersonsInTreeRequest\x1a).familytree.ValidatePersonsInTreeResponse\x12\x8a\x01\n" +
-	"\x1fUpdatePartnerRelationshipStatus\x122.familytree.UpdatePartnerRelationshipStatusRequest\x1a3.familytree.UpdatePartnerRelationshipStatusResponse\x12c\n" +
-	"\x12UpdateTreeSettings\x12%.familytree.UpdateTreeSettingsRequest\x1a&.familytree.UpdateTreeSettingsResponse\x12]\n" +
-	"\x10ExportTreeGEDCOM\x12#.familytree.ExportTreeGEDCOMRequest\x1a$.familytree.ExportTreeGEDCOMResponse\x12]\n" +
-	"\x10ImportTreeGEDCOM\x12#.familytree.ImportTreeGEDCOMRequest\x1a$.familytree.ImportTreeGEDCOMResponseBHZFgithub.com/Bad-Utya/myforebears-backend/gen/go/familytree;familytreepbb\x06proto3"
+	"\n\x1bfamilytree/fam" +
+	"ilytree.proto\x12\nf" +
+	"amilytree\"\x9b\x02\n\x04Tr" +
+	"ee\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02" +
+	"id\x12\x1d\n\ncreator_id" +
+	"\x18\x02 \x01(\x05R\tcreatorI" +
+	"d\x12&\n\x0fcreated_at_" +
+	"unix\x18\x03 \x01(\x03R\rcrea" +
+	"tedAtUnix\x12,\n\x12is_" +
+	"view_restricted\x18" +
+	"\x04 \x01(\bR\x10isViewRes" +
+	"tricted\x122\n\x16is_pu" +
+	"blic_on_main_pag" +
+	"e\x18\x05 \x01(\bR\x12isPubli" +
+	"cOnMainPage\x12\x12\n\x04n" +
+	"ame\x18\x06 \x01(\tR\x04name\x12" +
+	"$\n\x0eroot_person_i" +
+	"d\x18\a \x01(\tR\frootPer" +
+	"sonId\x12 \n\vdescrip" +
+	"tion\x18\b \x01(\tR\vdesc" +
+	"ription\"\xe1\x01\n\x06Pers" +
+	"on\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02" +
+	"id\x12\x17\n\atree_id\x18\x02 " +
+	"\x01(\tR\x06treeId\x12\x1d\n\nf" +
+	"irst_name\x18\x03 \x01(\tR" +
+	"\tfirstName\x12\x1b\n\tla" +
+	"st_name\x18\x04 \x01(\tR\bl" +
+	"astName\x12\x1e\n\npatro" +
+	"nymic\x18\x05 \x01(\tR\npat" +
+	"ronymic\x12*\n\x06gende" +
+	"r\x18\x06 \x01(\x0e2\x12.family" +
+	"tree.GenderR\x06gen" +
+	"der\x12&\n\x0favatar_ph" +
+	"oto_id\x18\a \x01(\tR\rav" +
+	"atarPhotoId\"\x88\x01\n\f" +
+	"Relationship\x12$\n\x0e" +
+	"person_id_from\x18\x01" +
+	" \x01(\tR\fpersonIdFr" +
+	"om\x12 \n\fperson_id_" +
+	"to\x18\x02 \x01(\tR\nperson" +
+	"IdTo\x120\n\x04type\x18\x03 \x01" +
+	"(\x0e2\x1c.familytree." +
+	"RelationshipType" +
+	"R\x04type\"\xbe\x01\n\bRelat" +
+	"ive\x12*\n\x06person\x18\x01 " +
+	"\x01(\v2\x12.familytree" +
+	".PersonR\x06person\x12" +
+	"I\n\x11relationship_" +
+	"type\x18\x02 \x01(\x0e2\x1c.fam" +
+	"ilytree.Relation" +
+	"shipTypeR\x10relati" +
+	"onshipType\x12;\n\tdi" +
+	"rection\x18\x03 \x01(\x0e2\x1d." +
+	"familytree.Relat" +
+	"ionDirectionR\tdi" +
+	"rection\"]\n\x11Creat" +
+	"eTreeRequest\x12&\n\x0f" +
+	"request_user_id\x18" +
+	"\x01 \x01(\x05R\rrequestUs" +
+	"erId\x12 \n\vdescript" +
+	"ion\x18\x02 \x01(\tR\vdescr" +
+	"iption\"o\n\x12Create" +
+	"TreeResponse\x12$\n\x04" +
+	"tree\x18\x01 \x01(\v2\x10.fam" +
+	"ilytree.TreeR\x04tr" +
+	"ee\x123\n\vroot_perso" +
+	"n\x18\x02 \x01(\v2\x12.family" +
+	"tree.PersonR\nroo" +
+	"tPerson\"C\n\x19ListT" +
+	"reesByCreatorReq" +
+	"uest\x12&\n\x0frequest_" +
+	"user_id\x18\x01 \x01(\x05R\rr" +
+	"equestUserId\"D\n\x1a" +
+	"ListTreesByCreat" +
+	"orResponse\x12&\n\x05tr" +
+	"ees\x18\x01 \x03(\v2\x10.fami" +
+	"lytree.TreeR\x05tre" +
+	"es\"@\n\x1fListPublic" +
+	"TreesByCreatorRe" +
+	"quest\x12\x1d\n\ncreator" +
+	"_id\x18\x01 \x01(\x05R\tcreat" +
+	"orId\"J\n ListPubl" +
+	"icTreesByCreator" +
+	"Response\x12&\n\x05tree" +
+	"s\x18\x01 \x03(\v2\x10.family" +
+	"tree.TreeR\x05trees" +
+	"\"4\n\x1cListRandomPu" +
+	"blicTreesRequest" +
+	"\x12\x14\n\x05limit\x18\x01 \x01(\x05R" +
+	"\x05limit\"G\n\x1dListRa" +
+	"ndomPublicTreesR" +
+	"esponse\x12&\n\x05trees" +
+	"\x18\x01 \x03(\v2\x10.familyt" +
+	"ree.TreeR\x05trees\"" +
+	"\xce\x01\n\x10AddParentReq" +
+	"uest\x12\x17\n\atree_id\x18" +
+	"\x01 \x01(\tR\x06treeId\x12\x19\n" +
+	"\bchild_id\x18\x02 \x01(\tR" +
+	"\achildId\x12*\n\x04role" +
+	"\x18\x03 \x01(\x0e2\x16.familyt" +
+	"ree.ParentRoleR\x04" +
+	"role\x12\x1d\n\nfirst_na" +
+	"me\x18\x04 \x01(\tR\tfirstN" +
+	"ame\x12\x1b\n\tlast_name" +
+	"\x18\x05 \x01(\tR\blastName" +
+	"\x12\x1e\n\npatronymic\x18\x06" +
+	" \x01(\tR\npatronymic" +
+	"\"\x90\x01\n\x11AddParentRe" +
+	"sponse\x12*\n\x06parent" +
+	"\x18\x01 \x01(\v2\x12.familyt" +
+	"ree.PersonR\x06pare" +
+	"nt\x12O\n\x1aauto_creat" +
+	"ed_second_parent" +
+	"\x18\x02 \x01(\v2\x12.familyt" +
+	"ree.PersonR\x17auto" +
+	"CreatedSecondPar" +
+	"ent\"\xf0\x01\n\x0fAddChild" +
+	"Request\x12\x17\n\atree_" +
+	"id\x18\x01 \x01(\tR\x06treeId" +
+	"\x12\x1d\n\nparent1_id\x18\x02" +
+	" \x01(\tR\tparent1Id\x12" +
+	"\x1d\n\nparent2_id\x18\x03 " +
+	"\x01(\tR\tparent2Id\x12\x1d" +
+	"\n\nfirst_name\x18\x04 \x01" +
+	"(\tR\tfirstName\x12\x1b\n" +
+	"\tlast_name\x18\x05 \x01(\t" +
+	"R\blastName\x12\x1e\n\npa" +
+	"tronymic\x18\x06 \x01(\tR\n" +
+	"patronymic\x12*\n\x06ge" +
+	"nder\x18\a \x01(\x0e2\x12.fam" +
+	"ilytree.GenderR\x06" +
+	"gender\"\x80\x01\n\x10AddCh" +
+	"ildResponse\x12(\n\x05c" +
+	"hild\x18\x01 \x01(\v2\x12.fam" +
+	"ilytree.PersonR\x05" +
+	"child\x12B\n\x13auto_cr" +
+	"eated_parent\x18\x02 \x01" +
+	"(\v2\x12.familytree." +
+	"PersonR\x11autoCrea" +
+	"tedParent\"\xa5\x01\n\x11Ad" +
+	"dPartnerRequest\x12" +
+	"\x17\n\atree_id\x18\x01 \x01(\t" +
+	"R\x06treeId\x12\x1b\n\tpers" +
+	"on_id\x18\x02 \x01(\tR\bper" +
+	"sonId\x12\x1d\n\nfirst_n" +
+	"ame\x18\x03 \x01(\tR\tfirst" +
+	"Name\x12\x1b\n\tlast_nam" +
+	"e\x18\x04 \x01(\tR\blastNam" +
+	"e\x12\x1e\n\npatronymic\x18" +
+	"\x05 \x01(\tR\npatronymi" +
+	"c\"B\n\x12AddPartnerR" +
+	"esponse\x12,\n\apartn" +
+	"er\x18\x01 \x01(\v2\x12.famil" +
+	"ytree.PersonR\apa" +
+	"rtner\"\xab\x01\n\x17Update" +
+	"PersonNameReques" +
+	"t\x12\x17\n\atree_id\x18\x01 \x01" +
+	"(\tR\x06treeId\x12\x1b\n\tpe" +
+	"rson_id\x18\x02 \x01(\tR\bp" +
+	"ersonId\x12\x1d\n\nfirst" +
+	"_name\x18\x03 \x01(\tR\tfir" +
+	"stName\x12\x1b\n\tlast_n" +
+	"ame\x18\x04 \x01(\tR\blastN" +
+	"ame\x12\x1e\n\npatronymi" +
+	"c\x18\x05 \x01(\tR\npatrony" +
+	"mic\"F\n\x18UpdatePer" +
+	"sonNameResponse\x12" +
+	"*\n\x06person\x18\x01 \x01(\v2" +
+	"\x12.familytree.Per" +
+	"sonR\x06person\"e\n\x1eU" +
+	"pdatePersonAvata" +
+	"rPhotoRequest\x12\x1b\n" +
+	"\tperson_id\x18\x01 \x01(\t" +
+	"R\bpersonId\x12&\n\x0fav" +
+	"atar_photo_id\x18\x02 " +
+	"\x01(\tR\ravatarPhoto" +
+	"Id\"M\n\x1fUpdatePers" +
+	"onAvatarPhotoRes" +
+	"ponse\x12*\n\x06person\x18" +
+	"\x01 \x01(\v2\x12.familytr" +
+	"ee.PersonR\x06perso" +
+	"n\"Q\n\x19DeletePerso" +
+	"nInTreeRequest\x12\x17" +
+	"\n\atree_id\x18\x01 \x01(\tR" +
+	"\x06treeId\x12\x1b\n\tperso" +
+	"n_id\x18\x02 \x01(\tR\bpers" +
+	"onId\"\x1c\n\x1aDeletePe" +
+	"rsonInTreeRespon" +
+	"se\"\xb6\x01\n\x13CreatePer" +
+	"sonRequest\x12\x17\n\atr" +
+	"ee_id\x18\x01 \x01(\tR\x06tre" +
+	"eId\x12\x1d\n\nfirst_nam" +
+	"e\x18\x02 \x01(\tR\tfirstNa" +
+	"me\x12\x1b\n\tlast_name\x18" +
+	"\x03 \x01(\tR\blastName\x12" +
+	"\x1e\n\npatronymic\x18\x04 " +
+	"\x01(\tR\npatronymic\x12" +
+	"*\n\x06gender\x18\x05 \x01(\x0e2" +
+	"\x12.familytree.Gen" +
+	"derR\x06gender\"B\n\x14C" +
+	"reatePersonRespo" +
+	"nse\x12*\n\x06person\x18\x01 " +
+	"\x01(\v2\x12.familytree" +
+	".PersonR\x06person\"" +
+	"H\n\x10GetPersonRequ" +
+	"est\x12\x17\n\atree_id\x18\x01" +
+	" \x01(\tR\x06treeId\x12\x1b\n\t" +
+	"person_id\x18\x02 \x01(\tR" +
+	"\bpersonId\"?\n\x11Get" +
+	"PersonResponse\x12*" +
+	"\n\x06person\x18\x01 \x01(\v2\x12" +
+	".familytree.Pers" +
+	"onR\x06person\"3\n\x18Li" +
+	"stPersonsByTreeR" +
+	"equest\x12\x17\n\atree_i" +
+	"d\x18\x01 \x01(\tR\x06treeId\"" +
+	"I\n\x19ListPersonsBy" +
+	"TreeResponse\x12,\n\a" +
+	"persons\x18\x01 \x03(\v2\x12." +
+	"familytree.Perso" +
+	"nR\apersons\"\xd3\x01\n\x13U" +
+	"pdatePersonReque" +
+	"st\x12\x17\n\atree_id\x18\x01 " +
+	"\x01(\tR\x06treeId\x12\x1b\n\tp" +
+	"erson_id\x18\x02 \x01(\tR\b" +
+	"personId\x12\x1d\n\nfirs" +
+	"t_name\x18\x03 \x01(\tR\tfi" +
+	"rstName\x12\x1b\n\tlast_" +
+	"name\x18\x04 \x01(\tR\blast" +
+	"Name\x12\x1e\n\npatronym" +
+	"ic\x18\x05 \x01(\tR\npatron" +
+	"ymic\x12*\n\x06gender\x18\x06" +
+	" \x01(\x0e2\x12.familytre" +
+	"e.GenderR\x06gender" +
+	"\"B\n\x14UpdatePerson" +
+	"Response\x12*\n\x06pers" +
+	"on\x18\x01 \x01(\v2\x12.famil" +
+	"ytree.PersonR\x06pe" +
+	"rson\"K\n\x13DeletePe" +
+	"rsonRequest\x12\x17\n\at" +
+	"ree_id\x18\x01 \x01(\tR\x06tr" +
+	"eeId\x12\x1b\n\tperson_i" +
+	"d\x18\x02 \x01(\tR\bpersonI" +
+	"d\"\x16\n\x14DeletePerso" +
+	"nResponse\"\xab\x01\n\x16Ad" +
+	"dRelationshipReq" +
+	"uest\x12\x17\n\atree_id\x18" +
+	"\x01 \x01(\tR\x06treeId\x12$\n" +
+	"\x0eperson_id_from\x18" +
+	"\x02 \x01(\tR\fpersonIdF" +
+	"rom\x12 \n\fperson_id" +
+	"_to\x18\x03 \x01(\tR\nperso" +
+	"nIdTo\x120\n\x04type\x18\x04 " +
+	"\x01(\x0e2\x1c.familytree" +
+	".RelationshipTyp" +
+	"eR\x04type\"\x19\n\x17AddRe" +
+	"lationshipRespon" +
+	"se\"\xae\x01\n\x19RemoveRel" +
+	"ationshipRequest" +
+	"\x12\x17\n\atree_id\x18\x01 \x01(" +
+	"\tR\x06treeId\x12$\n\x0eper" +
+	"son_id_from\x18\x02 \x01(" +
+	"\tR\fpersonIdFrom\x12" +
+	" \n\fperson_id_to\x18" +
+	"\x03 \x01(\tR\npersonIdT" +
+	"o\x120\n\x04type\x18\x04 \x01(\x0e2" +
+	"\x1c.familytree.Rel" +
+	"ationshipTypeR\x04t" +
+	"ype\"\x1c\n\x1aRemoveRel" +
+	"ationshipRespons" +
+	"e\"K\n\x13GetRelative" +
+	"sRequest\x12\x17\n\atree" +
+	"_id\x18\x01 \x01(\tR\x06treeI" +
+	"d\x12\x1b\n\tperson_id\x18\x02" +
+	" \x01(\tR\bpersonId\"J" +
+	"\n\x14GetRelativesRe" +
+	"sponse\x122\n\trelati" +
+	"ves\x18\x01 \x03(\v2\x14.fami" +
+	"lytree.RelativeR" +
+	"\trelatives\")\n\x0eGe" +
+	"tTreeRequest\x12\x17\n\a" +
+	"tree_id\x18\x01 \x01(\tR\x06t" +
+	"reeId\"7\n\x0fGetTree" +
+	"Response\x12$\n\x04tree" +
+	"\x18\x01 \x01(\v2\x10.familyt" +
+	"ree.TreeR\x04tree\"0" +
+	"\n\x15GetTreeContent" +
+	"Request\x12\x17\n\atree_" +
+	"id\x18\x01 \x01(\tR\x06treeId" +
+	"\"~\n GetTreeConte" +
+	"ntWithinDepthReq" +
+	"uest\x12\x17\n\atree_id\x18" +
+	"\x01 \x01(\tR\x06treeId\x12$\n" +
+	"\x0eroot_person_id\x18" +
+	"\x02 \x01(\tR\frootPerso" +
+	"nId\x12\x1b\n\tmax_depth" +
+	"\x18\x03 \x01(\x05R\bmaxDepth" +
+	"\"\x9f\x01\n\x16GetTreeCont" +
+	"entResponse\x12\x17\n\at" +
+	"ree_id\x18\x01 \x01(\tR\x06tr" +
+	"eeId\x12,\n\apersons\x18" +
+	"\x02 \x03(\v2\x12.familytr" +
+	"ee.PersonR\aperso" +
+	"ns\x12>\n\rrelationsh" +
+	"ips\x18\x03 \x03(\v2\x18.fami" +
+	"lytree.Relations" +
+	"hipR\rrelationshi" +
+	"ps\"3\n\x18GetTreeAcc" +
+	"essInfoRequest\x12\x17" +
+	"\n\atree_id\x18\x01 \x01(\tR" +
+	"\x06treeId\"A\n\x19GetTr" +
+	"eeAccessInfoResp" +
+	"onse\x12$\n\x04tree\x18\x01 \x01" +
+	"(\v2\x10.familytree." +
+	"TreeR\x04tree\"P\n\x1fIs" +
+	"TreeAccessEmailA" +
+	"llowedRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06" +
+	"treeId\x12\x14\n\x05email\x18" +
+	"\x02 \x01(\tR\x05email\"<\n " +
+	"IsTreeAccessEmai" +
+	"lAllowedResponse" +
+	"\x12\x18\n\aallowed\x18\x01 \x01(" +
+	"\bR\aallowed\"J\n\x19Ad" +
+	"dTreeAccessEmail" +
+	"Request\x12\x17\n\atree_" +
+	"id\x18\x01 \x01(\tR\x06treeId" +
+	"\x12\x14\n\x05email\x18\x02 \x01(\tR" +
+	"\x05email\"\x1c\n\x1aAddTre" +
+	"eAccessEmailResp" +
+	"onse\"6\n\x1bListTree" +
+	"AccessEmailsRequ" +
+	"est\x12\x17\n\atree_id\x18\x01" +
+	" \x01(\tR\x06treeId\"6\n\x1c" +
+	"ListTreeAccessEm" +
+	"ailsResponse\x12\x16\n\x06" +
+	"emails\x18\x01 \x03(\tR\x06em" +
+	"ails\"M\n\x1cDeleteTr" +
+	"eeAccessEmailReq" +
+	"uest\x12\x17\n\atree_id\x18" +
+	"\x01 \x01(\tR\x06treeId\x12\x14\n" +
+	"\x05email\x18\x02 \x01(\tR\x05em" +
+	"ail\"\x1f\n\x1dDeleteTre" +
+	"eAccessEmailResp" +
+	"onse\"V\n\x1cValidate" +
+	"PersonsInTreeReq" +
+	"uest\x12\x17\n\atree_id\x18" +
+	"\x01 \x01(\tR\x06treeId\x12\x1d\n" +
+	"\nperson_ids\x18\x02 \x03(" +
+	"\tR\tpersonIds\"\x1f\n\x1d" +
+	"ValidatePersonsI" +
+	"nTreeResponse\"\xbe\x01" +
+	"\n&UpdatePartnerR" +
+	"elationshipStatu" +
+	"sRequest\x12\x17\n\atree" +
+	"_id\x18\x01 \x01(\tR\x06treeI" +
+	"d\x12\x1d\n\nperson_id1\x18" +
+	"\x02 \x01(\tR\tpersonId1" +
+	"\x12\x1d\n\nperson_id2\x18\x03" +
+	" \x01(\tR\tpersonId2\x12" +
+	"=\n\x06status\x18\x04 \x01(\x0e2" +
+	"%.familytree.Par" +
+	"tnerRelationship" +
+	"StatusR\x06status\")" +
+	"\n'UpdatePartnerR" +
+	"elationshipStatu" +
+	"sResponse\"\xcc\x01\n\x19Up" +
+	"dateTreeSettings" +
+	"Request\x12\x17\n\atree_" +
+	"id\x18\x01 \x01(\tR\x06treeId" +
+	"\x12,\n\x12is_view_rest" +
+	"ricted\x18\x02 \x01(\bR\x10is" +
+	"ViewRestricted\x122" +
+	"\n\x16is_public_on_m" +
+	"ain_page\x18\x03 \x01(\bR\x12" +
+	"isPublicOnMainPa" +
+	"ge\x12\x12\n\x04name\x18\x04 \x01(\t" +
+	"R\x04name\x12 \n\vdescri" +
+	"ption\x18\x05 \x01(\tR\vdes" +
+	"cription\"B\n\x1aUpda" +
+	"teTreeSettingsRe" +
+	"sponse\x12$\n\x04tree\x18\x01" +
+	" \x01(\v2\x10.familytre" +
+	"e.TreeR\x04tree\"Z\n\x17" +
+	"ExportTreeGEDCOM" +
+	"Request\x12\x17\n\atree_" +
+	"id\x18\x01 \x01(\tR\x06treeId" +
+	"\x12&\n\x0frequest_user" +
+	"_id\x18\x02 \x01(\x05R\rreque" +
+	"stUserId\"A\n\x18Expo" +
+	"rtTreeGEDCOMResp" +
+	"onse\x12%\n\x0egedcom_c" +
+	"ontent\x18\x01 \x01(\tR\rge" +
+	"dcomContent\"h\n\x17I" +
+	"mportTreeGEDCOMR" +
+	"equest\x12%\n\x0egedcom" +
+	"_content\x18\x01 \x01(\tR\r" +
+	"gedcomContent\x12&\n" +
+	"\x0frequest_user_id" +
+	"\x18\x02 \x01(\x05R\rrequestU" +
+	"serId\"\xba\x01\n\x18Import" +
+	"TreeGEDCOMRespon" +
+	"se\x12$\n\x04tree\x18\x01 \x01(\v" +
+	"2\x10.familytree.Tr" +
+	"eeR\x04tree\x12)\n\x10pers" +
+	"ons_imported\x18\x02 \x01" +
+	"(\x05R\x0fpersonsImpor" +
+	"ted\x125\n\x16relations" +
+	"hips_imported\x18\x03 " +
+	"\x01(\x05R\x15relationshi" +
+	"psImported\x12\x16\n\x06er" +
+	"rors\x18\x04 \x03(\tR\x06erro" +
+	"rs*D\n\x06Gender\x12\x16\n\x12" +
+	"GENDER_UNSPECIFI" +
+	"ED\x10\x00\x12\x0f\n\vGENDER_M" +
+	"ALE\x10\x01\x12\x11\n\rGENDER_" +
+	"FEMALE\x10\x02*\xd7\x01\n\x10Rel" +
+	"ationshipType\x12!\n" +
+	"\x1dRELATIONSHIP_TY" +
+	"PE_UNSPECIFIED\x10\x00" +
+	"\x12\x1d\n\x19RELATIONSHIP" +
+	"_PARENT_CHILD\x10\x01\x12" +
+	"\x18\n\x14RELATIONSHIP_" +
+	"PARTNER\x10\x02\x12\"\n\x1eREL" +
+	"ATIONSHIP_PARTNE" +
+	"R_UNMARRIED\x10\x03\x12 \n" +
+	"\x1cRELATIONSHIP_PA" +
+	"RTNER_MARRIED\x10\x04\x12" +
+	"!\n\x1dRELATIONSHIP_" +
+	"PARTNER_DIVORCED" +
+	"\x10\x05*\xc6\x01\n\x19PartnerRe" +
+	"lationshipStatus" +
+	"\x12+\n'PARTNER_RELA" +
+	"TIONSHIP_STATUS_" +
+	"UNSPECIFIED\x10\x00\x12)\n" +
+	"%PARTNER_RELATIO" +
+	"NSHIP_STATUS_UNM" +
+	"ARRIED\x10\x01\x12'\n#PART" +
+	"NER_RELATIONSHIP" +
+	"_STATUS_MARRIED\x10" +
+	"\x02\x12(\n$PARTNER_REL" +
+	"ATIONSHIP_STATUS" +
+	"_DIVORCED\x10\x03*y\n\x11R" +
+	"elationDirection" +
+	"\x12\"\n\x1eRELATION_DIR" +
+	"ECTION_UNSPECIFI" +
+	"ED\x10\x00\x12\x1f\n\x1bRELATION" +
+	"_DIRECTION_OUTGO" +
+	"ING\x10\x01\x12\x1f\n\x1bRELATIO" +
+	"N_DIRECTION_INCO" +
+	"MING\x10\x02*Y\n\nParent" +
+	"Role\x12\x1b\n\x17PARENT_R" +
+	"OLE_UNSPECIFIED\x10" +
+	"\x00\x12\x16\n\x12PARENT_ROLE" +
+	"_FATHER\x10\x01\x12\x16\n\x12PAR" +
+	"ENT_ROLE_MOTHER\x10" +
+	"\x022\xba\x17\n\x11FamilyTree" +
+	"Service\x12K\n\nCreat" +
+	"eTree\x12\x1d.familytr" +
+	"ee.CreateTreeReq" +
+	"uest\x1a\x1e.familytre" +
+	"e.CreateTreeResp" +
+	"onse\x12c\n\x12ListTree" +
+	"sByCreator\x12%.fam" +
+	"ilytree.ListTree" +
+	"sByCreatorReques" +
+	"t\x1a&.familytree.L" +
+	"istTreesByCreato" +
+	"rResponse\x12u\n\x18Lis" +
+	"tPublicTreesByCr" +
+	"eator\x12+.familytr" +
+	"ee.ListPublicTre" +
+	"esByCreatorReque" +
+	"st\x1a,.familytree." +
+	"ListPublicTreesB" +
+	"yCreatorResponse" +
+	"\x12l\n\x15ListRandomPu" +
+	"blicTrees\x12(.fami" +
+	"lytree.ListRando" +
+	"mPublicTreesRequ" +
+	"est\x1a).familytree" +
+	".ListRandomPubli" +
+	"cTreesResponse\x12H" +
+	"\n\tAddParent\x12\x1c.fa" +
+	"milytree.AddPare" +
+	"ntRequest\x1a\x1d.fami" +
+	"lytree.AddParent" +
+	"Response\x12E\n\bAddC" +
+	"hild\x12\x1b.familytre" +
+	"e.AddChildReques" +
+	"t\x1a\x1c.familytree.A" +
+	"ddChildResponse\x12" +
+	"K\n\nAddPartner\x12\x1d." +
+	"familytree.AddPa" +
+	"rtnerRequest\x1a\x1e.f" +
+	"amilytree.AddPar" +
+	"tnerResponse\x12]\n\x10" +
+	"UpdatePersonName" +
+	"\x12#.familytree.Up" +
+	"datePersonNameRe" +
+	"quest\x1a$.familytr" +
+	"ee.UpdatePersonN" +
+	"ameResponse\x12r\n\x17U" +
+	"pdatePersonAvata" +
+	"rPhoto\x12*.familyt" +
+	"ree.UpdatePerson" +
+	"AvatarPhotoReque" +
+	"st\x1a+.familytree." +
+	"UpdatePersonAvat" +
+	"arPhotoResponse\x12" +
+	"c\n\x12DeletePersonI" +
+	"nTree\x12%.familytr" +
+	"ee.DeletePersonI" +
+	"nTreeRequest\x1a&.f" +
+	"amilytree.Delete" +
+	"PersonInTreeResp" +
+	"onse\x12Q\n\fCreatePe" +
+	"rson\x12\x1f.familytre" +
+	"e.CreatePersonRe" +
+	"quest\x1a .familytr" +
+	"ee.CreatePersonR" +
+	"esponse\x12H\n\tGetPe" +
+	"rson\x12\x1c.familytre" +
+	"e.GetPersonReque" +
+	"st\x1a\x1d.familytree." +
+	"GetPersonRespons" +
+	"e\x12`\n\x11ListPersons" +
+	"ByTree\x12$.familyt" +
+	"ree.ListPersonsB" +
+	"yTreeRequest\x1a%.f" +
+	"amilytree.ListPe" +
+	"rsonsByTreeRespo" +
+	"nse\x12Q\n\fUpdatePer" +
+	"son\x12\x1f.familytree" +
+	".UpdatePersonReq" +
+	"uest\x1a .familytre" +
+	"e.UpdatePersonRe" +
+	"sponse\x12Q\n\fDelete" +
+	"Person\x12\x1f.familyt" +
+	"ree.DeletePerson" +
+	"Request\x1a .family" +
+	"tree.DeletePerso" +
+	"nResponse\x12Z\n\x0fAdd" +
+	"Relationship\x12\".f" +
+	"amilytree.AddRel" +
+	"ationshipRequest" +
+	"\x1a#.familytree.Ad" +
+	"dRelationshipRes" +
+	"ponse\x12c\n\x12RemoveR" +
+	"elationship\x12%.fa" +
+	"milytree.RemoveR" +
+	"elationshipReque" +
+	"st\x1a&.familytree." +
+	"RemoveRelationsh" +
+	"ipResponse\x12Q\n\fGe" +
+	"tRelatives\x12\x1f.fam" +
+	"ilytree.GetRelat" +
+	"ivesRequest\x1a .fa" +
+	"milytree.GetRela" +
+	"tivesResponse\x12B\n" +
+	"\aGetTree\x12\x1a.famil" +
+	"ytree.GetTreeReq" +
+	"uest\x1a\x1b.familytre" +
+	"e.GetTreeRespons" +
+	"e\x12W\n\x0eGetTreeCont" +
+	"ent\x12!.familytree" +
+	".GetTreeContentR" +
+	"equest\x1a\".familyt" +
+	"ree.GetTreeConte" +
+	"ntResponse\x12m\n\x19Ge" +
+	"tTreeContentWith" +
+	"inDepth\x12,.family" +
+	"tree.GetTreeCont" +
+	"entWithinDepthRe" +
+	"quest\x1a\".familytr" +
+	"ee.GetTreeConten" +
+	"tResponse\x12`\n\x11Get" +
+	"TreeAccessInfo\x12$" +
+	".familytree.GetT" +
+	"reeAccessInfoReq" +
+	"uest\x1a%.familytre" +
+	"e.GetTreeAccessI" +
+	"nfoResponse\x12u\n\x18I" +
+	"sTreeAccessEmail" +
+	"Allowed\x12+.family" +
+	"tree.IsTreeAcces" +
+	"sEmailAllowedReq" +
+	"uest\x1a,.familytre" +
+	"e.IsTreeAccessEm" +
+	"ailAllowedRespon" +
+	"se\x12c\n\x12AddTreeAcc" +
+	"essEmail\x12%.famil" +
+	"ytree.AddTreeAcc" +
+	"essEmailRequest\x1a" +
+	"&.familytree.Add" +
+	"TreeAccessEmailR" +
+	"esponse\x12i\n\x14ListT" +
+	"reeAccessEmails\x12" +
+	"'.familytree.Lis" +
+	"tTreeAccessEmail" +
+	"sRequest\x1a(.famil" +
+	"ytree.ListTreeAc" +
+	"cessEmailsRespon" +
+	"se\x12l\n\x15DeleteTree" +
+	"AccessEmail\x12(.fa" +
+	"milytree.DeleteT" +
+	"reeAccessEmailRe" +
+	"quest\x1a).familytr" +
+	"ee.DeleteTreeAcc" +
+	"essEmailResponse" +
+	"\x12l\n\x15ValidatePers" +
+	"onsInTree\x12(.fami" +
+	"lytree.ValidateP" +
+	"ersonsInTreeRequ" +
+	"est\x1a).familytree" +
+	".ValidatePersons" +
+	"InTreeResponse\x12\x8a" +
+	"\x01\n\x1fUpdatePartner" +
+	"RelationshipStat" +
+	"us\x122.familytree." +
+	"UpdatePartnerRel" +
+	"ationshipStatusR" +
+	"equest\x1a3.familyt" +
+	"ree.UpdatePartne" +
+	"rRelationshipSta" +
+	"tusResponse\x12c\n\x12U" +
+	"pdateTreeSetting" +
+	"s\x12%.familytree.U" +
+	"pdateTreeSetting" +
+	"sRequest\x1a&.famil" +
+	"ytree.UpdateTree" +
+	"SettingsResponse" +
+	"\x12]\n\x10ExportTreeGE" +
+	"DCOM\x12#.familytre" +
+	"e.ExportTreeGEDC" +
+	"OMRequest\x1a$.fami" +
+	"lytree.ExportTre" +
+	"eGEDCOMResponse\x12" +
+	"]\n\x10ImportTreeGED" +
+	"COM\x12#.familytree" +
+	".ImportTreeGEDCO" +
+	"MRequest\x1a$.famil" +
+	"ytree.ImportTree" +
+	"GEDCOMResponseBH" +
+	"ZFgithub.com/Bad" +
+	"-Utya/myforebear" +
+	"s-backend/gen/go" +
+	"/familytree;fami" +
+	"lytreepbb\x06proto3"
 
 var (
 	file_familytree_familytree_proto_rawDescOnce sync.Once

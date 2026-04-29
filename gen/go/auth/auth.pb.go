@@ -25,6 +25,7 @@ type User struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int32                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	Nickname      string                 `protobuf:"bytes,2,opt,name=nickname,proto3" json:"nickname,omitempty"`
+	CreatedAtUnix int64                  `protobuf:"varint,3,opt,name=created_at_unix,json=createdAtUnix,proto3" json:"created_at_unix,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -71,6 +72,13 @@ func (x *User) GetNickname() string {
 		return x.Nickname
 	}
 	return ""
+}
+
+func (x *User) GetCreatedAtUnix() int64 {
+	if x != nil {
+		return x.CreatedAtUnix
+	}
+	return 0
 }
 
 type SendCodeRequest struct {
@@ -1069,10 +1077,11 @@ var File_auth_auth_proto protoreflect.FileDescriptor
 
 const file_auth_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x0fauth/auth.proto\x12\x04auth\"2\n" +
+	"\x0fauth/auth.proto\x12\x04auth\"Z\n" +
 	"\x04User\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x05R\x02id\x12\x1a\n" +
-	"\bnickname\x18\x02 \x01(\tR\bnickname\"C\n" +
+	"\bnickname\x18\x02 \x01(\tR\bnickname\x12&\n" +
+	"\x0fcreated_at_unix\x18\x03 \x01(\x03R\rcreatedAtUnix\"C\n" +
 	"\x0fSendCodeRequest\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x1a\n" +
 	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x12\n" +

@@ -138,6 +138,86 @@ func (h *Handler) GetUserAvatar(w http.ResponseWriter, r *http.Request) {
 	h.writeBinaryPhoto(w, resp)
 }
 
+// UploadTreeAvatar uploads or replaces the avatar for a tree.
+// @Summary Upload tree avatar
+// @Tags photos
+// @Accept mpfd
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param file formData file true "Avatar file"
+// @Success 200 {object} photoSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/avatar [post]
+func (h *Handler) UploadTreeAvatar(w http.ResponseWriter, r *http.Request) {
+	_, fileName, mimeType, content, ok := h.extractUploadPayload(w, r)
+	if !ok {
+		return
+	}
+
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
+		return
+	}
+
+	resp, err := h.client.UploadTreeAvatar(r.Context(), &photospb.UploadTreeAvatarRequest{
+		TreeId:   treeID,
+		FileName: fileName,
+		MimeType: mimeType,
+		Content:  content,
+	})
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("upload tree avatar failed", slog.String("error", err.Error()))
+		response.Error(w, status, "photos_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"photo": toPhotoJSON(resp.GetPhoto())})
+}
+
+// GetTreeAvatar returns tree avatar binary.
+// @Summary Get tree avatar
+// @Tags photos
+// @Produce octet-stream
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Success 200 {file} binary
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/avatar [get]
+func (h *Handler) GetTreeAvatar(w http.ResponseWriter, r *http.Request) {
+	treeID := chi.URLParam(r, "tree_id")
+	if strings.TrimSpace(treeID) == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "tree_id is required")
+		return
+	}
+
+	resp, err := h.client.GetTreeAvatar(r.Context(), &photospb.GetTreeAvatarRequest{
+		TreeId: treeID,
+	})
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("get tree avatar failed", slog.String("error", err.Error()))
+		response.Error(w, status, "photos_error", msg)
+		return
+	}
+
+	h.writeBinaryPhoto(w, resp)
+}
+
 // UploadPersonAvatar uploads avatar for a person in tree.
 // @Summary Upload person avatar
 // @Tags photos
@@ -184,6 +264,27 @@ func (h *Handler) UploadPersonAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.OK(w, map[string]any{"photo": toPhotoJSON(resp.GetPhoto())})
+}
+
+// UpdateTreeAvatar updates or replaces the avatar for a tree.
+// @Summary Update tree avatar
+// @Tags photos
+// @Accept mpfd
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Tree ID"
+// @Param file formData file true "Avatar file"
+// @Success 200 {object} photoSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 429 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/photos/{tree_id}/avatar [put]
+func (h *Handler) UpdateTreeAvatar(w http.ResponseWriter, r *http.Request) {
+	h.UploadTreeAvatar(w, r)
 }
 
 // GetPersonAvatar returns person avatar binary.

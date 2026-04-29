@@ -13,5 +13,6 @@ type Tree struct {
 	IsViewRestricted   bool
 	IsPublicOnMainPage bool
 	Name               string
+	Description        *string
 	RootPersonID       uuid.UUID
 }

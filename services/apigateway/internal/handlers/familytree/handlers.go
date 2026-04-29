@@ -68,9 +68,14 @@ type updatePersonGenderRequest struct {
 }
 
 type updateTreeSettingsRequest struct {
-	IsViewRestricted   bool   `json:"is_view_restricted"`
-	IsPublicOnMainPage bool   `json:"is_public_on_main_page"`
-	Name               string `json:"name"`
+	IsViewRestricted   bool    `json:"is_view_restricted"`
+	IsPublicOnMainPage bool    `json:"is_public_on_main_page"`
+	Name               string  `json:"name"`
+	Description        *string `json:"description"`
+}
+
+type createTreeRequest struct {
+	Description *string `json:"description"`
 }
 
 type treeAccessEmailRequest struct {
@@ -78,13 +83,16 @@ type treeAccessEmailRequest struct {
 }
 
 type familyTreeJSON struct {
-	ID                 string `json:"id"`
-	CreatorID          int32  `json:"creator_id"`
-	CreatorNickname    string `json:"creator_nickname,omitempty"`
-	CreatedAtUnix      int64  `json:"created_at_unix"`
-	IsViewRestricted   bool   `json:"is_view_restricted"`
-	IsPublicOnMainPage bool   `json:"is_public_on_main_page"`
-	Name               string `json:"name"`
+	ID                   string  `json:"id"`
+	CreatorID            int32   `json:"creator_id"`
+	CreatorNickname      string  `json:"creator_nickname,omitempty"`
+	CreatorCreatedAtUnix int64   `json:"creator_created_at_unix,omitempty"`
+	CreatedAtUnix        int64   `json:"created_at_unix"`
+	IsViewRestricted     bool    `json:"is_view_restricted"`
+	IsPublicOnMainPage   bool    `json:"is_public_on_main_page"`
+	Name                 string  `json:"name"`
+	Description          *string `json:"description"`
+	NodeCount            int     `json:"node_count,omitempty"`
 }
 
 type familyPersonJSON struct {
@@ -232,7 +240,15 @@ func (h *Handler) CreateTree(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.client.CreateTree(r.Context(), userID)
+	var req createTreeRequest
+	if r.Body != nil {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil && err != io.EOF {
+			response.Error(w, http.StatusBadRequest, "bad_request", "invalid request body")
+			return
+		}
+	}
+
+	resp, err := h.client.CreateTree(r.Context(), userID, req.Description)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("create tree failed", slog.String("error", err.Error()))
@@ -489,7 +505,7 @@ func (h *Handler) UpdateTreeSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.client.UpdateTreeSettings(r.Context(), treeID, req.IsViewRestricted, req.IsPublicOnMainPage, req.Name)
+	resp, err := h.client.UpdateTreeSettings(r.Context(), treeID, req.IsViewRestricted, req.IsPublicOnMainPage, req.Name, req.Description)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("update tree settings failed", slog.String("error", err.Error()))
@@ -1171,8 +1187,17 @@ func toTreeJSON(t *familytreepb.Tree) map[string]any {
 		"is_view_restricted":     t.GetIsViewRestricted(),
 		"is_public_on_main_page": t.GetIsPublicOnMainPage(),
 		"name":                   t.GetName(),
+		"description":            treeDescriptionJSONValue(t.GetDescription()),
 		"root_person_id":         t.GetRootPersonId(),
 	}
+}
+
+func treeDescriptionJSONValue(description string) any {
+	if description == "" {
+		return nil
+	}
+
+	return description
 }
 
 func (h *Handler) toTreeJSONWithCreator(ctx context.Context, t *familytreepb.Tree) (map[string]any, error) {
@@ -1187,6 +1212,13 @@ func (h *Handler) toTreeJSONWithCreator(ctx context.Context, t *familytreepb.Tre
 	}
 
 	treeJSON["creator_nickname"] = userResp.GetUser().GetNickname()
+	treeJSON["creator_created_at_unix"] = userResp.GetUser().GetCreatedAtUnix()
+
+	familyResp, err := h.client.ListPersonsByTree(ctx, t.GetId())
+	if err != nil {
+		return nil, err
+	}
+	treeJSON["node_count"] = len(familyResp.GetPersons())
 	return treeJSON, nil
 }
 
