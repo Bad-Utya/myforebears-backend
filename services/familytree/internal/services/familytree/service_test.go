@@ -35,8 +35,7 @@ func (s *personStorageStub) UpdateTreeRootPersonID(ctx context.Context, treeID u
 	s.t.Fatalf("unexpected UpdateTreeRootPersonID call")
 	return nil
 }
-
-func (s *personStorageStub) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool, name string) error {
+func (s *personStorageStub) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool, name string, description *string) error {
 	s.t.Fatalf("unexpected UpdateTreeSettings call")
 	return nil
 }

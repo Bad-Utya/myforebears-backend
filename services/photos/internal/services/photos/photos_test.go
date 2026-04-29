@@ -11,8 +11,8 @@ import (
 )
 
 type metaStub struct {
-	t                *testing.T
-	getPhotoByIDFn   func(ctx context.Context, photoID uuid.UUID) (models.Photo, error)
+	t              *testing.T
+	getPhotoByIDFn func(ctx context.Context, photoID uuid.UUID) (models.Photo, error)
 }
 
 func (m *metaStub) CreatePhoto(ctx context.Context, photo models.Photo) error {
@@ -32,6 +32,11 @@ func (m *metaStub) GetUserAvatar(ctx context.Context, ownerUserID int) (models.P
 	return models.Photo{}, nil
 }
 
+func (m *metaStub) GetTreeAvatar(ctx context.Context, treeID uuid.UUID) (models.Photo, error) {
+	m.t.Fatalf("unexpected GetTreeAvatar call")
+	return models.Photo{}, nil
+}
+
 func (m *metaStub) GetPersonAvatar(ctx context.Context, personID uuid.UUID) (models.Photo, error) {
 	m.t.Fatalf("unexpected GetPersonAvatar call")
 	return models.Photo{}, nil
@@ -39,6 +44,11 @@ func (m *metaStub) GetPersonAvatar(ctx context.Context, personID uuid.UUID) (mod
 
 func (m *metaStub) UnsetPersonAvatar(ctx context.Context, personID uuid.UUID) error {
 	m.t.Fatalf("unexpected UnsetPersonAvatar call")
+	return nil
+}
+
+func (m *metaStub) UnsetTreeAvatar(ctx context.Context, treeID uuid.UUID) error {
+	m.t.Fatalf("unexpected UnsetTreeAvatar call")
 	return nil
 }
 
