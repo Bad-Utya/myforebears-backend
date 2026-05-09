@@ -9,19 +9,30 @@ import (
 )
 
 var (
-	ErrPersonNotFound      = errors.New("person not found")
-	ErrTreeNotFound        = errors.New("tree not found")
-	ErrRelationshipExists  = errors.New("relationship already exists")
-	ErrRelationshipMissing = errors.New("relationship not found")
+	ErrPersonNotFound          = errors.New("person not found")
+	ErrTreeNotFound            = errors.New("tree not found")
+	ErrRelationshipExists      = errors.New("relationship already exists")
+	ErrRelationshipMissing     = errors.New("relationship not found")
+	ErrTreeAccessEmailExists   = errors.New("tree access email already exists")
+	ErrTreeAccessEmailNotFound = errors.New("tree access email not found")
 )
 
 type PersonStorage interface {
 	CreateTree(ctx context.Context, tree models.Tree) error
 	GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, error)
+	UpdateTreeRootPersonID(ctx context.Context, treeID uuid.UUID, rootPersonID uuid.UUID) error
+	UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool, name string, description *string) error
+	AddTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error
+	ListTreeAccessEmails(ctx context.Context, treeID uuid.UUID) ([]string, error)
+	IsTreeAccessEmailAllowed(ctx context.Context, treeID uuid.UUID, email string) (bool, error)
+	DeleteTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error
 	GetTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error)
+	GetPublicTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error)
+	GetRandomPublicTrees(ctx context.Context, limit int) ([]models.Tree, error)
 	CreatePerson(ctx context.Context, person models.Person) error
 	GetPerson(ctx context.Context, personID uuid.UUID) (models.Person, error)
 	UpdatePerson(ctx context.Context, person models.Person) error
+	UpdatePersonAvatarPhoto(ctx context.Context, personID uuid.UUID, avatarPhotoID *uuid.UUID) error
 	DeletePerson(ctx context.Context, personID uuid.UUID) error
 	GetPersonsByTree(ctx context.Context, treeID uuid.UUID) ([]models.Person, error)
 	Close()
@@ -35,5 +46,6 @@ type RelationshipStorage interface {
 	RemoveRelationship(ctx context.Context, personIDFrom uuid.UUID, personIDTo uuid.UUID, relType models.RelationshipType) error
 	GetRelatives(ctx context.Context, personID uuid.UUID) ([]models.Relative, error)
 	GetTreeRelationships(ctx context.Context, treeID uuid.UUID) ([]models.Relationship, error)
+	GetTreeRelationshipsWithinDepth(ctx context.Context, treeID uuid.UUID, rootPersonID uuid.UUID, maxDepth int) ([]models.Relationship, error)
 	Close(ctx context.Context) error
 }

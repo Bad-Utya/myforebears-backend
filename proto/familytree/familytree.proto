@@ -42,6 +42,11 @@ message Tree {
     string id = 1;
     int32 creator_id = 2;
     int64 created_at_unix = 3;
+    bool is_view_restricted = 4;
+    bool is_public_on_main_page = 5;
+    string name = 6;
+    string root_person_id = 7;
+    string description = 8;
 }
 
 message Person {
@@ -51,6 +56,7 @@ message Person {
     string last_name = 4;
     string patronymic = 5;
     Gender gender = 6;
+    string avatar_photo_id = 7;
 }
 
 message Relationship {
@@ -68,16 +74,18 @@ message Relative {
 service FamilyTreeService {
     rpc CreateTree (CreateTreeRequest) returns (CreateTreeResponse);
     rpc ListTreesByCreator (ListTreesByCreatorRequest) returns (ListTreesByCreatorResponse);
+    rpc ListPublicTreesByCreator (ListPublicTreesByCreatorRequest) returns (ListPublicTreesByCreatorResponse);
+    rpc ListRandomPublicTrees (ListRandomPublicTreesRequest) returns (ListRandomPublicTreesResponse);
 
     rpc AddParent (AddParentRequest) returns (AddParentResponse);
     rpc AddChild (AddChildRequest) returns (AddChildResponse);
     rpc AddPartner (AddPartnerRequest) returns (AddPartnerResponse);
     rpc UpdatePersonName (UpdatePersonNameRequest) returns (UpdatePersonNameResponse);
+    rpc UpdatePersonAvatarPhoto (UpdatePersonAvatarPhotoRequest) returns (UpdatePersonAvatarPhotoResponse);
     rpc DeletePersonInTree (DeletePersonInTreeRequest) returns (DeletePersonInTreeResponse);
 
     rpc CreatePerson (CreatePersonRequest) returns (CreatePersonResponse);
     rpc GetPerson (GetPersonRequest) returns (GetPersonResponse);
-    rpc GetPersonInTree (GetPersonInTreeRequest) returns (GetPersonInTreeResponse);
     rpc ListPersonsByTree (ListPersonsByTreeRequest) returns (ListPersonsByTreeResponse);
     rpc UpdatePerson (UpdatePersonRequest) returns (UpdatePersonResponse);
     rpc DeletePerson (DeletePersonRequest) returns (DeletePersonResponse);
@@ -86,12 +94,24 @@ service FamilyTreeService {
     rpc RemoveRelationship (RemoveRelationshipRequest) returns (RemoveRelationshipResponse);
     rpc GetRelatives (GetRelativesRequest) returns (GetRelativesResponse);
     rpc GetTree (GetTreeRequest) returns (GetTreeResponse);
+    rpc GetTreeContent (GetTreeContentRequest) returns (GetTreeContentResponse);
+        rpc GetTreeContentWithinDepth (GetTreeContentWithinDepthRequest) returns (GetTreeContentResponse);
+    rpc GetTreeAccessInfo (GetTreeAccessInfoRequest) returns (GetTreeAccessInfoResponse);
+    rpc IsTreeAccessEmailAllowed (IsTreeAccessEmailAllowedRequest) returns (IsTreeAccessEmailAllowedResponse);
+    rpc AddTreeAccessEmail (AddTreeAccessEmailRequest) returns (AddTreeAccessEmailResponse);
+    rpc ListTreeAccessEmails (ListTreeAccessEmailsRequest) returns (ListTreeAccessEmailsResponse);
+    rpc DeleteTreeAccessEmail (DeleteTreeAccessEmailRequest) returns (DeleteTreeAccessEmailResponse);
     rpc ValidatePersonsInTree (ValidatePersonsInTreeRequest) returns (ValidatePersonsInTreeResponse);
     rpc UpdatePartnerRelationshipStatus (UpdatePartnerRelationshipStatusRequest) returns (UpdatePartnerRelationshipStatusResponse);
+    rpc UpdateTreeSettings (UpdateTreeSettingsRequest) returns (UpdateTreeSettingsResponse);
+    
+    rpc ExportTreeGEDCOM (ExportTreeGEDCOMRequest) returns (ExportTreeGEDCOMResponse);
+    rpc ImportTreeGEDCOM (ImportTreeGEDCOMRequest) returns (ImportTreeGEDCOMResponse);
 }
 
 message CreateTreeRequest {
     int32 request_user_id = 1;
+    string description = 2;
 }
 
 message CreateTreeResponse {
@@ -107,14 +127,29 @@ message ListTreesByCreatorResponse {
     repeated Tree trees = 1;
 }
 
+message ListPublicTreesByCreatorRequest {
+    int32 creator_id = 1;
+}
+
+message ListPublicTreesByCreatorResponse {
+    repeated Tree trees = 1;
+}
+
+message ListRandomPublicTreesRequest {
+    int32 limit = 1;
+}
+
+message ListRandomPublicTreesResponse {
+    repeated Tree trees = 1;
+}
+
 message AddParentRequest {
-    int32 request_user_id = 1;
-    string tree_id = 2;
-    string child_id = 3;
-    ParentRole role = 4;
-    string first_name = 5;
-    string last_name = 6;
-    string patronymic = 7;
+    string tree_id = 1;
+    string child_id = 2;
+    ParentRole role = 3;
+    string first_name = 4;
+    string last_name = 5;
+    string patronymic = 6;
 }
 
 message AddParentResponse {
@@ -123,14 +158,13 @@ message AddParentResponse {
 }
 
 message AddChildRequest {
-    int32 request_user_id = 1;
-    string tree_id = 2;
-    string parent1_id = 3;
-    string parent2_id = 4;
-    string first_name = 5;
-    string last_name = 6;
-    string patronymic = 7;
-    Gender gender = 8;
+    string tree_id = 1;
+    string parent1_id = 2;
+    string parent2_id = 3;
+    string first_name = 4;
+    string last_name = 5;
+    string patronymic = 6;
+    Gender gender = 7;
 }
 
 message AddChildResponse {
@@ -139,12 +173,11 @@ message AddChildResponse {
 }
 
 message AddPartnerRequest {
-    int32 request_user_id = 1;
-    string tree_id = 2;
-    string person_id = 3;
-    string first_name = 4;
-    string last_name = 5;
-    string patronymic = 6;
+    string tree_id = 1;
+    string person_id = 2;
+    string first_name = 3;
+    string last_name = 4;
+    string patronymic = 5;
 }
 
 message AddPartnerResponse {
@@ -152,22 +185,29 @@ message AddPartnerResponse {
 }
 
 message UpdatePersonNameRequest {
-    int32 request_user_id = 1;
-    string tree_id = 2;
-    string person_id = 3;
-    string first_name = 4;
-    string last_name = 5;
-    string patronymic = 6;
+    string tree_id = 1;
+    string person_id = 2;
+    string first_name = 3;
+    string last_name = 4;
+    string patronymic = 5;
 }
 
 message UpdatePersonNameResponse {
     Person person = 1;
 }
 
+message UpdatePersonAvatarPhotoRequest {
+    string person_id = 1;
+    string avatar_photo_id = 2;
+}
+
+message UpdatePersonAvatarPhotoResponse {
+    Person person = 1;
+}
+
 message DeletePersonInTreeRequest {
-    int32 request_user_id = 1;
-    string tree_id = 2;
-    string person_id = 3;
+    string tree_id = 1;
+    string person_id = 2;
 }
 
 message DeletePersonInTreeResponse {}
@@ -185,26 +225,16 @@ message CreatePersonResponse {
 }
 
 message GetPersonRequest {
-    string person_id = 1;
+    string tree_id = 1;
+    string person_id = 2;
 }
 
 message GetPersonResponse {
     Person person = 1;
 }
 
-message GetPersonInTreeRequest {
-    int32 request_user_id = 1;
-    string tree_id = 2;
-    string person_id = 3;
-}
-
-message GetPersonInTreeResponse {
-    Person person = 1;
-}
-
 message ListPersonsByTreeRequest {
-    int32 request_user_id = 1;
-    string tree_id = 2;
+    string tree_id = 1;
 }
 
 message ListPersonsByTreeResponse {
@@ -212,11 +242,12 @@ message ListPersonsByTreeResponse {
 }
 
 message UpdatePersonRequest {
-    string person_id = 1;
-    string first_name = 2;
-    string last_name = 3;
-    string patronymic = 4;
-    Gender gender = 5;
+    string tree_id = 1;
+    string person_id = 2;
+    string first_name = 3;
+    string last_name = 4;
+    string patronymic = 5;
+    Gender gender = 6;
 }
 
 message UpdatePersonResponse {
@@ -224,29 +255,33 @@ message UpdatePersonResponse {
 }
 
 message DeletePersonRequest {
-    string person_id = 1;
+    string tree_id = 1;
+    string person_id = 2;
 }
 
 message DeletePersonResponse {}
 
 message AddRelationshipRequest {
-    string person_id_from = 1;
-    string person_id_to = 2;
-    RelationshipType type = 3;
+    string tree_id = 1;
+    string person_id_from = 2;
+    string person_id_to = 3;
+    RelationshipType type = 4;
 }
 
 message AddRelationshipResponse {}
 
 message RemoveRelationshipRequest {
-    string person_id_from = 1;
-    string person_id_to = 2;
-    RelationshipType type = 3;
+    string tree_id = 1;
+    string person_id_from = 2;
+    string person_id_to = 3;
+    RelationshipType type = 4;
 }
 
 message RemoveRelationshipResponse {}
 
 message GetRelativesRequest {
-    string person_id = 1;
+    string tree_id = 1;
+    string person_id = 2;
 }
 
 message GetRelativesResponse {
@@ -255,28 +290,112 @@ message GetRelativesResponse {
 
 message GetTreeRequest {
     string tree_id = 1;
-    int32 request_user_id = 2;
 }
 
 message GetTreeResponse {
-    repeated Person persons = 1;
-    repeated Relationship relationships = 2;
+    Tree tree = 1;
 }
 
+message GetTreeContentRequest {
+    string tree_id = 1;
+}
+
+    message GetTreeContentWithinDepthRequest {
+        string tree_id = 1;
+        string root_person_id = 2;
+        int32 max_depth = 3;
+    }
+
+message GetTreeContentResponse {
+    string tree_id = 1;
+    repeated Person persons = 2;
+    repeated Relationship relationships = 3;
+}
+
+message GetTreeAccessInfoRequest {
+    string tree_id = 1;
+}
+
+message GetTreeAccessInfoResponse {
+    Tree tree = 1;
+}
+
+message IsTreeAccessEmailAllowedRequest {
+    string tree_id = 1;
+    string email = 2;
+}
+
+message IsTreeAccessEmailAllowedResponse {
+    bool allowed = 1;
+}
+
+message AddTreeAccessEmailRequest {
+    string tree_id = 1;
+    string email = 2;
+}
+
+message AddTreeAccessEmailResponse {}
+
+message ListTreeAccessEmailsRequest {
+    string tree_id = 1;
+}
+
+message ListTreeAccessEmailsResponse {
+    repeated string emails = 1;
+}
+
+message DeleteTreeAccessEmailRequest {
+    string tree_id = 1;
+    string email = 2;
+}
+
+message DeleteTreeAccessEmailResponse {}
+
 message ValidatePersonsInTreeRequest {
-    int32 request_user_id = 1;
-    string tree_id = 2;
-    repeated string person_ids = 3;
+    string tree_id = 1;
+    repeated string person_ids = 2;
 }
 
 message ValidatePersonsInTreeResponse {}
 
 message UpdatePartnerRelationshipStatusRequest {
-    int32 request_user_id = 1;
-    string tree_id = 2;
-    string person_id1 = 3;
-    string person_id2 = 4;
-    PartnerRelationshipStatus status = 5;
+    string tree_id = 1;
+    string person_id1 = 2;
+    string person_id2 = 3;
+    PartnerRelationshipStatus status = 4;
 }
 
 message UpdatePartnerRelationshipStatusResponse {}
+
+message UpdateTreeSettingsRequest {
+    string tree_id = 1;
+    bool is_view_restricted = 2;
+    bool is_public_on_main_page = 3;
+    string name = 4;
+    string description = 5;
+}
+
+message UpdateTreeSettingsResponse {
+    Tree tree = 1;
+}
+
+message ExportTreeGEDCOMRequest {
+    string tree_id = 1;
+    int32 request_user_id = 2;
+}
+
+message ExportTreeGEDCOMResponse {
+    string gedcom_content = 1;
+}
+
+message ImportTreeGEDCOMRequest {
+    string gedcom_content = 1;
+    int32 request_user_id = 2;
+}
+
+message ImportTreeGEDCOMResponse {
+    Tree tree = 1;
+    int32 persons_imported = 2;
+    int32 relationships_imported = 3;
+    repeated string errors = 4;
+}

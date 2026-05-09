@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/storage"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -45,14 +47,15 @@ func (s *Storage) CreatePerson(ctx context.Context, person models.Person) error 
 
 	_, err := s.pool.Exec(
 		ctx,
-		`INSERT INTO persons (id, tree_id, first_name, last_name, patronymic, gender)
-		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		`INSERT INTO persons (id, tree_id, first_name, last_name, patronymic, gender, avatar_photo_id)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		person.ID,
 		person.TreeID,
 		person.FirstName,
 		person.LastName,
 		person.Patronymic,
 		person.Gender,
+		person.AvatarPhotoID,
 	)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -66,10 +69,15 @@ func (s *Storage) CreateTree(ctx context.Context, tree models.Tree) error {
 
 	_, err := s.pool.Exec(
 		ctx,
-		`INSERT INTO trees (id, creator_id)
-		 VALUES ($1, $2)`,
+		`INSERT INTO trees (id, creator_id, is_view_restricted, is_public_on_main_page, name, description, root_person_id)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
 		tree.ID,
 		tree.CreatorID,
+		tree.IsViewRestricted,
+		tree.IsPublicOnMainPage,
+		tree.Name,
+		tree.Description,
+		tree.RootPersonID,
 	)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -82,12 +90,13 @@ func (s *Storage) GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, e
 	const op = "storage.postgres.GetTree"
 
 	var tree models.Tree
+	var description sql.NullString
 	err := s.pool.QueryRow(
 		ctx,
-		`SELECT id, creator_id, created_at
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, description, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
 		 FROM trees WHERE id = $1`,
 		treeID,
-	).Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt)
+	).Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &description, &tree.RootPersonID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.Tree{}, fmt.Errorf("%s: %w", op, storage.ErrTreeNotFound)
@@ -95,7 +104,156 @@ func (s *Storage) GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, e
 		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
 	}
 
+	if description.Valid {
+		tree.Description = &description.String
+	}
+
 	return tree, nil
+}
+
+func (s *Storage) UpdateTreeRootPersonID(ctx context.Context, treeID uuid.UUID, rootPersonID uuid.UUID) error {
+	const op = "storage.postgres.UpdateTreeRootPersonID"
+
+	cmdTag, err := s.pool.Exec(
+		ctx,
+		`UPDATE trees
+		 SET root_person_id = $1
+		 WHERE id = $2`,
+		rootPersonID,
+		treeID,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrTreeNotFound)
+	}
+
+	return nil
+}
+
+func (s *Storage) UpdateTreeSettings(ctx context.Context, treeID uuid.UUID, isViewRestricted bool, isPublicOnMainPage bool, name string, description *string) error {
+	const op = "storage.postgres.UpdateTreeSettings"
+
+	cmdTag, err := s.pool.Exec(
+		ctx,
+		`UPDATE trees
+		 SET is_view_restricted = $1,
+		     is_public_on_main_page = $2,
+		     name = $3,
+		     description = $4
+		 WHERE id = $5`,
+		isViewRestricted,
+		isPublicOnMainPage,
+		name,
+		description,
+		treeID,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrTreeNotFound)
+	}
+
+	return nil
+}
+
+func (s *Storage) AddTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error {
+	const op = "storage.postgres.AddTreeAccessEmail"
+
+	_, err := s.pool.Exec(
+		ctx,
+		`INSERT INTO tree_access_emails (tree_id, email)
+		 VALUES ($1, $2)`,
+		treeID,
+		email,
+	)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return fmt.Errorf("%s: %w", op, storage.ErrTreeAccessEmailExists)
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) ListTreeAccessEmails(ctx context.Context, treeID uuid.UUID) ([]string, error) {
+	const op = "storage.postgres.ListTreeAccessEmails"
+
+	rows, err := s.pool.Query(
+		ctx,
+		`SELECT email
+		 FROM tree_access_emails
+		 WHERE tree_id = $1
+		 ORDER BY email ASC`,
+		treeID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	emails := make([]string, 0)
+	for rows.Next() {
+		var email string
+		if err := rows.Scan(&email); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		emails = append(emails, email)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return emails, nil
+}
+
+func (s *Storage) IsTreeAccessEmailAllowed(ctx context.Context, treeID uuid.UUID, email string) (bool, error) {
+	const op = "storage.postgres.IsTreeAccessEmailAllowed"
+
+	var allowed bool
+	err := s.pool.QueryRow(
+		ctx,
+		`SELECT EXISTS(
+			SELECT 1
+			FROM tree_access_emails
+			WHERE tree_id = $1 AND email = $2
+		)`,
+		treeID,
+		email,
+	).Scan(&allowed)
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return allowed, nil
+}
+
+func (s *Storage) DeleteTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error {
+	const op = "storage.postgres.DeleteTreeAccessEmail"
+
+	cmdTag, err := s.pool.Exec(
+		ctx,
+		`DELETE FROM tree_access_emails
+		 WHERE tree_id = $1 AND email = $2`,
+		treeID,
+		email,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrTreeAccessEmailNotFound)
+	}
+
+	return nil
 }
 
 func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error) {
@@ -103,7 +261,7 @@ func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]model
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, creator_id, created_at
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, description, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
 		 FROM trees
 		 WHERE creator_id = $1
 		 ORDER BY created_at DESC`,
@@ -117,8 +275,85 @@ func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]model
 	trees := make([]models.Tree, 0)
 	for rows.Next() {
 		var tree models.Tree
-		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt); err != nil {
+		var description sql.NullString
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &description, &tree.RootPersonID); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		if description.Valid {
+			tree.Description = &description.String
+		}
+		trees = append(trees, tree)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return trees, nil
+}
+
+func (s *Storage) GetPublicTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error) {
+	const op = "storage.postgres.GetPublicTreesByCreator"
+
+	rows, err := s.pool.Query(
+		ctx,
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, description, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
+		 FROM trees
+		 WHERE creator_id = $1 AND is_public_on_main_page = TRUE
+		 ORDER BY created_at DESC`,
+		creatorID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	trees := make([]models.Tree, 0)
+	for rows.Next() {
+		var tree models.Tree
+		var description sql.NullString
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &description, &tree.RootPersonID); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		if description.Valid {
+			tree.Description = &description.String
+		}
+		trees = append(trees, tree)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return trees, nil
+}
+
+func (s *Storage) GetRandomPublicTrees(ctx context.Context, limit int) ([]models.Tree, error) {
+	const op = "storage.postgres.GetRandomPublicTrees"
+
+	rows, err := s.pool.Query(
+		ctx,
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, description, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
+		 FROM trees
+		 WHERE is_public_on_main_page = TRUE
+		 ORDER BY RANDOM()
+		 LIMIT $1`,
+		limit,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	trees := make([]models.Tree, 0)
+	for rows.Next() {
+		var tree models.Tree
+		var description sql.NullString
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &description, &tree.RootPersonID); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		if description.Valid {
+			tree.Description = &description.String
 		}
 		trees = append(trees, tree)
 	}
@@ -136,7 +371,7 @@ func (s *Storage) GetPerson(ctx context.Context, personID uuid.UUID) (models.Per
 	var person models.Person
 	err := s.pool.QueryRow(
 		ctx,
-		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender
+		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender, avatar_photo_id
 		 FROM persons WHERE id = $1`,
 		personID,
 	).Scan(
@@ -146,6 +381,7 @@ func (s *Storage) GetPerson(ctx context.Context, personID uuid.UUID) (models.Per
 		&person.LastName,
 		&person.Patronymic,
 		&person.Gender,
+		&person.AvatarPhotoID,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -186,6 +422,29 @@ func (s *Storage) UpdatePerson(ctx context.Context, person models.Person) error 
 	return nil
 }
 
+func (s *Storage) UpdatePersonAvatarPhoto(ctx context.Context, personID uuid.UUID, avatarPhotoID *uuid.UUID) error {
+	const op = "storage.postgres.UpdatePersonAvatarPhoto"
+
+	cmdTag, err := s.pool.Exec(
+		ctx,
+		`UPDATE persons
+		 SET avatar_photo_id = $1,
+		     updated_at = NOW()
+		 WHERE id = $2`,
+		avatarPhotoID,
+		personID,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrPersonNotFound)
+	}
+
+	return nil
+}
+
 func (s *Storage) DeletePerson(ctx context.Context, personID uuid.UUID) error {
 	const op = "storage.postgres.DeletePerson"
 
@@ -206,7 +465,7 @@ func (s *Storage) GetPersonsByTree(ctx context.Context, treeID uuid.UUID) ([]mod
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender
+		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender, avatar_photo_id
 		 FROM persons WHERE tree_id = $1`,
 		treeID,
 	)
@@ -225,6 +484,7 @@ func (s *Storage) GetPersonsByTree(ctx context.Context, treeID uuid.UUID) ([]mod
 			&person.LastName,
 			&person.Patronymic,
 			&person.Gender,
+			&person.AvatarPhotoID,
 		); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}

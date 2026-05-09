@@ -3,3 +3,6 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'events_local_db')\gex
 
 SELECT 'CREATE DATABASE familytree_local_db'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'familytree_local_db')\gexec
+
+SELECT 'CREATE DATABASE photos_local_db'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'photos_local_db')\gexec

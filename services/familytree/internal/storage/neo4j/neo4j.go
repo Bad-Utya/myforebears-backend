@@ -332,6 +332,76 @@ func (s *Storage) GetTreeRelationships(ctx context.Context, treeID uuid.UUID) ([
 	return rels, nil
 }
 
+func (s *Storage) GetTreeRelationshipsWithinDepth(ctx context.Context, treeID uuid.UUID, rootPersonID uuid.UUID, maxDepth int) ([]models.Relationship, error) {
+	const op = "storage.neo4j.GetTreeRelationshipsWithinDepth"
+
+	session := s.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	defer session.Close(ctx)
+
+	res, err := session.Run(
+		ctx,
+		`MATCH (root:Person {id: $root_id, tree_id: $tree_id})
+		 OPTIONAL MATCH p=(root)-[:PARENT_OF|PARTNER_OF*1..]-(n:Person {tree_id: $tree_id})
+		 WHERE length(p) <= $max_depth
+		 WITH collect(p) AS paths
+		 UNWIND paths AS path
+		 WITH path WHERE path IS NOT NULL
+		 UNWIND relationships(path) AS r
+		 WITH DISTINCT startNode(r) AS a, endNode(r) AS b, type(r) AS rel_type, r.partner_status AS partner_status
+		 RETURN a.id AS from_id, b.id AS to_id, rel_type, partner_status`,
+		map[string]any{
+			"tree_id":   treeID.String(),
+			"root_id":   rootPersonID.String(),
+			"max_depth": maxDepth,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	rels := make([]models.Relationship, 0)
+	for res.Next(ctx) {
+		rec := res.Record()
+		fromValue, _ := rec.Get("from_id")
+		toValue, _ := rec.Get("to_id")
+		typeValue, _ := rec.Get("rel_type")
+		partnerStatusValue, _ := rec.Get("partner_status")
+
+		fromID, err := uuid.Parse(fromValue.(string))
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		toID, err := uuid.Parse(toValue.(string))
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+
+		partnerStatus := ""
+		if partnerStatusValue != nil {
+			if value, ok := partnerStatusValue.(string); ok {
+				partnerStatus = value
+			}
+		}
+
+		relType, err := fromNeo4jRelationship(typeValue.(string), partnerStatus)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+
+		rels = append(rels, models.Relationship{
+			PersonIDFrom: fromID,
+			PersonIDTo:   toID,
+			Type:         relType,
+		})
+	}
+
+	if err := res.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return rels, nil
+}
+
 func (s *Storage) Close(ctx context.Context) error {
 	return s.driver.Close(ctx)
 }

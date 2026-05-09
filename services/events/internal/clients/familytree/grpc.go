@@ -39,13 +39,12 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) ValidatePersonsInTree(ctx context.Context, requestUserID int, treeID string, personIDs []string) error {
+func (c *Client) ValidatePersonsInTree(ctx context.Context, treeID string, personIDs []string) error {
 	const op = "clients.familytree.ValidatePersonsInTree"
 
 	_, err := c.api.ValidatePersonsInTree(ctx, &familytreepb.ValidatePersonsInTreeRequest{
-		RequestUserId: int32(requestUserID),
-		TreeId:        treeID,
-		PersonIds:     personIDs,
+		TreeId:    treeID,
+		PersonIds: personIDs,
 	})
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -54,15 +53,14 @@ func (c *Client) ValidatePersonsInTree(ctx context.Context, requestUserID int, t
 	return nil
 }
 
-func (c *Client) UpdatePartnerRelationshipStatus(ctx context.Context, requestUserID int, treeID string, personID1 string, personID2 string, status familytreepb.PartnerRelationshipStatus) error {
+func (c *Client) UpdatePartnerRelationshipStatus(ctx context.Context, treeID string, personID1 string, personID2 string, status familytreepb.PartnerRelationshipStatus) error {
 	const op = "clients.familytree.UpdatePartnerRelationshipStatus"
 
 	_, err := c.api.UpdatePartnerRelationshipStatus(ctx, &familytreepb.UpdatePartnerRelationshipStatusRequest{
-		RequestUserId: int32(requestUserID),
-		TreeId:        treeID,
-		PersonId1:     personID1,
-		PersonId2:     personID2,
-		Status:        status,
+		TreeId:    treeID,
+		PersonId1: personID1,
+		PersonId2: personID2,
+		Status:    status,
 	})
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)

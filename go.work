@@ -4,8 +4,10 @@ use (
 	./gen/go
 	./services/apigateway
 	./services/auth
-	./services/familytree
 	./services/emailprovider
 	./services/events
+	./services/familytree
+	./services/photos
+	./services/visualisation
 	./utility
 )

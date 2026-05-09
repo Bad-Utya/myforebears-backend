@@ -13,6 +13,7 @@ func Map(err error) error {
 	case errors.Is(err, personsvc.ErrInvalidPersonID),
 		errors.Is(err, personsvc.ErrInvalidTreeID),
 		errors.Is(err, personsvc.ErrInvalidUserID),
+		errors.Is(err, personsvc.ErrInvalidLimit),
 		errors.Is(err, personsvc.ErrInvalidName),
 		errors.Is(err, personsvc.ErrInvalidGender),
 		errors.Is(err, personsvc.ErrDeleteNotAllowed),
@@ -25,11 +26,12 @@ func Map(err error) error {
 		errors.Is(err, personsvc.ErrUnknownPersonGender),
 		errors.Is(err, personsvc.ErrInvalidRelationType),
 		errors.Is(err, personsvc.ErrSelfRelationship),
-		errors.Is(err, personsvc.ErrPersonNotInSameTree):
+		errors.Is(err, personsvc.ErrPersonNotInSameTree),
+		errors.Is(err, personsvc.ErrInvalidEmail):
 		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, personsvc.ErrPersonNotFound), errors.Is(err, personsvc.ErrRelationshipMissing), errors.Is(err, personsvc.ErrTreeNotFound):
+	case errors.Is(err, personsvc.ErrPersonNotFound), errors.Is(err, personsvc.ErrRelationshipMissing), errors.Is(err, personsvc.ErrTreeNotFound), errors.Is(err, personsvc.ErrTreeAccessEmailNotFound):
 		return status.Error(codes.NotFound, err.Error())
-	case errors.Is(err, personsvc.ErrRelationshipExists):
+	case errors.Is(err, personsvc.ErrRelationshipExists), errors.Is(err, personsvc.ErrTreeAccessEmailExists):
 		return status.Error(codes.AlreadyExists, err.Error())
 	case errors.Is(err, personsvc.ErrForbidden):
 		return status.Error(codes.PermissionDenied, err.Error())

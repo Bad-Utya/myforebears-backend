@@ -7,7 +7,12 @@ import (
 )
 
 type Tree struct {
-	ID        uuid.UUID
-	CreatorID int
-	CreatedAt time.Time
+	ID                 uuid.UUID
+	CreatorID          int
+	CreatedAt          time.Time
+	IsViewRestricted   bool
+	IsPublicOnMainPage bool
+	Name               string
+	Description        *string
+	RootPersonID       uuid.UUID
 }

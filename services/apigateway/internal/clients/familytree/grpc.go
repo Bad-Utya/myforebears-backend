@@ -39,10 +39,13 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) CreateTree(ctx context.Context, requestUserID int) (*familytreepb.CreateTreeResponse, error) {
+func (c *Client) CreateTree(ctx context.Context, requestUserID int, description *string) (*familytreepb.CreateTreeResponse, error) {
 	const op = "clients.familytree.CreateTree"
 
-	resp, err := c.api.CreateTree(ctx, &familytreepb.CreateTreeRequest{RequestUserId: int32(requestUserID)})
+	resp, err := c.api.CreateTree(ctx, &familytreepb.CreateTreeRequest{
+		RequestUserId: int32(requestUserID),
+		Description:   stringOrEmpty(description),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -61,10 +64,32 @@ func (c *Client) ListTreesByCreator(ctx context.Context, requestUserID int) (*fa
 	return resp, nil
 }
 
-func (c *Client) GetTree(ctx context.Context, requestUserID int, treeID string) (*familytreepb.GetTreeResponse, error) {
+func (c *Client) ListPublicTreesByCreator(ctx context.Context, creatorID int) (*familytreepb.ListPublicTreesByCreatorResponse, error) {
+	const op = "clients.familytree.ListPublicTreesByCreator"
+
+	resp, err := c.api.ListPublicTreesByCreator(ctx, &familytreepb.ListPublicTreesByCreatorRequest{CreatorId: int32(creatorID)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) ListRandomPublicTrees(ctx context.Context, limit int) (*familytreepb.ListRandomPublicTreesResponse, error) {
+	const op = "clients.familytree.ListRandomPublicTrees"
+
+	resp, err := c.api.ListRandomPublicTrees(ctx, &familytreepb.ListRandomPublicTreesRequest{Limit: int32(limit)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) GetTree(ctx context.Context, treeID string) (*familytreepb.GetTreeResponse, error) {
 	const op = "clients.familytree.GetTree"
 
-	resp, err := c.api.GetTree(ctx, &familytreepb.GetTreeRequest{TreeId: treeID, RequestUserId: int32(requestUserID)})
+	resp, err := c.api.GetTree(ctx, &familytreepb.GetTreeRequest{TreeId: treeID})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -72,10 +97,109 @@ func (c *Client) GetTree(ctx context.Context, requestUserID int, treeID string) 
 	return resp, nil
 }
 
-func (c *Client) ListPersonsByTree(ctx context.Context, requestUserID int, treeID string) (*familytreepb.ListPersonsByTreeResponse, error) {
+func (c *Client) GetTreeContent(ctx context.Context, treeID string) (*familytreepb.GetTreeContentResponse, error) {
+	const op = "clients.familytree.GetTreeContent"
+
+	resp, err := c.api.GetTreeContent(ctx, &familytreepb.GetTreeContentRequest{TreeId: treeID})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) GetTreeAccessInfo(ctx context.Context, treeID string) (*familytreepb.GetTreeAccessInfoResponse, error) {
+	const op = "clients.familytree.GetTreeAccessInfo"
+
+	resp, err := c.api.GetTreeAccessInfo(ctx, &familytreepb.GetTreeAccessInfoRequest{TreeId: treeID})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) IsTreeAccessEmailAllowed(ctx context.Context, treeID string, email string) (bool, error) {
+	const op = "clients.familytree.IsTreeAccessEmailAllowed"
+
+	resp, err := c.api.IsTreeAccessEmailAllowed(ctx, &familytreepb.IsTreeAccessEmailAllowedRequest{TreeId: treeID, Email: email})
+	if err != nil {
+		return false, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp.GetAllowed(), nil
+}
+
+func (c *Client) AddTreeAccessEmail(ctx context.Context, treeID string, email string) error {
+	const op = "clients.familytree.AddTreeAccessEmail"
+
+	_, err := c.api.AddTreeAccessEmail(ctx, &familytreepb.AddTreeAccessEmailRequest{
+		TreeId: treeID,
+		Email:  email,
+	})
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func (c *Client) ListTreeAccessEmails(ctx context.Context, treeID string) (*familytreepb.ListTreeAccessEmailsResponse, error) {
+	const op = "clients.familytree.ListTreeAccessEmails"
+
+	resp, err := c.api.ListTreeAccessEmails(ctx, &familytreepb.ListTreeAccessEmailsRequest{
+		TreeId: treeID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) DeleteTreeAccessEmail(ctx context.Context, treeID string, email string) error {
+	const op = "clients.familytree.DeleteTreeAccessEmail"
+
+	_, err := c.api.DeleteTreeAccessEmail(ctx, &familytreepb.DeleteTreeAccessEmailRequest{
+		TreeId: treeID,
+		Email:  email,
+	})
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func (c *Client) UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool, name string, description *string) (*familytreepb.UpdateTreeSettingsResponse, error) {
+	const op = "clients.familytree.UpdateTreeSettings"
+
+	resp, err := c.api.UpdateTreeSettings(ctx, &familytreepb.UpdateTreeSettingsRequest{
+		TreeId:             treeID,
+		IsViewRestricted:   isViewRestricted,
+		IsPublicOnMainPage: isPublicOnMainPage,
+		Name:               name,
+		Description:        stringOrEmpty(description),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func stringOrEmpty(value *string) string {
+	if value == nil {
+		return ""
+	}
+
+	return *value
+}
+
+func (c *Client) ListPersonsByTree(ctx context.Context, treeID string) (*familytreepb.ListPersonsByTreeResponse, error) {
 	const op = "clients.familytree.ListPersonsByTree"
 
-	resp, err := c.api.ListPersonsByTree(ctx, &familytreepb.ListPersonsByTreeRequest{TreeId: treeID, RequestUserId: int32(requestUserID)})
+	resp, err := c.api.ListPersonsByTree(ctx, &familytreepb.ListPersonsByTreeRequest{TreeId: treeID})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -83,13 +207,12 @@ func (c *Client) ListPersonsByTree(ctx context.Context, requestUserID int, treeI
 	return resp, nil
 }
 
-func (c *Client) GetPersonInTree(ctx context.Context, requestUserID int, treeID string, personID string) (*familytreepb.GetPersonInTreeResponse, error) {
+func (c *Client) GetPerson(ctx context.Context, treeID string, personID string) (*familytreepb.GetPersonResponse, error) {
 	const op = "clients.familytree.GetPersonInTree"
 
-	resp, err := c.api.GetPersonInTree(ctx, &familytreepb.GetPersonInTreeRequest{
-		RequestUserId: int32(requestUserID),
-		TreeId:        treeID,
-		PersonId:      personID,
+	resp, err := c.api.GetPerson(ctx, &familytreepb.GetPersonRequest{
+		TreeId:   treeID,
+		PersonId: personID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -142,6 +265,17 @@ func (c *Client) UpdatePersonName(ctx context.Context, req *familytreepb.UpdateP
 	return resp, nil
 }
 
+func (c *Client) UpdatePerson(ctx context.Context, req *familytreepb.UpdatePersonRequest) (*familytreepb.UpdatePersonResponse, error) {
+	const op = "clients.familytree.UpdatePerson"
+
+	resp, err := c.api.UpdatePerson(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) DeletePersonInTree(ctx context.Context, req *familytreepb.DeletePersonInTreeRequest) error {
 	const op = "clients.familytree.DeletePersonInTree"
 
@@ -151,4 +285,32 @@ func (c *Client) DeletePersonInTree(ctx context.Context, req *familytreepb.Delet
 	}
 
 	return nil
+}
+
+func (c *Client) ExportTreeGEDCOM(ctx context.Context, requestUserID int, treeID string) (*familytreepb.ExportTreeGEDCOMResponse, error) {
+	const op = "clients.familytree.ExportTreeGEDCOM"
+
+	resp, err := c.api.ExportTreeGEDCOM(ctx, &familytreepb.ExportTreeGEDCOMRequest{
+		TreeId:        treeID,
+		RequestUserId: int32(requestUserID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) ImportTreeGEDCOM(ctx context.Context, requestUserID int, gedcomContent string) (*familytreepb.ImportTreeGEDCOMResponse, error) {
+	const op = "clients.familytree.ImportTreeGEDCOM"
+
+	resp, err := c.api.ImportTreeGEDCOM(ctx, &familytreepb.ImportTreeGEDCOMRequest{
+		GedcomContent: gedcomContent,
+		RequestUserId: int32(requestUserID),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
 }

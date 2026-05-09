@@ -11,11 +11,17 @@ import (
 	"github.com/google/uuid"
 )
 
-func (s *Service) AddRelationship(ctx context.Context, personIDFrom string, personIDTo string, relType models.RelationshipType) error {
+func (s *Service) AddRelationship(ctx context.Context, treeID string, personIDFrom string, personIDTo string, relType models.RelationshipType) error {
 	const op = "service.familytree.AddRelationship"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("adding relationship", slog.String("person_id_from", personIDFrom), slog.String("person_id_to", personIDTo), slog.String("relationship_type", string(relType)))
+	log.Info("adding relationship", slog.String("tree_id", treeID), slog.String("person_id_from", personIDFrom), slog.String("person_id_to", personIDTo), slog.String("relationship_type", string(relType)))
+
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
+	if err != nil {
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
 
 	if !isValidRelationshipType(relType) {
 		log.Info("invalid relationship type", slog.String("relationship_type", string(relType)))
@@ -57,6 +63,10 @@ func (s *Service) AddRelationship(ctx context.Context, personIDFrom string, pers
 		log.Info("persons belong to different trees", slog.String("from_tree_id", fromPerson.TreeID.String()), slog.String("to_tree_id", toPerson.TreeID.String()))
 		return fmt.Errorf("%s: %w", op, ErrPersonNotInSameTree)
 	}
+	if fromPerson.TreeID != parsedTreeID || toPerson.TreeID != parsedTreeID {
+		log.Info("person tree mismatch", slog.String("requested_tree_id", parsedTreeID.String()), slog.String("from_tree_id", fromPerson.TreeID.String()), slog.String("to_tree_id", toPerson.TreeID.String()))
+		return fmt.Errorf("%s: %w", op, ErrTreeMismatch)
+	}
 
 	if isPartnerRelationshipType(relType) && fromID.String() > toID.String() {
 		fromID, toID = toID, fromID
@@ -76,11 +86,17 @@ func (s *Service) AddRelationship(ctx context.Context, personIDFrom string, pers
 	return nil
 }
 
-func (s *Service) RemoveRelationship(ctx context.Context, personIDFrom string, personIDTo string, relType models.RelationshipType) error {
+func (s *Service) RemoveRelationship(ctx context.Context, treeID string, personIDFrom string, personIDTo string, relType models.RelationshipType) error {
 	const op = "service.familytree.RemoveRelationship"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("removing relationship", slog.String("person_id_from", personIDFrom), slog.String("person_id_to", personIDTo), slog.String("relationship_type", string(relType)))
+	log.Info("removing relationship", slog.String("tree_id", treeID), slog.String("person_id_from", personIDFrom), slog.String("person_id_to", personIDTo), slog.String("relationship_type", string(relType)))
+
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
+	if err != nil {
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
 
 	if !isValidRelationshipType(relType) {
 		log.Info("invalid relationship type", slog.String("relationship_type", string(relType)))
@@ -91,6 +107,31 @@ func (s *Service) RemoveRelationship(ctx context.Context, personIDFrom string, p
 	if err != nil {
 		log.Info("invalid relationship person ids", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	fromPerson, err := s.personStorage.GetPerson(ctx, fromID)
+	if err != nil {
+		if errors.Is(err, storage.ErrPersonNotFound) {
+			log.Info("from person not found", slog.String("person_id", fromID.String()))
+			return fmt.Errorf("%s: %w", op, ErrPersonNotFound)
+		}
+		log.Error("failed to load from person", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	toPerson, err := s.personStorage.GetPerson(ctx, toID)
+	if err != nil {
+		if errors.Is(err, storage.ErrPersonNotFound) {
+			log.Info("to person not found", slog.String("person_id", toID.String()))
+			return fmt.Errorf("%s: %w", op, ErrPersonNotFound)
+		}
+		log.Error("failed to load to person", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if fromPerson.TreeID != parsedTreeID || toPerson.TreeID != parsedTreeID {
+		log.Info("person tree mismatch", slog.String("requested_tree_id", parsedTreeID.String()), slog.String("from_tree_id", fromPerson.TreeID.String()), slog.String("to_tree_id", toPerson.TreeID.String()))
+		return fmt.Errorf("%s: %w", op, ErrTreeMismatch)
 	}
 
 	if isPartnerRelationshipType(relType) && fromID.String() > toID.String() {
@@ -111,11 +152,17 @@ func (s *Service) RemoveRelationship(ctx context.Context, personIDFrom string, p
 	return nil
 }
 
-func (s *Service) GetRelatives(ctx context.Context, personID string) ([]models.Relative, error) {
+func (s *Service) GetRelatives(ctx context.Context, treeID string, personID string) ([]models.Relative, error) {
 	const op = "service.familytree.GetRelatives"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("getting relatives", slog.String("person_id", personID))
+	log.Info("getting relatives", slog.String("tree_id", treeID), slog.String("person_id", personID))
+
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
+	if err != nil {
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 
 	parsedPersonID, err := uuid.Parse(personID)
 	if err != nil {
@@ -123,13 +170,18 @@ func (s *Service) GetRelatives(ctx context.Context, personID string) ([]models.R
 		return nil, fmt.Errorf("%s: %w", op, ErrInvalidPersonID)
 	}
 
-	if _, err := s.personStorage.GetPerson(ctx, parsedPersonID); err != nil {
+	person, err := s.personStorage.GetPerson(ctx, parsedPersonID)
+	if err != nil {
 		if errors.Is(err, storage.ErrPersonNotFound) {
 			log.Info("person not found", slog.String("person_id", parsedPersonID.String()))
 			return nil, fmt.Errorf("%s: %w", op, ErrPersonNotFound)
 		}
 		log.Error("failed to get person", slog.String("error", err.Error()))
 		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	if person.TreeID != parsedTreeID {
+		log.Info("person tree mismatch", slog.String("person_tree_id", person.TreeID.String()), slog.String("requested_tree_id", parsedTreeID.String()))
+		return nil, fmt.Errorf("%s: %w", op, ErrTreeMismatch)
 	}
 
 	relatives, err := s.relationStorage.GetRelatives(ctx, parsedPersonID)

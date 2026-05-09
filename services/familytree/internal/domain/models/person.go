@@ -10,10 +10,11 @@ const (
 )
 
 type Person struct {
-	ID         uuid.UUID
-	TreeID     uuid.UUID
-	FirstName  string
-	LastName   string
-	Patronymic string
-	Gender     Gender
+	ID            uuid.UUID
+	TreeID        uuid.UUID
+	FirstName     string
+	LastName      string
+	Patronymic    string
+	Gender        Gender
+	AvatarPhotoID *uuid.UUID
 }

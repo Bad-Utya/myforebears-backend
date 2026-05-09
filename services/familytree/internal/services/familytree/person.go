@@ -13,27 +13,32 @@ import (
 )
 
 var (
-	ErrInvalidPersonID     = errors.New("invalid person id")
-	ErrInvalidTreeID       = errors.New("invalid tree id")
-	ErrInvalidName         = errors.New("first name and last name are required")
-	ErrInvalidGender       = errors.New("invalid gender")
-	ErrInvalidUserID       = errors.New("invalid user id")
-	ErrForbidden           = errors.New("forbidden")
-	ErrInvalidParentRole   = errors.New("invalid parent role")
-	ErrParentExists        = errors.New("parent with this role already exists")
-	ErrParentLimitReached  = errors.New("child already has two parents")
-	ErrAtLeastOneParent    = errors.New("at least one parent id must be provided")
-	ErrTreeMismatch        = errors.New("person does not belong to tree")
-	ErrUnknownPersonGender = errors.New("person gender is unknown")
-	ErrPersonNotFound      = errors.New("person not found")
-	ErrTreeNotFound        = errors.New("tree not found")
-	ErrDeleteNotAllowed    = errors.New("delete is not allowed for current relationship set")
-	ErrCannotDeleteLast    = errors.New("cannot delete the only person in tree")
-	ErrSelfRelationship    = errors.New("self relationship is not allowed")
-	ErrRelationshipExists  = errors.New("relationship already exists")
-	ErrRelationshipMissing = errors.New("relationship not found")
-	ErrPersonNotInSameTree = errors.New("persons must belong to the same tree")
-	ErrInvalidRelationType = errors.New("invalid relationship type")
+	ErrInvalidPersonID         = errors.New("invalid person id")
+	ErrInvalidTreeID           = errors.New("invalid tree id")
+	ErrInvalidName             = errors.New("first name and last name are required")
+	ErrInvalidGender           = errors.New("invalid gender")
+	ErrInvalidUserID           = errors.New("invalid user id")
+	ErrInvalidLimit            = errors.New("invalid limit")
+	ErrForbidden               = errors.New("forbidden")
+	ErrInvalidParentRole       = errors.New("invalid parent role")
+	ErrParentExists            = errors.New("parent with this role already exists")
+	ErrParentLimitReached      = errors.New("child already has two parents")
+	ErrAtLeastOneParent        = errors.New("at least one parent id must be provided")
+	ErrTreeMismatch            = errors.New("person does not belong to tree")
+	ErrUnknownPersonGender     = errors.New("person gender is unknown")
+	ErrPersonNotFound          = errors.New("person not found")
+	ErrTreeNotFound            = errors.New("tree not found")
+	ErrDeleteNotAllowed        = errors.New("delete is not allowed for current relationship set")
+	ErrCannotDeleteLast        = errors.New("cannot delete the only person in tree")
+	ErrSelfRelationship        = errors.New("self relationship is not allowed")
+	ErrRelationshipExists      = errors.New("relationship already exists")
+	ErrRelationshipMissing     = errors.New("relationship not found")
+	ErrPersonNotInSameTree     = errors.New("persons must belong to the same tree")
+	ErrInvalidRelationType     = errors.New("invalid relationship type")
+	ErrInvalidEmail            = errors.New("invalid email")
+	ErrTreeAccessEmailExists   = errors.New("tree access email already exists")
+	ErrTreeAccessEmailNotFound = errors.New("tree access email not found")
+	ErrInvalidMaxDepth         = errors.New("invalid max depth")
 )
 
 type Service struct {
@@ -85,7 +90,7 @@ func (s *Service) CreatePerson(
 		return models.Person{}, fmt.Errorf("%s: %w", op, ErrInvalidGender)
 	}
 
-	tree, err := s.personStorage.GetTree(ctx, parsedTreeID)
+	_, err = s.personStorage.GetTree(ctx, parsedTreeID)
 	if err != nil {
 		if errors.Is(err, storage.ErrTreeNotFound) {
 			log.Info("tree not found", slog.String("tree_id", parsedTreeID.String()))
@@ -95,7 +100,7 @@ func (s *Service) CreatePerson(
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	person, err := s.createPersonRecord(ctx, tree.CreatorID, parsedTreeID, gender, firstName, lastName, patronymic)
+	person, err := s.createPersonRecord(ctx, parsedTreeID, gender, firstName, lastName, patronymic)
 	if err != nil {
 		log.Error("failed to create person", slog.String("error", err.Error()))
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
@@ -106,11 +111,17 @@ func (s *Service) CreatePerson(
 	return person, nil
 }
 
-func (s *Service) GetPerson(ctx context.Context, personID string) (models.Person, error) {
+func (s *Service) GetPerson(ctx context.Context, treeID string, personID string) (models.Person, error) {
 	const op = "service.familytree.GetPerson"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("getting person", slog.String("person_id", personID))
+	log.Info("getting person", slog.String("tree_id", treeID), slog.String("person_id", personID))
+
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
+	if err != nil {
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
+		return models.Person{}, fmt.Errorf("%s: %w", op, err)
+	}
 
 	parsedPersonID, err := uuid.Parse(personID)
 	if err != nil {
@@ -128,6 +139,11 @@ func (s *Service) GetPerson(ctx context.Context, personID string) (models.Person
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 
+	if person.TreeID != parsedTreeID {
+		log.Info("person tree mismatch", slog.String("person_tree_id", person.TreeID.String()), slog.String("requested_tree_id", parsedTreeID.String()))
+		return models.Person{}, fmt.Errorf("%s: %w", op, ErrTreeMismatch)
+	}
+
 	log.Info("person loaded", slog.String("person_id", person.ID.String()))
 
 	return person, nil
@@ -135,6 +151,7 @@ func (s *Service) GetPerson(ctx context.Context, personID string) (models.Person
 
 func (s *Service) UpdatePerson(
 	ctx context.Context,
+	treeID string,
 	personID string,
 	firstName string,
 	lastName string,
@@ -144,7 +161,13 @@ func (s *Service) UpdatePerson(
 	const op = "service.familytree.UpdatePerson"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("updating person", slog.String("person_id", personID))
+	log.Info("updating person", slog.String("tree_id", treeID), slog.String("person_id", personID))
+
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
+	if err != nil {
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
+		return models.Person{}, fmt.Errorf("%s: %w", op, err)
+	}
 
 	parsedPersonID, err := uuid.Parse(personID)
 	if err != nil {
@@ -177,6 +200,11 @@ func (s *Service) UpdatePerson(
 	existing.Patronymic = patronymic
 	existing.Gender = gender
 
+	if existing.TreeID != parsedTreeID {
+		log.Info("person tree mismatch", slog.String("person_tree_id", existing.TreeID.String()), slog.String("requested_tree_id", parsedTreeID.String()))
+		return models.Person{}, fmt.Errorf("%s: %w", op, ErrTreeMismatch)
+	}
+
 	if err := s.personStorage.UpdatePerson(ctx, existing); err != nil {
 		if errors.Is(err, storage.ErrPersonNotFound) {
 			log.Info("person not found during update", slog.String("person_id", parsedPersonID.String()))
@@ -191,11 +219,17 @@ func (s *Service) UpdatePerson(
 	return existing, nil
 }
 
-func (s *Service) DeletePerson(ctx context.Context, personID string) error {
+func (s *Service) DeletePerson(ctx context.Context, treeID string, personID string) error {
 	const op = "service.familytree.DeletePerson"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("deleting person", slog.String("person_id", personID))
+	log.Info("deleting person", slog.String("tree_id", treeID), slog.String("person_id", personID))
+
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
+	if err != nil {
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
+		return fmt.Errorf("%s: %w", op, err)
+	}
 
 	parsedPersonID, err := uuid.Parse(personID)
 	if err != nil {
@@ -211,6 +245,11 @@ func (s *Service) DeletePerson(ctx context.Context, personID string) error {
 		}
 		log.Error("failed to load person", slog.String("error", err.Error()))
 		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if person.TreeID != parsedTreeID {
+		log.Info("person tree mismatch", slog.String("person_tree_id", person.TreeID.String()), slog.String("requested_tree_id", parsedTreeID.String()))
+		return fmt.Errorf("%s: %w", op, ErrTreeMismatch)
 	}
 
 	personsInTree, err := s.personStorage.GetPersonsByTree(ctx, person.TreeID)
@@ -290,16 +329,16 @@ func canDeleteByRelationshipRules(relatives []models.Relative) bool {
 	return false
 }
 
-func (s *Service) GetTree(ctx context.Context, treeID string) ([]models.Person, []models.Relationship, error) {
-	const op = "service.familytree.GetTree"
+func (s *Service) getTreeContentRaw(ctx context.Context, treeID string) ([]models.Person, []models.Relationship, error) {
+	const op = "service.familytree.getTreeContentRaw"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("getting tree", slog.String("tree_id", treeID))
+	log.Info("getting tree content", slog.String("tree_id", treeID))
 
-	parsedTreeID, err := uuid.Parse(treeID)
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
 	if err != nil {
-		log.Info("invalid tree id", slog.String("tree_id", treeID))
-		return nil, nil, fmt.Errorf("%s: %w", op, ErrInvalidTreeID)
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
+		return nil, nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	persons, err := s.personStorage.GetPersonsByTree(ctx, parsedTreeID)
