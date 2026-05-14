@@ -1,5 +1,7 @@
 ﻿# myforebears-backend
 
+ Сайт доступен по ссылке https://rooots.ru/
+
 ## Запуск backend'а
 
 1. Скачать репозиторий;
