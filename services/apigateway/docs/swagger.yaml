@@ -97,6 +97,285 @@ definitions:
       data:
         $ref: '#/definitions/auth.usersInfoData'
     type: object
+  customtree.createTreeBody:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      relation_down:
+        type: string
+      relation_up:
+        type: string
+      root_entity_name:
+        type: string
+    type: object
+  customtree.customContentSuccessResponse:
+    properties:
+      data:
+        properties:
+          edges:
+            items:
+              $ref: '#/definitions/customtree.customEdgeJSON'
+            type: array
+          entities:
+            items:
+              $ref: '#/definitions/customtree.customEntityJSON'
+            type: array
+          tree:
+            $ref: '#/definitions/customtree.customTreeJSON'
+        type: object
+    type: object
+  customtree.customCoordinateEdgeJSON:
+    properties:
+      child_id:
+        type: string
+      label_down:
+        type: string
+      label_up:
+        type: string
+      parent_id:
+        type: string
+    type: object
+  customtree.customCoordinateNodeJSON:
+    properties:
+      avatar_photo_id:
+        type: string
+      entity_id:
+        type: string
+      layer:
+        type: integer
+      name:
+        type: string
+      x:
+        type: number
+      "y":
+        type: number
+    type: object
+  customtree.customCoordinatesSuccessResponse:
+    properties:
+      data:
+        properties:
+          edges:
+            items:
+              $ref: '#/definitions/customtree.customCoordinateEdgeJSON'
+            type: array
+          height:
+            type: number
+          nodes:
+            items:
+              $ref: '#/definitions/customtree.customCoordinateNodeJSON'
+            type: array
+          width:
+            type: number
+        type: object
+    type: object
+  customtree.customEdgeJSON:
+    properties:
+      child_id:
+        type: string
+      parent_id:
+        type: string
+    type: object
+  customtree.customEmailsSuccessResponse:
+    properties:
+      data:
+        properties:
+          emails:
+            items:
+              type: string
+            type: array
+        type: object
+    type: object
+  customtree.customEntitiesSuccessResponse:
+    properties:
+      data:
+        properties:
+          entities:
+            items:
+              $ref: '#/definitions/customtree.customEntityJSON'
+            type: array
+        type: object
+    type: object
+  customtree.customEntityJSON:
+    properties:
+      avatar_photo_id:
+        type: string
+      created_at_unix:
+        type: integer
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      tree_id:
+        type: string
+    type: object
+  customtree.customEntitySuccessResponse:
+    properties:
+      data:
+        properties:
+          entity:
+            $ref: '#/definitions/customtree.customEntityJSON'
+        type: object
+    type: object
+  customtree.customPhotoJSON:
+    properties:
+      created_at_unix:
+        type: integer
+      entity_id:
+        type: string
+      file_name:
+        type: string
+      id:
+        type: string
+      is_avatar:
+        type: boolean
+      mime_type:
+        type: string
+      size_bytes:
+        type: integer
+    type: object
+  customtree.customPhotoSuccessResponse:
+    properties:
+      data:
+        properties:
+          photo:
+            $ref: '#/definitions/customtree.customPhotoJSON'
+        type: object
+    type: object
+  customtree.customPhotosSuccessResponse:
+    properties:
+      data:
+        properties:
+          photos:
+            items:
+              $ref: '#/definitions/customtree.customPhotoJSON'
+            type: array
+        type: object
+    type: object
+  customtree.customStatusSuccessResponse:
+    properties:
+      data:
+        properties:
+          status:
+            type: string
+        type: object
+    type: object
+  customtree.customTagJSON:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  customtree.customTagsSuccessResponse:
+    properties:
+      data:
+        properties:
+          tags:
+            items:
+              $ref: '#/definitions/customtree.customTagJSON'
+            type: array
+        type: object
+    type: object
+  customtree.customTreeJSON:
+    properties:
+      created_at_unix:
+        type: integer
+      creator_id:
+        type: integer
+      description:
+        type: string
+      id:
+        type: string
+      is_public_on_main_page:
+        type: boolean
+      is_view_restricted:
+        type: boolean
+      name:
+        type: string
+      relation_down:
+        type: string
+      relation_up:
+        type: string
+      root_entity_id:
+        type: string
+      similarity_score:
+        type: number
+      tags:
+        items:
+          $ref: '#/definitions/customtree.customTagJSON'
+        type: array
+    type: object
+  customtree.customTreeSuccessResponse:
+    properties:
+      data:
+        properties:
+          root_entity:
+            $ref: '#/definitions/customtree.customEntityJSON'
+          tree:
+            $ref: '#/definitions/customtree.customTreeJSON'
+        type: object
+    type: object
+  customtree.customTreesSuccessResponse:
+    properties:
+      data:
+        properties:
+          trees:
+            items:
+              $ref: '#/definitions/customtree.customTreeJSON'
+            type: array
+        type: object
+    type: object
+  customtree.edgeBody:
+    properties:
+      child_id:
+        type: string
+      parent_id:
+        type: string
+    type: object
+  customtree.emailBody:
+    properties:
+      email:
+        type: string
+    type: object
+  customtree.entityBody:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      parent_id:
+        type: string
+    type: object
+  customtree.tagsBody:
+    properties:
+      tag_codes:
+        items:
+          type: string
+        type: array
+    type: object
+  customtree.updateTreeBody:
+    properties:
+      description:
+        type: string
+      is_public_on_main_page:
+        type: boolean
+      is_view_restricted:
+        type: boolean
+      name:
+        type: string
+      relation_down:
+        type: string
+      relation_up:
+        type: string
+      root_entity_id:
+        type: string
+    type: object
   events.createEventTypeRequest:
     properties:
       name:
@@ -333,6 +612,11 @@ definitions:
       data:
         $ref: '#/definitions/familytree.addPartnerSuccessData'
     type: object
+  familytree.createTreeFromPublicRequest:
+    properties:
+      tree_name:
+        type: string
+    type: object
   familytree.createTreeSuccessData:
     properties:
       root_person:
@@ -344,6 +628,13 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/familytree.createTreeSuccessData'
+    type: object
+  familytree.exportPublicPersonRequest:
+    properties:
+      person_id:
+        type: string
+      tree_id:
+        type: string
     type: object
   familytree.familyEventJSON:
     properties:
@@ -457,6 +748,23 @@ definitions:
         type: string
       node_count:
         type: integer
+      root_person_id:
+        type: string
+      similarity_score:
+        type: number
+      tags:
+        items:
+          $ref: '#/definitions/familytree.tagJSON'
+        type: array
+    type: object
+  familytree.importPublicPersonRequest:
+    properties:
+      attach_to_person_id:
+        type: string
+      attachment:
+        type: string
+      tree_id:
+        type: string
     type: object
   familytree.personSuccessData:
     properties:
@@ -479,6 +787,174 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/familytree.personsSuccessData'
+    type: object
+  familytree.publicEventInput:
+    properties:
+      date_bound:
+        type: string
+      date_iso:
+        type: string
+      date_precision:
+        type: string
+      date_unknown:
+        type: boolean
+      event_type_id:
+        type: string
+      event_type_name:
+        type: string
+      id:
+        type: string
+    type: object
+  familytree.publicPersonEventJSON:
+    properties:
+      date_bound:
+        type: string
+      date_iso:
+        type: string
+      date_precision:
+        type: string
+      date_unknown:
+        type: boolean
+      event_type_id:
+        type: string
+      event_type_name:
+        type: string
+      id:
+        type: string
+      public_person_id:
+        type: string
+      source_event_id:
+        type: string
+    type: object
+  familytree.publicPersonImportSuccessResponse:
+    properties:
+      data:
+        properties:
+          person:
+            $ref: '#/definitions/familytree.familyPersonJSON'
+        type: object
+    type: object
+  familytree.publicPersonJSONSchema:
+    properties:
+      avatar_photo_id:
+        type: string
+      biography:
+        type: string
+      created_at_unix:
+        type: integer
+      events:
+        items:
+          $ref: '#/definitions/familytree.publicPersonEventJSON'
+        type: array
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      owner_user_id:
+        type: integer
+      patronymic:
+        type: string
+      similarity_score:
+        type: number
+      tags:
+        items:
+          $ref: '#/definitions/familytree.tagJSON'
+        type: array
+      updated_at_unix:
+        type: integer
+    type: object
+  familytree.publicPersonPhotoJSON:
+    properties:
+      created_at_unix:
+        type: integer
+      file_name:
+        type: string
+      id:
+        type: string
+      is_avatar:
+        type: boolean
+      mime_type:
+        type: string
+      public_person_id:
+        type: string
+      size_bytes:
+        type: integer
+    type: object
+  familytree.publicPersonPhotoSuccessResponse:
+    properties:
+      data:
+        properties:
+          photo:
+            $ref: '#/definitions/familytree.publicPersonPhotoJSON'
+        type: object
+    type: object
+  familytree.publicPersonPhotosSuccessResponse:
+    properties:
+      data:
+        properties:
+          photos:
+            items:
+              $ref: '#/definitions/familytree.publicPersonPhotoJSON'
+            type: array
+        type: object
+    type: object
+  familytree.publicPersonSuccessResponse:
+    properties:
+      data:
+        properties:
+          person:
+            $ref: '#/definitions/familytree.publicPersonJSONSchema'
+        type: object
+    type: object
+  familytree.publicPersonTreeSuccessResponse:
+    properties:
+      data:
+        properties:
+          person:
+            $ref: '#/definitions/familytree.familyPersonJSON'
+          tree:
+            $ref: '#/definitions/familytree.familyTreeJSON'
+        type: object
+    type: object
+  familytree.publicPersonsSuccessResponse:
+    properties:
+      data:
+        properties:
+          persons:
+            items:
+              $ref: '#/definitions/familytree.publicPersonJSONSchema'
+            type: array
+        type: object
+    type: object
+  familytree.setTagsRequest:
+    properties:
+      tag_codes:
+        items:
+          type: string
+        type: array
+    type: object
+  familytree.tagJSON:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  familytree.tagsSuccessResponse:
+    properties:
+      data:
+        properties:
+          tags:
+            items:
+              $ref: '#/definitions/familytree.tagJSON'
+            type: array
+        type: object
     type: object
   familytree.treeAccessEmailRequest:
     properties:
@@ -546,6 +1022,23 @@ definitions:
   familytree.updatePersonNameRequest:
     properties:
       first_name:
+        type: string
+      last_name:
+        type: string
+      patronymic:
+        type: string
+    type: object
+  familytree.updatePublicPersonRequest:
+    properties:
+      biography:
+        type: string
+      events:
+        items:
+          $ref: '#/definitions/familytree.publicEventInput'
+        type: array
+      first_name:
+        type: string
+      gender:
         type: string
       last_name:
         type: string
@@ -1048,6 +1541,1161 @@ paths:
       summary: Send reset link
       tags:
       - auth
+  /api/custom-trees/:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customTreesSuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List my custom trees
+      tags:
+      - custom-trees
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree settings and root entity
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customtree.createTreeBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customTreeSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create custom tree
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}:
+    delete:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customStatusSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete custom tree
+      tags:
+      - custom-trees
+    get:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customTreeSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get custom tree
+      tags:
+      - custom-trees
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Complete tree settings
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customtree.updateTreeBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customTreeSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update custom tree
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/access-emails:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Email to remove
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customtree.emailBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customStatusSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete custom tree access email
+      tags:
+      - custom-trees
+    get:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customEmailsSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List custom tree access emails
+      tags:
+      - custom-trees
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Allowed email
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customtree.emailBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customStatusSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add custom tree access email
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/content:
+    get:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customContentSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get custom tree content
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/coordinates:
+    get:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Entity used as visualization root
+        in: query
+        name: root_entity_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customCoordinatesSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Render custom tree coordinates
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/edges:
+    delete:
+      consumes:
+      - application/json
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Parent and child IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customtree.edgeBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customStatusSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Remove custom tree edge
+      tags:
+      - custom-trees
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Parent and child IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customtree.edgeBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customStatusSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add custom tree edge
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/entities:
+    get:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customEntitiesSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List custom tree entities
+      tags:
+      - custom-trees
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Entity data and parent ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customtree.entityBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customEntitySuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create custom tree entity
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/entities/{entity_id}:
+    delete:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entity_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customStatusSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete custom tree entity
+      tags:
+      - custom-trees
+    get:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entity_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customEntitySuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get custom tree entity
+      tags:
+      - custom-trees
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entity_id
+        required: true
+        type: string
+      - description: Entity data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customtree.entityBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customEntitySuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update custom tree entity
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/entities/{entity_id}/photos:
+    get:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entity_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customPhotosSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: List custom entity photos
+      tags:
+      - custom-trees
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entity_id
+        required: true
+        type: string
+      - description: Image file
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Use as avatar
+        in: formData
+        name: is_avatar
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customPhotoSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Upload custom entity photo
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/entities/{entity_id}/photos/{photo_id}:
+    delete:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entity_id
+        required: true
+        type: string
+      - description: Photo ID
+        in: path
+        name: photo_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customStatusSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete custom entity photo
+      tags:
+      - custom-trees
+    get:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Entity ID
+        in: path
+        name: entity_id
+        required: true
+        type: string
+      - description: Photo ID
+        in: path
+        name: photo_id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get custom entity photo
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/svg:
+    get:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Entity used as visualization root
+        in: query
+        name: root_entity_id
+        type: string
+      produces:
+      - image/svg+xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Render custom tree SVG
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/tags:
+    get:
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customTagsSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get custom tree tags
+      tags:
+      - custom-trees
+      - tags
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Complete tag-code set
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customtree.tagsBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customTreeSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Replace custom tree tags
+      tags:
+      - custom-trees
+      - tags
+  /api/custom-trees/public/random:
+    get:
+      parameters:
+      - description: Result count (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customTreesSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List random public custom trees
+      tags:
+      - custom-trees
+  /api/custom-trees/public/search:
+    get:
+      parameters:
+      - description: Name or description substring
+        in: query
+        name: q
+        type: string
+      - description: Comma-separated or repeated tag codes
+        in: query
+        name: tags
+        type: string
+      - description: Result count (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customTreesSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Search public custom trees
+      tags:
+      - custom-trees
+  /api/custom-trees/public/users/{user_id}:
+    get:
+      parameters:
+      - description: Owner user ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customTreesSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List user's public custom trees
+      tags:
+      - custom-trees
   /api/event-types/:
     get:
       consumes:
@@ -2451,6 +4099,95 @@ paths:
       summary: Update tree root person
       tags:
       - familytree
+  /api/familytree/{tree_id}/tags:
+    get:
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.tagsSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get family tree tags
+      tags:
+      - tags
+      - familytree
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Complete tag-code set
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/familytree.setTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.treeSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Replace family tree tags
+      tags:
+      - tags
+      - familytree
   /api/familytree/import/gedcom:
     post:
       consumes:
@@ -2536,15 +4273,17 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Tree name substring
+      - description: Tree name or description substring
         in: query
-        name: name
-        required: true
+        name: q
         type: string
-      - description: Trees count
+      - description: Comma-separated tag codes
+        in: query
+        name: tags
+        type: string
+      - description: Trees count (default 20, max 100)
         in: query
         name: limit
-        required: true
         type: integer
       produces:
       - application/json
@@ -3298,6 +5037,627 @@ paths:
       summary: Upload user avatar
       tags:
       - photos
+  /api/public-persons/:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create empty public person
+      tags:
+      - public-persons
+  /api/public-persons/{public_person_id}:
+    delete:
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.familyStatusSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete public person
+      tags:
+      - public-persons
+    get:
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get public person
+      tags:
+      - public-persons
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      - description: Public person data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/familytree.updatePublicPersonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update public person
+      tags:
+      - public-persons
+  /api/public-persons/{public_person_id}/import:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      - description: Target tree and attachment
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/familytree.importPublicPersonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonImportSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Import public person into tree
+      tags:
+      - public-persons
+  /api/public-persons/{public_person_id}/import-as-tree:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      - description: New tree settings
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/familytree.createTreeFromPublicRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonTreeSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create tree from public person
+      tags:
+      - public-persons
+  /api/public-persons/{public_person_id}/photos:
+    get:
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonPhotosSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List public person photos
+      tags:
+      - public-persons
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      - description: Image file
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: Use as avatar
+        in: formData
+        name: is_avatar
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonPhotoSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Upload public person photo
+      tags:
+      - public-persons
+  /api/public-persons/{public_person_id}/photos/{photo_id}:
+    delete:
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      - description: Photo ID
+        in: path
+        name: photo_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.familyStatusSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete public person photo
+      tags:
+      - public-persons
+    get:
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      - description: Photo ID
+        in: path
+        name: photo_id
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get public person photo
+      tags:
+      - public-persons
+  /api/public-persons/{public_person_id}/tags:
+    get:
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.tagsSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Get public person tags
+      tags:
+      - tags
+      - public-persons
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Public person ID
+        in: path
+        name: public_person_id
+        required: true
+        type: string
+      - description: Complete tag-code set
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/familytree.setTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Replace public person tags
+      tags:
+      - tags
+      - public-persons
+  /api/public-persons/export:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree and person IDs
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/familytree.exportPublicPersonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Export tree person to public catalog
+      tags:
+      - public-persons
+  /api/public-persons/random:
+    get:
+      parameters:
+      - description: Result count (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonsSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List random public persons
+      tags:
+      - public-persons
+  /api/public-persons/search:
+    get:
+      parameters:
+      - description: Name or biography substring
+        in: query
+        name: q
+        type: string
+      - description: Comma-separated or repeated tag codes
+        in: query
+        name: tags
+        type: string
+      - description: Result count (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonsSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Search public persons
+      tags:
+      - public-persons
+  /api/public-persons/users/{user_id}:
+    get:
+      parameters:
+      - description: Owner user ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: Result count (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.publicPersonsSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List user's public persons
+      tags:
+      - public-persons
+  /api/tags:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.tagsSuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: List available tags
+      tags:
+      - tags
   /api/users/{user_id}:
     get:
       consumes:

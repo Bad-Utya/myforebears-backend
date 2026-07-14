@@ -46,6 +46,92 @@ type updatePublicPersonRequest struct {
 	Events     []publicEventInput `json:"events"`
 }
 
+type publicPersonEventJSON struct {
+	ID             string `json:"id"`
+	PublicPersonID string `json:"public_person_id"`
+	SourceEventID  string `json:"source_event_id"`
+	EventTypeID    string `json:"event_type_id"`
+	EventTypeName  string `json:"event_type_name"`
+	DateISO        string `json:"date_iso"`
+	DatePrecision  string `json:"date_precision"`
+	DateBound      string `json:"date_bound"`
+	DateUnknown    bool   `json:"date_unknown"`
+}
+
+type publicPersonJSONSchema struct {
+	ID              string                  `json:"id"`
+	OwnerUserID     int32                   `json:"owner_user_id"`
+	FirstName       string                  `json:"first_name"`
+	LastName        string                  `json:"last_name"`
+	Patronymic      string                  `json:"patronymic"`
+	Gender          string                  `json:"gender"`
+	Biography       string                  `json:"biography"`
+	AvatarPhotoID   string                  `json:"avatar_photo_id"`
+	CreatedAtUnix   int64                   `json:"created_at_unix"`
+	UpdatedAtUnix   int64                   `json:"updated_at_unix"`
+	Events          []publicPersonEventJSON `json:"events"`
+	Tags            []tagJSON               `json:"tags"`
+	SimilarityScore float64                 `json:"similarity_score"`
+}
+
+type publicPersonPhotoJSON struct {
+	ID             string `json:"id"`
+	PublicPersonID string `json:"public_person_id"`
+	FileName       string `json:"file_name"`
+	MimeType       string `json:"mime_type"`
+	SizeBytes      int64  `json:"size_bytes"`
+	IsAvatar       bool   `json:"is_avatar"`
+	CreatedAtUnix  int64  `json:"created_at_unix"`
+}
+
+type publicPersonSuccessResponse struct {
+	Data struct {
+		Person publicPersonJSONSchema `json:"person"`
+	} `json:"data"`
+}
+
+type publicPersonsSuccessResponse struct {
+	Data struct {
+		Persons []publicPersonJSONSchema `json:"persons"`
+	} `json:"data"`
+}
+
+type publicPersonPhotoSuccessResponse struct {
+	Data struct {
+		Photo publicPersonPhotoJSON `json:"photo"`
+	} `json:"data"`
+}
+
+type publicPersonPhotosSuccessResponse struct {
+	Data struct {
+		Photos []publicPersonPhotoJSON `json:"photos"`
+	} `json:"data"`
+}
+
+type publicPersonImportSuccessResponse struct {
+	Data struct {
+		Person familyPersonJSON `json:"person"`
+	} `json:"data"`
+}
+
+type publicPersonTreeSuccessResponse struct {
+	Data struct {
+		Tree   familyTreeJSON   `json:"tree"`
+		Person familyPersonJSON `json:"person"`
+	} `json:"data"`
+}
+
+// CreatePublicPerson creates an empty reusable public person.
+// @Summary Create empty public person
+// @Tags public-persons
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} publicPersonSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/ [post]
 func (h *Handler) CreatePublicPerson(w http.ResponseWriter, r *http.Request) {
 	userID, ok := publicUserID(w, r)
 	if !ok {
@@ -59,6 +145,20 @@ func (h *Handler) CreatePublicPerson(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"person": publicPersonJSON(resp.GetPerson())})
 }
 
+// ExportPersonToPublic copies a person and related media/events from an owned tree into the public catalog.
+// @Summary Export tree person to public catalog
+// @Tags public-persons
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body exportPublicPersonRequest true "Tree and person IDs"
+// @Success 200 {object} publicPersonSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/export [post]
 func (h *Handler) ExportPersonToPublic(w http.ResponseWriter, r *http.Request) {
 	userID, ok := publicUserID(w, r)
 	if !ok {
@@ -121,6 +221,16 @@ func (h *Handler) ExportPersonToPublic(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"person": publicPersonJSON(created.GetPerson())})
 }
 
+// GetPublicPerson returns one reusable public person.
+// @Summary Get public person
+// @Tags public-persons
+// @Produce json
+// @Param public_person_id path string true "Public person ID"
+// @Success 200 {object} publicPersonSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/{public_person_id} [get]
 func (h *Handler) GetPublicPerson(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.client.GetPublicPerson(r.Context(), chi.URLParam(r, "public_person_id"))
 	if err != nil {
@@ -129,6 +239,16 @@ func (h *Handler) GetPublicPerson(w http.ResponseWriter, r *http.Request) {
 	}
 	response.OK(w, map[string]any{"person": publicPersonJSON(resp.GetPerson())})
 }
+
+// ListRandomPublicPersons returns random entries from the public catalog.
+// @Summary List random public persons
+// @Tags public-persons
+// @Produce json
+// @Param limit query int false "Result count (default 20, max 100)"
+// @Success 200 {object} publicPersonsSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/random [get]
 func (h *Handler) ListRandomPublicPersons(w http.ResponseWriter, r *http.Request) {
 	limit := queryLimit(r, 20)
 	resp, err := h.client.ListRandomPublicPersons(r.Context(), limit)
@@ -138,6 +258,18 @@ func (h *Handler) ListRandomPublicPersons(w http.ResponseWriter, r *http.Request
 	}
 	response.OK(w, map[string]any{"persons": publicPersonsJSON(resp.GetPersons())})
 }
+
+// SearchPublicPersons searches public persons by text and tag similarity.
+// @Summary Search public persons
+// @Tags public-persons
+// @Produce json
+// @Param q query string false "Name or biography substring"
+// @Param tags query string false "Comma-separated or repeated tag codes"
+// @Param limit query int false "Result count (default 20, max 100)"
+// @Success 200 {object} publicPersonsSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/search [get]
 func (h *Handler) SearchPublicPersons(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.client.SearchPublicPersons(r.Context(), r.URL.Query().Get("q"), selectedTagCodes(r), queryLimit(r, 20))
 	if err != nil {
@@ -146,6 +278,17 @@ func (h *Handler) SearchPublicPersons(w http.ResponseWriter, r *http.Request) {
 	}
 	response.OK(w, map[string]any{"persons": publicPersonsJSON(resp.GetPersons())})
 }
+
+// ListPublicPersonsByOwner returns public persons created by a user.
+// @Summary List user's public persons
+// @Tags public-persons
+// @Produce json
+// @Param user_id path int true "Owner user ID"
+// @Param limit query int false "Result count (default 20, max 100)"
+// @Success 200 {object} publicPersonsSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/users/{user_id} [get]
 func (h *Handler) ListPublicPersonsByOwner(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(chi.URLParam(r, "user_id"))
 	if err != nil {
@@ -160,6 +303,21 @@ func (h *Handler) ListPublicPersonsByOwner(w http.ResponseWriter, r *http.Reques
 	response.OK(w, map[string]any{"persons": publicPersonsJSON(resp.GetPersons())})
 }
 
+// UpdatePublicPerson fully updates a public person owned by the caller.
+// @Summary Update public person
+// @Tags public-persons
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param public_person_id path string true "Public person ID"
+// @Param request body updatePublicPersonRequest true "Public person data"
+// @Success 200 {object} publicPersonSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/{public_person_id} [put]
 func (h *Handler) UpdatePublicPerson(w http.ResponseWriter, r *http.Request) {
 	userID, ok := publicUserID(w, r)
 	if !ok {
@@ -182,6 +340,19 @@ func (h *Handler) UpdatePublicPerson(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"person": publicPersonJSON(resp.GetPerson())})
 }
 
+// DeletePublicPerson removes an owned public person and its copied media.
+// @Summary Delete public person
+// @Tags public-persons
+// @Produce json
+// @Security ApiKeyAuth
+// @Param public_person_id path string true "Public person ID"
+// @Success 200 {object} familyStatusSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/{public_person_id} [delete]
 func (h *Handler) DeletePublicPerson(w http.ResponseWriter, r *http.Request) {
 	userID, ok := publicUserID(w, r)
 	if !ok {
@@ -199,6 +370,21 @@ func (h *Handler) DeletePublicPerson(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]string{"status": "ok"})
 }
 
+// ImportPublicPerson copies a public person into an existing owned tree and attaches it to a person.
+// @Summary Import public person into tree
+// @Tags public-persons
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param public_person_id path string true "Public person ID"
+// @Param request body importPublicPersonRequest true "Target tree and attachment"
+// @Success 200 {object} publicPersonImportSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/{public_person_id}/import [post]
 func (h *Handler) ImportPublicPerson(w http.ResponseWriter, r *http.Request) {
 	userID, ok := publicUserID(w, r)
 	if !ok {
@@ -233,6 +419,20 @@ func (h *Handler) ImportPublicPerson(w http.ResponseWriter, r *http.Request) {
 	response.OK(w, map[string]any{"person": toPersonJSON(core.GetPerson())})
 }
 
+// CreateTreeFromPublicPerson creates a new family tree whose root is a copy of a public person.
+// @Summary Create tree from public person
+// @Tags public-persons
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param public_person_id path string true "Public person ID"
+// @Param request body createTreeFromPublicRequest true "New tree settings"
+// @Success 200 {object} publicPersonTreeSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/{public_person_id}/import-as-tree [post]
 func (h *Handler) CreateTreeFromPublicPerson(w http.ResponseWriter, r *http.Request) {
 	userID, ok := publicUserID(w, r)
 	if !ok {
@@ -264,6 +464,22 @@ func (h *Handler) CreateTreeFromPublicPerson(w http.ResponseWriter, r *http.Requ
 	response.OK(w, map[string]any{"tree": toTreeJSON(core.GetTree()), "person": toPersonJSON(core.GetPerson())})
 }
 
+// UploadPublicPersonPhoto uploads a gallery image or avatar for an owned public person.
+// @Summary Upload public person photo
+// @Tags public-persons
+// @Accept mpfd
+// @Produce json
+// @Security ApiKeyAuth
+// @Param public_person_id path string true "Public person ID"
+// @Param file formData file true "Image file"
+// @Param is_avatar formData bool false "Use as avatar"
+// @Success 200 {object} publicPersonPhotoSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/{public_person_id}/photos [post]
 func (h *Handler) UploadPublicPersonPhoto(w http.ResponseWriter, r *http.Request) {
 	userID, ok := publicUserID(w, r)
 	if !ok {
@@ -292,6 +508,17 @@ func (h *Handler) UploadPublicPersonPhoto(w http.ResponseWriter, r *http.Request
 	}
 	response.OK(w, map[string]any{"photo": resp.GetPhoto()})
 }
+
+// ListPublicPersonPhotos returns metadata for all public-person photos.
+// @Summary List public person photos
+// @Tags public-persons
+// @Produce json
+// @Param public_person_id path string true "Public person ID"
+// @Success 200 {object} publicPersonPhotosSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/{public_person_id}/photos [get]
 func (h *Handler) ListPublicPersonPhotos(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.photosClient.ListPublicPersonPhotos(r.Context(), chi.URLParam(r, "public_person_id"))
 	if err != nil {
@@ -300,6 +527,18 @@ func (h *Handler) ListPublicPersonPhotos(w http.ResponseWriter, r *http.Request)
 	}
 	response.OK(w, map[string]any{"photos": resp.GetPhotos()})
 }
+
+// GetPublicPersonPhoto returns public-person photo bytes.
+// @Summary Get public person photo
+// @Tags public-persons
+// @Produce application/octet-stream
+// @Param public_person_id path string true "Public person ID"
+// @Param photo_id path string true "Photo ID"
+// @Success 200 {file} binary
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/{public_person_id}/photos/{photo_id} [get]
 func (h *Handler) GetPublicPersonPhoto(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.photosClient.GetPublicPersonPhoto(r.Context(), chi.URLParam(r, "public_person_id"), chi.URLParam(r, "photo_id"))
 	if err != nil {
@@ -310,6 +549,21 @@ func (h *Handler) GetPublicPersonPhoto(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	_, _ = w.Write(resp.GetContent())
 }
+
+// DeletePublicPersonPhoto removes a photo from an owned public person.
+// @Summary Delete public person photo
+// @Tags public-persons
+// @Produce json
+// @Security ApiKeyAuth
+// @Param public_person_id path string true "Public person ID"
+// @Param photo_id path string true "Photo ID"
+// @Success 200 {object} familyStatusSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/public-persons/{public_person_id}/photos/{photo_id} [delete]
 func (h *Handler) DeletePublicPersonPhoto(w http.ResponseWriter, r *http.Request) {
 	userID, ok := publicUserID(w, r)
 	if !ok {

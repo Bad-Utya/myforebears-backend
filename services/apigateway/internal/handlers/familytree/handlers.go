@@ -93,16 +93,19 @@ type treeAccessEmailRequest struct {
 }
 
 type familyTreeJSON struct {
-	ID                   string  `json:"id"`
-	CreatorID            int32   `json:"creator_id"`
-	CreatorNickname      string  `json:"creator_nickname,omitempty"`
-	CreatorCreatedAtUnix int64   `json:"creator_created_at_unix,omitempty"`
-	CreatedAtUnix        int64   `json:"created_at_unix"`
-	IsViewRestricted     bool    `json:"is_view_restricted"`
-	IsPublicOnMainPage   bool    `json:"is_public_on_main_page"`
-	Name                 string  `json:"name"`
-	Description          *string `json:"description"`
-	NodeCount            int     `json:"node_count,omitempty"`
+	ID                   string    `json:"id"`
+	CreatorID            int32     `json:"creator_id"`
+	CreatorNickname      string    `json:"creator_nickname,omitempty"`
+	CreatorCreatedAtUnix int64     `json:"creator_created_at_unix,omitempty"`
+	CreatedAtUnix        int64     `json:"created_at_unix"`
+	IsViewRestricted     bool      `json:"is_view_restricted"`
+	IsPublicOnMainPage   bool      `json:"is_public_on_main_page"`
+	Name                 string    `json:"name"`
+	Description          *string   `json:"description"`
+	NodeCount            int       `json:"node_count,omitempty"`
+	RootPersonID         string    `json:"root_person_id,omitempty"`
+	Tags                 []tagJSON `json:"tags,omitempty"`
+	SimilarityScore      float64   `json:"similarity_score,omitempty"`
 }
 
 type familyPersonJSON struct {
