@@ -24,6 +24,10 @@ clients:
     address: "visualisation:50055"
     timeout: 5s
     retries_count: 3
+  customtree:
+    address: "customtree:50056"
+    timeout: 5s
+    retries_count: 3
   token_storage:
     address: "redis:6379"
     password: "from-env"

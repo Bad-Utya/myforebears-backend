@@ -26,6 +26,12 @@ type MetadataStorage interface {
 	Close()
 }
 
+type PublicMetadataStorage interface {
+	ListPublicPersonPhotos(ctx context.Context, publicPersonID uuid.UUID) ([]models.Photo, error)
+	UnsetPublicPersonAvatar(ctx context.Context, publicPersonID uuid.UUID) error
+	DeletePublicPersonMedia(ctx context.Context, publicPersonID uuid.UUID) ([]models.Photo, error)
+}
+
 type ObjectStorage interface {
 	PutObject(ctx context.Context, key string, content []byte, mimeType string) error
 	GetObject(ctx context.Context, key string) ([]byte, error)

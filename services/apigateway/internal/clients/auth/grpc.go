@@ -172,10 +172,43 @@ func (c *Client) GetUserInfo(ctx context.Context, userID int) (*authpb.GetUserIn
 	return resp, nil
 }
 
+func (c *Client) GetMe(ctx context.Context, userID int) (*authpb.GetMeResponse, error) {
+	const op = "clients.auth.GetMe"
+
+	resp, err := c.api.GetMe(ctx, &authpb.GetMeRequest{UserId: int32(userID)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) SearchUsers(ctx context.Context, query string, limit int) (*authpb.SearchUsersResponse, error) {
+	const op = "clients.auth.SearchUsers"
+
+	resp, err := c.api.SearchUsers(ctx, &authpb.SearchUsersRequest{Query: query, Limit: int32(limit)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
 func (c *Client) UpdateNickname(ctx context.Context, userID int, nickname string) (*authpb.UpdateNicknameResponse, error) {
 	const op = "clients.auth.UpdateNickname"
 
 	resp, err := c.api.UpdateNickname(ctx, &authpb.UpdateNicknameRequest{UserId: int32(userID), Nickname: nickname})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) UpdatePreferences(ctx context.Context, userID int, language string, theme string) (*authpb.UpdatePreferencesResponse, error) {
+	const op = "clients.auth.UpdatePreferences"
+
+	resp, err := c.api.UpdatePreferences(ctx, &authpb.UpdatePreferencesRequest{UserId: int32(userID), Language: language, Theme: theme})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 
-	eventspb "github.com/Bad-Utya/myforebears-backend/gen/go/events"
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/domain/models"
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/storage"
 	"github.com/google/uuid"
@@ -19,6 +19,8 @@ var (
 	ErrInvalidGender           = errors.New("invalid gender")
 	ErrInvalidUserID           = errors.New("invalid user id")
 	ErrInvalidLimit            = errors.New("invalid limit")
+	ErrInvalidQuery            = errors.New("invalid query")
+	ErrUnknownTag              = errors.New("unknown tag")
 	ErrForbidden               = errors.New("forbidden")
 	ErrInvalidParentRole       = errors.New("invalid parent role")
 	ErrParentExists            = errors.New("parent with this role already exists")
@@ -44,20 +46,20 @@ var (
 type Service struct {
 	log             *slog.Logger
 	personStorage   storage.PersonStorage
+	publicStorage   storage.PublicPersonStorage
+	tagStorage      storage.TagStorage
 	relationStorage storage.RelationshipStorage
-	eventsClient    eventsClient
 }
 
-type eventsClient interface {
-	CreateEvent(ctx context.Context, req *eventspb.CreateEventRequest) (*eventspb.CreateEventResponse, error)
-}
-
-func New(log *slog.Logger, personStorage storage.PersonStorage, relationStorage storage.RelationshipStorage, eventsClient eventsClient) *Service {
+func New(log *slog.Logger, personStorage storage.PersonStorage, relationStorage storage.RelationshipStorage) *Service {
+	publicStorage, _ := personStorage.(storage.PublicPersonStorage)
+	tagStorage, _ := personStorage.(storage.TagStorage)
 	return &Service{
 		log:             log,
 		personStorage:   personStorage,
+		publicStorage:   publicStorage,
+		tagStorage:      tagStorage,
 		relationStorage: relationStorage,
-		eventsClient:    eventsClient,
 	}
 }
 
@@ -68,6 +70,7 @@ func (s *Service) CreatePerson(
 	lastName string,
 	patronymic string,
 	gender models.Gender,
+	biography string,
 ) (models.Person, error) {
 	const op = "service.familytree.CreatePerson"
 	log := s.log.With(slog.String("op", op))
@@ -103,6 +106,10 @@ func (s *Service) CreatePerson(
 	person, err := s.createPersonRecord(ctx, parsedTreeID, gender, firstName, lastName, patronymic)
 	if err != nil {
 		log.Error("failed to create person", slog.String("error", err.Error()))
+		return models.Person{}, fmt.Errorf("%s: %w", op, err)
+	}
+	person.Biography = strings.TrimSpace(biography)
+	if err := s.personStorage.UpdatePerson(ctx, person); err != nil {
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -157,6 +164,7 @@ func (s *Service) UpdatePerson(
 	lastName string,
 	patronymic string,
 	gender models.Gender,
+	biography string,
 ) (models.Person, error) {
 	const op = "service.familytree.UpdatePerson"
 	log := s.log.With(slog.String("op", op))
@@ -199,6 +207,7 @@ func (s *Service) UpdatePerson(
 	existing.LastName = lastName
 	existing.Patronymic = patronymic
 	existing.Gender = gender
+	existing.Biography = strings.TrimSpace(biography)
 
 	if existing.TreeID != parsedTreeID {
 		log.Info("person tree mismatch", slog.String("person_tree_id", existing.TreeID.String()), slog.String("requested_tree_id", parsedTreeID.String()))

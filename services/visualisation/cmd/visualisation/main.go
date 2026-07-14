@@ -29,6 +29,12 @@ func main() {
 		cfg.FamilyTree.Address,
 		cfg.FamilyTree.Timeout,
 		cfg.FamilyTree.RetriesCount,
+		cfg.Photos.Address,
+		cfg.Photos.Timeout,
+		cfg.Photos.RetriesCount,
+		cfg.Events.Address,
+		cfg.Events.Timeout,
+		cfg.Events.RetriesCount,
 	)
 
 	go application.GRPCServer.MustRun()

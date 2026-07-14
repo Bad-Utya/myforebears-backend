@@ -12,6 +12,7 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 
 	authclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/auth"
+	customtreeclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/customtree"
 	eventsclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/events"
 	familytreeclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/familytree"
 	photosclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/photos"
@@ -19,6 +20,7 @@ import (
 	visualisationclient "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/clients/visualisation"
 	"github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/config"
 	authhandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/auth"
+	customtreehandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/customtree"
 	eventshandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/events"
 	familytreehandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/familytree"
 	photoshandler "github.com/Bad-Utya/myforebears-backend/services/apigateway/internal/handlers/photos"
@@ -34,6 +36,7 @@ type App struct {
 	eventsClient        *eventsclient.Client
 	photosClient        *photosclient.Client
 	visualisationClient *visualisationclient.Client
+	customTreeClient    *customtreeclient.Client
 	redisClient         *redisclient.Client
 }
 
@@ -95,13 +98,17 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect to visualisation service: %v", err))
 	}
+	customTreeGRPC, err := customtreeclient.New(ctx, log, cfg.Clients.CustomTree.Address, cfg.Clients.CustomTree.Timeout, cfg.Clients.CustomTree.RetriesCount)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to customtree service: %v", err))
+	}
 
 	// Build HTTP router.
 	router := chi.NewRouter()
 
 	// Global middleware.
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedOrigins:   []string{"http://82.202.128.104:3000/"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Request-Id"},
 		ExposedHeaders:   []string{"Link"},
@@ -125,12 +132,14 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 
 	tokenChecker := middleware.NewTokenChecker(redisClient, cfg.JWTSecret, log)
 	treeAccessChecker := middleware.NewTreeAccessChecker(log, tokenChecker, familyTreeGRPC)
+	customTreeAccess := middleware.NewCustomTreeAccess(tokenChecker, customTreeGRPC)
 
 	authHandler := authhandler.New(log, authGRPC, familyTreeGRPC)
-	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC, eventsGRPC, authGRPC)
+	familyTreeHandler := familytreehandler.New(log, familyTreeGRPC, eventsGRPC, authGRPC, photosGRPC)
 	eventsHandler := eventshandler.New(log, eventsGRPC)
 	photosHandler := photoshandler.New(log, photosGRPC)
 	visualisationHandler := visualisationhandler.New(log, visualisationGRPC)
+	customTreeHandler := customtreehandler.New(customTreeGRPC)
 
 	router.Get("/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL("/swagger/doc.json"),
@@ -156,16 +165,21 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
 			r.Patch("/me/nickname", authHandler.UpdateNickname)
+			r.Patch("/me/preferences", authHandler.UpdatePreferences)
 			r.Get("/me", authHandler.GetMe)
 		})
 
+		r.Get("/search", authHandler.SearchUsers)
 		r.Get("/public/random", authHandler.ListRandomPublicUsers)
 		r.Get("/{user_id}", authHandler.GetUserInfo)
 	})
 
+	router.Get("/api/tags", familyTreeHandler.ListTags)
+
 	router.Route("/api/familytree", func(r chi.Router) {
 		r.Get("/public/users/{user_id}", familyTreeHandler.ListPublicTreesByCreator)
 		r.Get("/public/random", familyTreeHandler.ListRandomPublicTrees)
+		r.Get("/public/search", familyTreeHandler.SearchPublicTrees)
 
 		r.Group(func(r chi.Router) {
 			r.Use(tokenChecker.Middleware)
@@ -177,6 +191,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		r.Group(func(r chi.Router) {
 			r.Use(treeAccessChecker.ReadAccessMiddleware)
 			r.Get("/{tree_id}", familyTreeHandler.GetTree)
+			r.Get("/{tree_id}/tags", familyTreeHandler.GetTreeTags)
 			r.Get("/{tree_id}/content", familyTreeHandler.GetTreeContent)
 			r.Get("/{tree_id}/persons", familyTreeHandler.ListPersons)
 			r.Get("/{tree_id}/persons/{person_id}", familyTreeHandler.GetPerson)
@@ -185,6 +200,8 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		r.Group(func(r chi.Router) {
 			r.Use(treeAccessChecker.OwnerOnlyMiddleware)
 			r.Patch("/{tree_id}", familyTreeHandler.UpdateTreeSettings)
+			r.Put("/{tree_id}/tags", familyTreeHandler.SetTreeTags)
+			r.Patch("/{tree_id}/root-person", familyTreeHandler.UpdateTreeRootPerson)
 			r.Get("/{tree_id}/export/gedcom", familyTreeHandler.ExportGEDCOM)
 			r.Post("/{tree_id}/access-emails", familyTreeHandler.AddTreeAccessEmail)
 			r.Get("/{tree_id}/access-emails", familyTreeHandler.ListTreeAccessEmails)
@@ -273,6 +290,67 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		})
 	})
 
+	router.Route("/api/public-persons", func(r chi.Router) {
+		r.Get("/random", familyTreeHandler.ListRandomPublicPersons)
+		r.Get("/search", familyTreeHandler.SearchPublicPersons)
+		r.Get("/users/{user_id}", familyTreeHandler.ListPublicPersonsByOwner)
+		r.Get("/{public_person_id}", familyTreeHandler.GetPublicPerson)
+		r.Get("/{public_person_id}/tags", familyTreeHandler.GetPublicPersonTags)
+		r.Get("/{public_person_id}/photos", familyTreeHandler.ListPublicPersonPhotos)
+		r.Get("/{public_person_id}/photos/{photo_id}", familyTreeHandler.GetPublicPersonPhoto)
+		r.Group(func(r chi.Router) {
+			r.Use(tokenChecker.Middleware)
+			r.Post("/", familyTreeHandler.CreatePublicPerson)
+			r.Post("/export", familyTreeHandler.ExportPersonToPublic)
+			r.Put("/{public_person_id}", familyTreeHandler.UpdatePublicPerson)
+			r.Put("/{public_person_id}/tags", familyTreeHandler.SetPublicPersonTags)
+			r.Delete("/{public_person_id}", familyTreeHandler.DeletePublicPerson)
+			r.Post("/{public_person_id}/import", familyTreeHandler.ImportPublicPerson)
+			r.Post("/{public_person_id}/import-as-tree", familyTreeHandler.CreateTreeFromPublicPerson)
+			r.Post("/{public_person_id}/photos", familyTreeHandler.UploadPublicPersonPhoto)
+			r.Delete("/{public_person_id}/photos/{photo_id}", familyTreeHandler.DeletePublicPersonPhoto)
+		})
+	})
+
+	router.Route("/api/custom-trees", func(r chi.Router) {
+		r.Get("/public/random", customTreeHandler.Random)
+		r.Get("/public/search", customTreeHandler.Search)
+		r.Get("/public/users/{user_id}", customTreeHandler.ListByOwner)
+		r.Group(func(r chi.Router) {
+			r.Use(tokenChecker.Middleware)
+			r.Post("/", customTreeHandler.CreateTree)
+			r.Get("/", customTreeHandler.ListMine)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(customTreeAccess.Read)
+			r.Get("/{tree_id}", customTreeHandler.GetTree)
+			r.Get("/{tree_id}/tags", customTreeHandler.GetTags)
+			r.Get("/{tree_id}/content", customTreeHandler.Content)
+			r.Get("/{tree_id}/entities", customTreeHandler.ListEntities)
+			r.Get("/{tree_id}/entities/{entity_id}", customTreeHandler.GetEntity)
+			r.Get("/{tree_id}/entities/{entity_id}/photos", customTreeHandler.ListPhotos)
+			r.Get("/{tree_id}/entities/{entity_id}/photos/{photo_id}", customTreeHandler.GetPhoto)
+			r.Get("/{tree_id}/coordinates", customTreeHandler.Coordinates)
+			r.Get("/{tree_id}/svg", customTreeHandler.SVG)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(customTreeAccess.Owner)
+			r.Put("/{tree_id}", customTreeHandler.UpdateTree)
+			r.Put("/{tree_id}/tags", customTreeHandler.SetTags)
+			r.Delete("/{tree_id}", customTreeHandler.DeleteTree)
+			r.Post("/{tree_id}/entities", customTreeHandler.CreateEntity)
+			r.Put("/{tree_id}/entities/{entity_id}", customTreeHandler.UpdateEntity)
+			r.Delete("/{tree_id}/entities/{entity_id}", customTreeHandler.DeleteEntity)
+			r.Post("/{tree_id}/edges", customTreeHandler.AddEdge)
+			r.Delete("/{tree_id}/edges", customTreeHandler.RemoveEdge)
+			r.Post("/{tree_id}/access-emails", customTreeHandler.AddEmail)
+			r.Get("/{tree_id}/access-emails", customTreeHandler.ListEmails)
+			r.Delete("/{tree_id}/access-emails", customTreeHandler.DeleteEmail)
+			r.Post("/{tree_id}/entities/{entity_id}/photos", customTreeHandler.UploadPhoto)
+			r.Delete("/{tree_id}/entities/{entity_id}/photos/{photo_id}", customTreeHandler.DeletePhoto)
+		})
+	})
+
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.HTTP.Port),
 		Handler:      router,
@@ -289,6 +367,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 		eventsClient:        eventsGRPC,
 		photosClient:        photosGRPC,
 		visualisationClient: visualisationGRPC,
+		customTreeClient:    customTreeGRPC,
 		redisClient:         redisClient,
 	}
 }
@@ -338,6 +417,9 @@ func (a *App) Stop(ctx context.Context) {
 
 	if err := a.visualisationClient.Close(); err != nil {
 		a.log.Error("failed to close visualisation grpc connection", slog.String("op", op), slog.String("error", err.Error()))
+	}
+	if err := a.customTreeClient.Close(); err != nil {
+		a.log.Error("failed to close customtree grpc connection", slog.String("error", err.Error()))
 	}
 
 	if err := a.redisClient.Close(); err != nil {

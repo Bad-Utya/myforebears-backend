@@ -170,3 +170,27 @@ func (c *Client) DeletePhotoByID(ctx context.Context, req *photospb.DeletePhotoB
 
 	return nil
 }
+
+func (c *Client) CopyPersonMediaToPublic(ctx context.Context, req *photospb.CopyPersonMediaToPublicRequest) (*photospb.CopyMediaResponse, error) {
+	return c.api.CopyPersonMediaToPublic(ctx, req)
+}
+func (c *Client) CopyPublicPersonMediaToTree(ctx context.Context, req *photospb.CopyPublicPersonMediaToTreeRequest) (*photospb.CopyMediaResponse, error) {
+	return c.api.CopyPublicPersonMediaToTree(ctx, req)
+}
+func (c *Client) UploadPublicPersonPhoto(ctx context.Context, req *photospb.UploadPublicPersonPhotoRequest) (*photospb.UploadPersonPhotoResponse, error) {
+	return c.api.UploadPublicPersonPhoto(ctx, req)
+}
+func (c *Client) ListPublicPersonPhotos(ctx context.Context, id string) (*photospb.ListPersonPhotosResponse, error) {
+	return c.api.ListPublicPersonPhotos(ctx, &photospb.ListPublicPersonPhotosRequest{PublicPersonId: id})
+}
+func (c *Client) GetPublicPersonPhoto(ctx context.Context, publicID, photoID string) (*photospb.GetPhotoContentResponse, error) {
+	return c.api.GetPublicPersonPhoto(ctx, &photospb.GetPublicPersonPhotoRequest{PublicPersonId: publicID, PhotoId: photoID})
+}
+func (c *Client) DeletePublicPersonPhoto(ctx context.Context, userID int, publicID, photoID string) error {
+	_, err := c.api.DeletePublicPersonPhoto(ctx, &photospb.DeletePublicPersonPhotoRequest{RequestUserId: int32(userID), PublicPersonId: publicID, PhotoId: photoID})
+	return err
+}
+func (c *Client) DeletePublicPersonMedia(ctx context.Context, userID int, publicID string) error {
+	_, err := c.api.DeletePublicPersonMedia(ctx, &photospb.DeletePublicPersonMediaRequest{RequestUserId: int32(userID), PublicPersonId: publicID})
+	return err
+}

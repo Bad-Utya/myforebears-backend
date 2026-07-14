@@ -8,4 +8,6 @@ type User struct {
 	PassHash  []byte
 	Nickname  string
 	CreatedAt time.Time
+	Language  string
+	Theme     string
 }

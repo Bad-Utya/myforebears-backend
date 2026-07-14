@@ -14,6 +14,8 @@ import (
 type App struct {
 	GRPCServer *grpcapp.App
 	publisher  *rabbitmq.Publisher
+	postgres   *postgres.Storage
+	redis      *redisstorage.Storage
 }
 
 func New(
@@ -62,6 +64,8 @@ func New(
 	return &App{
 		GRPCServer: grpcApp,
 		publisher:  pub,
+		postgres:   userStorage,
+		redis:      verificationStorage,
 	}
 }
 
@@ -69,4 +73,6 @@ func New(
 func (a *App) Stop() {
 	a.GRPCServer.Stop()
 	a.publisher.Close()
+	a.redis.Close()
+	a.postgres.Close()
 }

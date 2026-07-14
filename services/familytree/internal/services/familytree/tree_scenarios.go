@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	eventspb "github.com/Bad-Utya/myforebears-backend/gen/go/events"
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/domain/models"
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/storage"
 	"github.com/google/uuid"
@@ -17,17 +16,20 @@ import (
 type ParentRole string
 
 const (
-	ParentRoleFather    ParentRole = "FATHER"
-	ParentRoleMother    ParentRole = "MOTHER"
-	birthEventTypeID    string     = "4af8f935-180f-4be6-8f7a-f6ecf90af4b2"
-	marriageEventTypeID string     = "2c2f5f12-5476-4ef4-89df-85d0a6f4a6bc"
+	ParentRoleFather ParentRole = "FATHER"
+	ParentRoleMother ParentRole = "MOTHER"
 )
 
-func (s *Service) CreateTree(ctx context.Context, requestUserID int, description string) (models.Tree, models.Person, error) {
+func (s *Service) CreateTree(ctx context.Context, requestUserID int, description string, name string) (models.Tree, models.Person, error) {
 	const op = "service.familytree.CreateTree"
 	log := s.log.With(slog.String("op", op))
 
-	log.Info("creating tree", slog.Int("request_user_id", requestUserID))
+	name = strings.TrimSpace(name)
+	if name == "" {
+		name = "New tree"
+	}
+
+	log.Info("creating tree", slog.Int("request_user_id", requestUserID), slog.String("name", name))
 
 	if requestUserID <= 0 {
 		return models.Tree{}, models.Person{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
@@ -41,7 +43,7 @@ func (s *Service) CreateTree(ctx context.Context, requestUserID int, description
 		CreatedAt:          time.Now(),
 		IsViewRestricted:   true,
 		IsPublicOnMainPage: false,
-		Name:               "New tree",
+		Name:               name,
 		Description:        descriptionPtr,
 	}
 
@@ -106,6 +108,33 @@ func (s *Service) ListPublicTreesByCreator(ctx context.Context, creatorID int) (
 	}
 
 	log.Info("public trees listed", slog.Int("count", len(trees)))
+
+	return trees, nil
+}
+
+func (s *Service) SearchPublicTreesByName(ctx context.Context, nameQuery string, tagCodes []string, limit int) ([]models.Tree, error) {
+	const op = "service.familytree.SearchPublicTreesByName"
+	log := s.log.With(slog.String("op", op))
+
+	nameQuery = strings.TrimSpace(nameQuery)
+	log.Info("searching public trees", slog.String("query", nameQuery), slog.Int("limit", limit))
+
+	tagCodes = normalizeTagCodes(tagCodes)
+	if nameQuery == "" && len(tagCodes) == 0 {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidQuery)
+	}
+	if limit <= 0 || limit > 100 {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidLimit)
+	}
+
+	trees, err := s.tagStorage.SearchPublicTrees(ctx, strings.ToLower(nameQuery), tagCodes, limit)
+	if err != nil {
+		if errors.Is(err, storage.ErrUnknownTag) {
+			return nil, fmt.Errorf("%s: %w", op, ErrUnknownTag)
+		}
+		log.Error("failed to search public trees", slog.String("error", err.Error()))
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
 
 	return trees, nil
 }
@@ -295,6 +324,59 @@ func (s *Service) UpdateTreeSettings(ctx context.Context, treeID string, isViewR
 			return models.Tree{}, fmt.Errorf("%s: %w", op, ErrTreeNotFound)
 		}
 		log.Error("failed to load updated tree", slog.String("error", err.Error()))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return tree, nil
+}
+
+func (s *Service) UpdateTreeRootPerson(ctx context.Context, treeID string, rootPersonID string) (models.Tree, error) {
+	const op = "service.familytree.UpdateTreeRootPerson"
+	log := s.log.With(slog.String("op", op))
+
+	log.Info("updating tree root person", slog.String("tree_id", treeID), slog.String("root_person_id", rootPersonID))
+
+	parsedTreeID, err := s.authorizeTree(ctx, treeID)
+	if err != nil {
+		log.Error("failed to validate tree", slog.String("error", err.Error()))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	parsedPersonID, err := uuid.Parse(rootPersonID)
+	if err != nil {
+		log.Info("invalid person id", slog.String("person_id", rootPersonID))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, ErrInvalidPersonID)
+	}
+
+	person, err := s.personStorage.GetPerson(ctx, parsedPersonID)
+	if err != nil {
+		if errors.Is(err, storage.ErrPersonNotFound) {
+			log.Info("person not found", slog.String("person_id", parsedPersonID.String()))
+			return models.Tree{}, fmt.Errorf("%s: %w", op, ErrPersonNotFound)
+		}
+		log.Error("failed to load person", slog.String("error", err.Error()))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	if person.TreeID != parsedTreeID {
+		log.Info("person tree mismatch", slog.String("person_tree_id", person.TreeID.String()), slog.String("requested_tree_id", parsedTreeID.String()))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, ErrTreeMismatch)
+	}
+
+	if err := s.personStorage.UpdateTreeRootPersonID(ctx, parsedTreeID, parsedPersonID); err != nil {
+		if errors.Is(err, storage.ErrTreeNotFound) {
+			log.Info("tree not found", slog.String("tree_id", parsedTreeID.String()))
+			return models.Tree{}, fmt.Errorf("%s: %w", op, ErrTreeNotFound)
+		}
+		log.Error("failed to update tree root person", slog.String("error", err.Error()))
+		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	tree, err := s.personStorage.GetTree(ctx, parsedTreeID)
+	if err != nil {
+		if errors.Is(err, storage.ErrTreeNotFound) {
+			return models.Tree{}, fmt.Errorf("%s: %w", op, ErrTreeNotFound)
+		}
 		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -583,12 +665,6 @@ func (s *Service) AddPartner(
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	tree, err := s.personStorage.GetTree(ctx, parsedTreeID)
-	if err != nil {
-		log.Error("failed to load tree", slog.String("error", err.Error()))
-		return models.Person{}, fmt.Errorf("%s: %w", op, err)
-	}
-
 	if firstName == "" || lastName == "" {
 		log.Info("invalid partner name")
 		return models.Person{}, fmt.Errorf("%s: %w", op, ErrInvalidName)
@@ -626,18 +702,11 @@ func (s *Service) AddPartner(
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	created, err := s.ensureRelationship(ctx, basePerson.ID, partner.ID, models.RelationshipPartnerMarried)
+	_, err = s.ensureRelationship(ctx, basePerson.ID, partner.ID, models.RelationshipPartnerMarried)
 	if err != nil {
 		log.Error("failed to ensure partner relationship", slog.String("error", err.Error()))
 		return models.Person{}, fmt.Errorf("%s: %w", op, err)
 	}
-	if created {
-		if err := s.createAutogeneratedMarriageEvent(ctx, tree.CreatorID, parsedTreeID, basePerson.ID, partner.ID); err != nil {
-			log.Error("failed to create autogenerated marriage event", slog.String("error", err.Error()))
-			return models.Person{}, fmt.Errorf("%s: %w", op, err)
-		}
-	}
-
 	log.Info("partner added", slog.String("partner_id", partner.ID.String()))
 
 	return partner, nil
@@ -972,11 +1041,9 @@ func (s *Service) createPersonRecord(
 	}
 	if err := s.relationStorage.EnsurePersonNode(ctx, person.ID, person.TreeID); err != nil {
 		log.Error("failed to ensure person node", slog.String("person_id", person.ID.String()), slog.String("error", err.Error()))
-		return models.Person{}, err
-	}
-
-	if err := s.createAutogeneratedBirthEvent(ctx, treeID, person.ID); err != nil {
-		log.Error("failed to create autogenerated birth event", slog.String("person_id", person.ID.String()), slog.String("error", err.Error()))
+		if rollbackErr := s.personStorage.DeletePerson(ctx, person.ID); rollbackErr != nil {
+			log.Error("failed to roll back person record", slog.String("person_id", person.ID.String()), slog.String("error", rollbackErr.Error()))
+		}
 		return models.Person{}, err
 	}
 
@@ -1004,69 +1071,6 @@ func (s *Service) ensureRelationship(ctx context.Context, fromID uuid.UUID, toID
 		return false, err
 	}
 	return true, nil
-}
-
-func (s *Service) createAutogeneratedBirthEvent(ctx context.Context, treeID uuid.UUID, personID uuid.UUID) error {
-	const op = "service.familytree.createAutogeneratedBirthEvent"
-	log := s.log.With(slog.String("op", op), slog.String("tree_id", treeID.String()), slog.String("person_id", personID.String()))
-
-	if s.eventsClient == nil {
-		log.Info("events client is not configured, skip autogenerated birth event")
-		return nil
-	}
-
-	_, err := s.eventsClient.CreateEvent(ctx, &eventspb.CreateEventRequest{
-		TreeId:              treeID.String(),
-		EventTypeId:         birthEventTypeID,
-		PrimaryPersonIds:    []string{personID.String()},
-		AdditionalPersonIds: nil,
-		DateIso:             "",
-		DateUnknown:         true,
-		DatePrecision:       eventspb.EventDatePrecision_EVENT_DATE_PRECISION_DAY,
-		DateBound:           eventspb.EventDateBound_EVENT_DATE_BOUND_EXACT,
-		IsAutogenerated:     true,
-	})
-
-	if err != nil {
-		log.Error("failed to create autogenerated birth event", slog.String("error", err.Error()))
-		return err
-	}
-
-	return nil
-}
-
-func (s *Service) createAutogeneratedMarriageEvent(ctx context.Context, requestUserID int, treeID uuid.UUID, person1ID uuid.UUID, person2ID uuid.UUID) error {
-	const op = "service.familytree.createAutogeneratedMarriageEvent"
-	log := s.log.With(slog.String("op", op), slog.Int("request_user_id", requestUserID), slog.String("tree_id", treeID.String()), slog.String("person1_id", person1ID.String()), slog.String("person2_id", person2ID.String()))
-
-	if s.eventsClient == nil {
-		log.Info("events client is not configured, skip autogenerated marriage event")
-		return nil
-	}
-
-	primary := []string{person1ID.String(), person2ID.String()}
-	if primary[0] > primary[1] {
-		primary[0], primary[1] = primary[1], primary[0]
-	}
-
-	_, err := s.eventsClient.CreateEvent(ctx, &eventspb.CreateEventRequest{
-		TreeId:              treeID.String(),
-		EventTypeId:         marriageEventTypeID,
-		PrimaryPersonIds:    primary,
-		AdditionalPersonIds: nil,
-		DateIso:             "",
-		DateUnknown:         true,
-		DatePrecision:       eventspb.EventDatePrecision_EVENT_DATE_PRECISION_DAY,
-		DateBound:           eventspb.EventDateBound_EVENT_DATE_BOUND_EXACT,
-		IsAutogenerated:     true,
-	})
-
-	if err != nil {
-		log.Error("failed to create autogenerated marriage event", slog.String("error", err.Error()))
-		return err
-	}
-
-	return nil
 }
 
 func parentRoleGender(role ParentRole) (models.Gender, error) {

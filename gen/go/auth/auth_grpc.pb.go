@@ -29,7 +29,10 @@ const (
 	Auth_Logout_FullMethodName                   = "/auth.Auth/Logout"
 	Auth_LogoutFromAllDevices_FullMethodName     = "/auth.Auth/LogoutFromAllDevices"
 	Auth_GetUserInfo_FullMethodName              = "/auth.Auth/GetUserInfo"
+	Auth_GetMe_FullMethodName                    = "/auth.Auth/GetMe"
+	Auth_SearchUsers_FullMethodName              = "/auth.Auth/SearchUsers"
 	Auth_UpdateNickname_FullMethodName           = "/auth.Auth/UpdateNickname"
+	Auth_UpdatePreferences_FullMethodName        = "/auth.Auth/UpdatePreferences"
 )
 
 // AuthClient is the client API for Auth service.
@@ -46,7 +49,10 @@ type AuthClient interface {
 	Logout(ctx context.Context, in *LogoutRequest, opts ...grpc.CallOption) (*LogoutResponse, error)
 	LogoutFromAllDevices(ctx context.Context, in *LogoutFromAllDevicesRequest, opts ...grpc.CallOption) (*LogoutFromAllDevicesResponse, error)
 	GetUserInfo(ctx context.Context, in *GetUserInfoRequest, opts ...grpc.CallOption) (*GetUserInfoResponse, error)
+	GetMe(ctx context.Context, in *GetMeRequest, opts ...grpc.CallOption) (*GetMeResponse, error)
+	SearchUsers(ctx context.Context, in *SearchUsersRequest, opts ...grpc.CallOption) (*SearchUsersResponse, error)
 	UpdateNickname(ctx context.Context, in *UpdateNicknameRequest, opts ...grpc.CallOption) (*UpdateNicknameResponse, error)
+	UpdatePreferences(ctx context.Context, in *UpdatePreferencesRequest, opts ...grpc.CallOption) (*UpdatePreferencesResponse, error)
 }
 
 type authClient struct {
@@ -157,10 +163,40 @@ func (c *authClient) GetUserInfo(ctx context.Context, in *GetUserInfoRequest, op
 	return out, nil
 }
 
+func (c *authClient) GetMe(ctx context.Context, in *GetMeRequest, opts ...grpc.CallOption) (*GetMeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetMeResponse)
+	err := c.cc.Invoke(ctx, Auth_GetMe_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) SearchUsers(ctx context.Context, in *SearchUsersRequest, opts ...grpc.CallOption) (*SearchUsersResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchUsersResponse)
+	err := c.cc.Invoke(ctx, Auth_SearchUsers_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *authClient) UpdateNickname(ctx context.Context, in *UpdateNicknameRequest, opts ...grpc.CallOption) (*UpdateNicknameResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateNicknameResponse)
 	err := c.cc.Invoke(ctx, Auth_UpdateNickname_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authClient) UpdatePreferences(ctx context.Context, in *UpdatePreferencesRequest, opts ...grpc.CallOption) (*UpdatePreferencesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdatePreferencesResponse)
+	err := c.cc.Invoke(ctx, Auth_UpdatePreferences_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +217,10 @@ type AuthServer interface {
 	Logout(context.Context, *LogoutRequest) (*LogoutResponse, error)
 	LogoutFromAllDevices(context.Context, *LogoutFromAllDevicesRequest) (*LogoutFromAllDevicesResponse, error)
 	GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error)
+	GetMe(context.Context, *GetMeRequest) (*GetMeResponse, error)
+	SearchUsers(context.Context, *SearchUsersRequest) (*SearchUsersResponse, error)
 	UpdateNickname(context.Context, *UpdateNicknameRequest) (*UpdateNicknameResponse, error)
+	UpdatePreferences(context.Context, *UpdatePreferencesRequest) (*UpdatePreferencesResponse, error)
 	mustEmbedUnimplementedAuthServer()
 }
 
@@ -222,8 +261,17 @@ func (UnimplementedAuthServer) LogoutFromAllDevices(context.Context, *LogoutFrom
 func (UnimplementedAuthServer) GetUserInfo(context.Context, *GetUserInfoRequest) (*GetUserInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserInfo not implemented")
 }
+func (UnimplementedAuthServer) GetMe(context.Context, *GetMeRequest) (*GetMeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMe not implemented")
+}
+func (UnimplementedAuthServer) SearchUsers(context.Context, *SearchUsersRequest) (*SearchUsersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchUsers not implemented")
+}
 func (UnimplementedAuthServer) UpdateNickname(context.Context, *UpdateNicknameRequest) (*UpdateNicknameResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNickname not implemented")
+}
+func (UnimplementedAuthServer) UpdatePreferences(context.Context, *UpdatePreferencesRequest) (*UpdatePreferencesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePreferences not implemented")
 }
 func (UnimplementedAuthServer) mustEmbedUnimplementedAuthServer() {}
 func (UnimplementedAuthServer) testEmbeddedByValue()              {}
@@ -426,6 +474,42 @@ func _Auth_GetUserInfo_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Auth_GetMe_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).GetMe(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_GetMe_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).GetMe(ctx, req.(*GetMeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_SearchUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchUsersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).SearchUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_SearchUsers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).SearchUsers(ctx, req.(*SearchUsersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Auth_UpdateNickname_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateNicknameRequest)
 	if err := dec(in); err != nil {
@@ -440,6 +524,24 @@ func _Auth_UpdateNickname_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AuthServer).UpdateNickname(ctx, req.(*UpdateNicknameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Auth_UpdatePreferences_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdatePreferencesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServer).UpdatePreferences(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Auth_UpdatePreferences_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServer).UpdatePreferences(ctx, req.(*UpdatePreferencesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -492,8 +594,20 @@ var Auth_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Auth_GetUserInfo_Handler,
 		},
 		{
+			MethodName: "GetMe",
+			Handler:    _Auth_GetMe_Handler,
+		},
+		{
+			MethodName: "SearchUsers",
+			Handler:    _Auth_SearchUsers_Handler,
+		},
+		{
 			MethodName: "UpdateNickname",
 			Handler:    _Auth_UpdateNickname_Handler,
+		},
+		{
+			MethodName: "UpdatePreferences",
+			Handler:    _Auth_UpdatePreferences_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

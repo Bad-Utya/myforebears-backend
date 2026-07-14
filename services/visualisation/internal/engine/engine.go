@@ -40,14 +40,24 @@ func RenderPDFWithTrace(visType models.VisualisationType, rootPersonID uuid.UUID
 }
 
 func RenderSVG(visType models.VisualisationType, rootPersonID uuid.UUID, includedPersonIDs []uuid.UUID, content *familytreepb.GetTreeContentResponse) ([]byte, error) {
-	return renderSVGInternal(visType, rootPersonID, includedPersonIDs, content, nil)
+	return renderSVGInternal(visType, rootPersonID, includedPersonIDs, content, nil, nil)
+}
+
+func RenderSVGWithPersonData(
+	visType models.VisualisationType,
+	rootPersonID uuid.UUID,
+	includedPersonIDs []uuid.UUID,
+	content *familytreepb.GetTreeContentResponse,
+	personData map[string]stage4_render.PersonRenderData,
+) ([]byte, error) {
+	return renderSVGInternal(visType, rootPersonID, includedPersonIDs, content, nil, personData)
 }
 
 func RenderSVGWithTrace(visType models.VisualisationType, rootPersonID uuid.UUID, includedPersonIDs []uuid.UUID, content *familytreepb.GetTreeContentResponse, out io.Writer) ([]byte, error) {
-	return renderSVGInternal(visType, rootPersonID, includedPersonIDs, content, out)
+	return renderSVGInternal(visType, rootPersonID, includedPersonIDs, content, out, nil)
 }
 
-func renderSVGInternal(visType models.VisualisationType, rootPersonID uuid.UUID, includedPersonIDs []uuid.UUID, content *familytreepb.GetTreeContentResponse, out io.Writer) ([]byte, error) {
+func renderSVGInternal(visType models.VisualisationType, rootPersonID uuid.UUID, includedPersonIDs []uuid.UUID, content *familytreepb.GetTreeContentResponse, out io.Writer, personData map[string]stage4_render.PersonRenderData) ([]byte, error) {
 	if content == nil {
 		return nil, fmt.Errorf("visualisation content is empty")
 	}
@@ -140,14 +150,14 @@ func renderSVGInternal(visType models.VisualisationType, rootPersonID uuid.UUID,
 	renderResult := stage4_render.BuildCoordRenderResult(cm, tree)
 	debugf(out, "[stage4_render] nodes=%d edges=%d", len(renderResult.Nodes), len(renderResult.Edges))
 
-	return renderSVG(renderResult, tree), nil
+	return renderSVG(renderResult, tree, personData), nil
 }
 
-func renderSVG(result *stage4_render.CoordRenderResult, tree *stage1_input.FamilyTree) []byte {
+func renderSVG(result *stage4_render.CoordRenderResult, tree *stage1_input.FamilyTree, personData map[string]stage4_render.PersonRenderData) []byte {
 	if result == nil {
 		return []byte("<?xml version=\"1.0\" encoding=\"UTF-8\"?><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1\" height=\"1\"></svg>")
 	}
-	renderer := stage4_render.NewCoordSVGRenderer(result, tree)
+	renderer := stage4_render.NewCoordSVGRenderer(result, tree, personData)
 	return []byte(renderer.Render())
 }
 
@@ -421,7 +431,7 @@ func buildStageTree(people map[uuid.UUID]personView, relations []relationView) (
 		pid := i + 1
 		idToInt[id] = pid
 		p := people[id]
-		tree.AddPerson(stage1_input.NewPerson(pid, p.label, p.gender))
+		tree.AddPerson(stage1_input.NewPerson(pid, p.label, p.gender, p.id.String(), p.person.GetTreeId()))
 		internalPersons[pid] = p.person
 	}
 
@@ -578,7 +588,7 @@ func buildLabel(person *familytreepb.Person) string {
 	return strings.Join(parts, " ")
 }
 
-func buildPersonDisplayName(firstName, lastName, patronymic, fallback string) string {
+func BuildPersonDisplayName(firstName, lastName, patronymic, fallback string) string {
 	parts := make([]string, 0, 3)
 	if first := strings.TrimSpace(firstName); first != "" {
 		parts = append(parts, first)

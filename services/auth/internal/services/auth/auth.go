@@ -29,6 +29,10 @@ var (
 	ErrUserExists         = errors.New("user already exists")
 	ErrInvalidNickname    = errors.New("invalid nickname")
 	ErrInvalidUserID      = errors.New("invalid user id")
+	ErrInvalidLanguage    = errors.New("invalid language")
+	ErrInvalidTheme       = errors.New("invalid theme")
+	ErrInvalidQuery       = errors.New("invalid search query")
+	ErrInvalidLimit       = errors.New("invalid limit")
 	ErrUserNotFound       = errors.New("user not found")
 	ErrInvalidCode        = errors.New("invalid code")
 	ErrInvalidToken       = errors.New("invalid token")
@@ -55,8 +59,10 @@ type UserStorage interface {
 	SaveUser(ctx context.Context, email string, passHash []byte, nickname string) (int, error)
 	GetUser(ctx context.Context, email string) (models.User, error)
 	GetUserByID(ctx context.Context, userID int) (models.User, error)
+	SearchUsersByNickname(ctx context.Context, query string, limit int) ([]models.User, error)
 	UpdatePassword(ctx context.Context, email string, password []byte) error
 	UpdateNickname(ctx context.Context, userID int, nickname string) error
+	UpdatePreferences(ctx context.Context, userID int, language string, theme string) error
 }
 
 type VerificationStorage interface {
@@ -616,6 +622,33 @@ func (a *Auth) GetUserInfo(ctx context.Context, userID int) (models.User, error)
 	return user, nil
 }
 
+func (a *Auth) SearchUsersByNickname(ctx context.Context, query string, limit int) ([]models.User, error) {
+	const op = "auth.SearchUsersByNickname"
+
+	log := a.log.With(slog.String("op", op))
+
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidQuery)
+	}
+	if limit <= 0 {
+		return nil, fmt.Errorf("%s: %w", op, ErrInvalidLimit)
+	}
+
+	log.Info("searching users by nickname", slog.String("query", query), slog.Int("limit", limit))
+
+	users, err := a.userStorage.SearchUsersByNickname(ctx, strings.ToLower(query), limit)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return users, nil
+}
+
+func (a *Auth) GetMe(ctx context.Context, userID int) (models.User, error) {
+	return a.GetUserInfo(ctx, userID)
+}
+
 func (a *Auth) UpdateNickname(ctx context.Context, userID int, nickname string) (models.User, error) {
 	const op = "auth.UpdateNickname"
 
@@ -648,6 +681,44 @@ func (a *Auth) UpdateNickname(ctx context.Context, userID int, nickname string) 
 	return user, nil
 }
 
+func (a *Auth) UpdatePreferences(ctx context.Context, userID int, language string, theme string) (models.User, error) {
+	const op = "auth.UpdatePreferences"
+
+	log := a.log.With(slog.String("op", op))
+
+	language = strings.TrimSpace(strings.ToLower(language))
+	theme = strings.TrimSpace(strings.ToLower(theme))
+	if userID <= 0 {
+		return models.User{}, fmt.Errorf("%s: %w", op, ErrInvalidUserID)
+	}
+	if !isValidLanguage(language) {
+		return models.User{}, fmt.Errorf("%s: %w", op, ErrInvalidLanguage)
+	}
+	if !isValidTheme(theme) {
+		return models.User{}, fmt.Errorf("%s: %w", op, ErrInvalidTheme)
+	}
+
+	log.Info("updating user preferences", slog.Int("user_id", userID), slog.String("language", language), slog.String("theme", theme))
+
+	if err := a.userStorage.UpdatePreferences(ctx, userID, language, theme); err != nil {
+		if errors.Is(err, storage.ErrUserNotFound) {
+			return models.User{}, fmt.Errorf("%s: %w", op, ErrUserNotFound)
+		}
+		log.Error("failed to update preferences", slog.String("error", err.Error()))
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	user, err := a.userStorage.GetUserByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, storage.ErrUserNotFound) {
+			return models.User{}, fmt.Errorf("%s: %w", op, ErrUserNotFound)
+		}
+		return models.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return user, nil
+}
+
 func defaultNicknameByEmail(email string) string {
 	email = strings.TrimSpace(email)
 	parts := strings.SplitN(email, "@", 2)
@@ -656,4 +727,12 @@ func defaultNicknameByEmail(email string) string {
 	}
 
 	return strings.TrimSpace(parts[0])
+}
+
+func isValidLanguage(language string) bool {
+	return language == "ru" || language == "en"
+}
+
+func isValidTheme(theme string) bool {
+	return theme == "light" || theme == "dark"
 }

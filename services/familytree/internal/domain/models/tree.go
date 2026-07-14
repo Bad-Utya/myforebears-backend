@@ -15,4 +15,12 @@ type Tree struct {
 	Name               string
 	Description        *string
 	RootPersonID       uuid.UUID
+	Tags               []Tag
+	SimilarityScore    float64
+}
+
+type Tag struct {
+	Code        string
+	Name        string
+	Description string
 }

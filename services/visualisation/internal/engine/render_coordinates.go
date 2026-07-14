@@ -230,7 +230,7 @@ func renderResultToJSON(result *stage4_render.CoordRenderResult, internalPersons
 					Patronymic:    fullPerson.GetPatronymic(),
 					Gender:        gender,
 					AvatarPhotoID: fullPerson.GetAvatarPhotoId(),
-					Name:          buildPersonDisplayName(fullPerson.GetFirstName(), fullPerson.GetLastName(), fullPerson.GetPatronymic(), fullPerson.GetId()),
+					Name:          BuildPersonDisplayName(fullPerson.GetFirstName(), fullPerson.GetLastName(), fullPerson.GetPatronymic(), fullPerson.GetId()),
 				}
 				continue
 			}

@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS custom_tree_tags;
+DROP TABLE IF EXISTS tags;

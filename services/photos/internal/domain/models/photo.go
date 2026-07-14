@@ -12,6 +12,8 @@ type Photo struct {
 	TreeID         *uuid.UUID
 	PersonID       *uuid.UUID
 	EventID        *uuid.UUID
+	PublicPersonID *uuid.UUID
+	PublicEventID  *uuid.UUID
 	IsUserAvatar   bool
 	IsTreeAvatar   bool
 	IsPersonAvatar bool

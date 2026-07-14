@@ -47,8 +47,8 @@ func (s *Storage) CreatePerson(ctx context.Context, person models.Person) error 
 
 	_, err := s.pool.Exec(
 		ctx,
-		`INSERT INTO persons (id, tree_id, first_name, last_name, patronymic, gender, avatar_photo_id)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		`INSERT INTO persons (id, tree_id, first_name, last_name, patronymic, gender, avatar_photo_id, biography)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 		person.ID,
 		person.TreeID,
 		person.FirstName,
@@ -56,6 +56,7 @@ func (s *Storage) CreatePerson(ctx context.Context, person models.Person) error 
 		person.Patronymic,
 		person.Gender,
 		person.AvatarPhotoID,
+		person.Biography,
 	)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -106,6 +107,10 @@ func (s *Storage) GetTree(ctx context.Context, treeID uuid.UUID) (models.Tree, e
 
 	if description.Valid {
 		tree.Description = &description.String
+	}
+	tree.Tags, err = s.listTreeTags(ctx, tree.ID)
+	if err != nil {
+		return models.Tree{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return tree, nil
@@ -282,6 +287,10 @@ func (s *Storage) GetTreesByCreator(ctx context.Context, creatorID int) ([]model
 		if description.Valid {
 			tree.Description = &description.String
 		}
+		tree.Tags, err = s.listTreeTags(ctx, tree.ID)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
 		trees = append(trees, tree)
 	}
 
@@ -317,6 +326,53 @@ func (s *Storage) GetPublicTreesByCreator(ctx context.Context, creatorID int) ([
 		}
 		if description.Valid {
 			tree.Description = &description.String
+		}
+		tree.Tags, err = s.listTreeTags(ctx, tree.ID)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		trees = append(trees, tree)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return trees, nil
+}
+
+func (s *Storage) GetPublicTreesByName(ctx context.Context, nameQuery string, limit int) ([]models.Tree, error) {
+	const op = "storage.postgres.GetPublicTreesByName"
+
+	rows, err := s.pool.Query(
+		ctx,
+		`SELECT id, creator_id, created_at, is_view_restricted, is_public_on_main_page, name, description, COALESCE(root_person_id, '00000000-0000-0000-0000-000000000000')
+		 FROM trees
+		 WHERE is_public_on_main_page = TRUE
+		   AND LOWER(name) LIKE '%' || $1::text || '%'
+		 ORDER BY created_at DESC
+		 LIMIT $2`,
+		nameQuery,
+		limit,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	trees := make([]models.Tree, 0)
+	for rows.Next() {
+		var tree models.Tree
+		var description sql.NullString
+		if err := rows.Scan(&tree.ID, &tree.CreatorID, &tree.CreatedAt, &tree.IsViewRestricted, &tree.IsPublicOnMainPage, &tree.Name, &description, &tree.RootPersonID); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		if description.Valid {
+			tree.Description = &description.String
+		}
+		tree.Tags, err = s.listTreeTags(ctx, tree.ID)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		trees = append(trees, tree)
 	}
@@ -355,6 +411,10 @@ func (s *Storage) GetRandomPublicTrees(ctx context.Context, limit int) ([]models
 		if description.Valid {
 			tree.Description = &description.String
 		}
+		tree.Tags, err = s.listTreeTags(ctx, tree.ID)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
 		trees = append(trees, tree)
 	}
 
@@ -371,7 +431,7 @@ func (s *Storage) GetPerson(ctx context.Context, personID uuid.UUID) (models.Per
 	var person models.Person
 	err := s.pool.QueryRow(
 		ctx,
-		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender, avatar_photo_id
+		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender, avatar_photo_id, biography
 		 FROM persons WHERE id = $1`,
 		personID,
 	).Scan(
@@ -382,6 +442,7 @@ func (s *Storage) GetPerson(ctx context.Context, personID uuid.UUID) (models.Per
 		&person.Patronymic,
 		&person.Gender,
 		&person.AvatarPhotoID,
+		&person.Biography,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -403,12 +464,14 @@ func (s *Storage) UpdatePerson(ctx context.Context, person models.Person) error 
 		     last_name = $2,
 		     patronymic = $3,
 		     gender = $4,
+		     biography = $5,
 		     updated_at = NOW()
-		 WHERE id = $5`,
+		 WHERE id = $6`,
 		person.FirstName,
 		person.LastName,
 		person.Patronymic,
 		person.Gender,
+		person.Biography,
 		person.ID,
 	)
 	if err != nil {
@@ -465,7 +528,7 @@ func (s *Storage) GetPersonsByTree(ctx context.Context, treeID uuid.UUID) ([]mod
 
 	rows, err := s.pool.Query(
 		ctx,
-		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender, avatar_photo_id
+		`SELECT id, tree_id, first_name, last_name, COALESCE(patronymic, ''), gender, avatar_photo_id, biography
 		 FROM persons WHERE tree_id = $1`,
 		treeID,
 	)
@@ -485,6 +548,7 @@ func (s *Storage) GetPersonsByTree(ctx context.Context, treeID uuid.UUID) ([]mod
 			&person.Patronymic,
 			&person.Gender,
 			&person.AvatarPhotoID,
+			&person.Biography,
 		); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}

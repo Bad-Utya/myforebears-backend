@@ -6,6 +6,7 @@ import (
 	photospb "github.com/Bad-Utya/myforebears-backend/gen/go/photos"
 	"github.com/Bad-Utya/myforebears-backend/services/photos/internal/domain/models"
 	"github.com/Bad-Utya/myforebears-backend/services/photos/internal/lib/grpcerr"
+	photossvc "github.com/Bad-Utya/myforebears-backend/services/photos/internal/services/photos"
 	"google.golang.org/grpc"
 )
 
@@ -22,6 +23,13 @@ type PhotosService interface {
 	ListEventPhotos(ctx context.Context, treeID string, eventID string) ([]models.Photo, error)
 	GetPhotoByID(ctx context.Context, treeID string, photoID string) (models.Photo, []byte, error)
 	DeletePhotoByID(ctx context.Context, treeID string, photoID string) error
+	CopyPersonMediaToPublic(ctx context.Context, userID int, treeID, personID, publicPersonID string, mappings []photossvc.EventPhotoMapping) ([]models.Photo, error)
+	CopyPublicPersonMediaToTree(ctx context.Context, userID int, publicPersonID, treeID, personID string, mappings []photossvc.EventPhotoMapping) ([]models.Photo, error)
+	UploadPublicPersonPhoto(ctx context.Context, userID int, publicPersonID, fileName, mimeType string, content []byte, isAvatar bool) (models.Photo, error)
+	ListPublicPersonPhotos(ctx context.Context, publicPersonID string) ([]models.Photo, error)
+	GetPublicPersonPhoto(ctx context.Context, publicPersonID, photoID string) (models.Photo, []byte, error)
+	DeletePublicPersonPhoto(ctx context.Context, userID int, publicPersonID, photoID string) error
+	DeletePublicPersonMedia(ctx context.Context, userID int, publicPersonID string) error
 }
 
 type Handler struct {
@@ -200,6 +208,8 @@ func toProtoPhoto(photo models.Photo) *photospb.Photo {
 	personID := ""
 	eventID := ""
 	treeID := ""
+	publicPersonID := ""
+	publicEventID := ""
 	if photo.PersonID != nil {
 		personID = photo.PersonID.String()
 	}
@@ -208,6 +218,12 @@ func toProtoPhoto(photo models.Photo) *photospb.Photo {
 	}
 	if photo.TreeID != nil {
 		treeID = photo.TreeID.String()
+	}
+	if photo.PublicPersonID != nil {
+		publicPersonID = photo.PublicPersonID.String()
+	}
+	if photo.PublicEventID != nil {
+		publicEventID = photo.PublicEventID.String()
 	}
 
 	return &photospb.Photo{
@@ -222,5 +238,7 @@ func toProtoPhoto(photo models.Photo) *photospb.Photo {
 		SizeBytes:      photo.SizeBytes,
 		CreatedAtUnix:  photo.CreatedAt.Unix(),
 		TreeId:         treeID,
+		PublicPersonId: publicPersonID,
+		PublicEventId:  publicEventID,
 	}
 }

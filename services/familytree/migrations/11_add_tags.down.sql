@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS public_person_tags;
+DROP TABLE IF EXISTS tree_tags;
+DROP TABLE IF EXISTS tags;

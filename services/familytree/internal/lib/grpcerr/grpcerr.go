@@ -14,6 +14,7 @@ func Map(err error) error {
 		errors.Is(err, personsvc.ErrInvalidTreeID),
 		errors.Is(err, personsvc.ErrInvalidUserID),
 		errors.Is(err, personsvc.ErrInvalidLimit),
+		errors.Is(err, personsvc.ErrInvalidQuery),
 		errors.Is(err, personsvc.ErrInvalidName),
 		errors.Is(err, personsvc.ErrInvalidGender),
 		errors.Is(err, personsvc.ErrDeleteNotAllowed),
@@ -27,9 +28,11 @@ func Map(err error) error {
 		errors.Is(err, personsvc.ErrInvalidRelationType),
 		errors.Is(err, personsvc.ErrSelfRelationship),
 		errors.Is(err, personsvc.ErrPersonNotInSameTree),
-		errors.Is(err, personsvc.ErrInvalidEmail):
+		errors.Is(err, personsvc.ErrInvalidEmail),
+		errors.Is(err, personsvc.ErrInvalidAttachment),
+		errors.Is(err, personsvc.ErrUnknownTag):
 		return status.Error(codes.InvalidArgument, err.Error())
-	case errors.Is(err, personsvc.ErrPersonNotFound), errors.Is(err, personsvc.ErrRelationshipMissing), errors.Is(err, personsvc.ErrTreeNotFound), errors.Is(err, personsvc.ErrTreeAccessEmailNotFound):
+	case errors.Is(err, personsvc.ErrPersonNotFound), errors.Is(err, personsvc.ErrPublicPersonNotFound), errors.Is(err, personsvc.ErrRelationshipMissing), errors.Is(err, personsvc.ErrTreeNotFound), errors.Is(err, personsvc.ErrTreeAccessEmailNotFound):
 		return status.Error(codes.NotFound, err.Error())
 	case errors.Is(err, personsvc.ErrRelationshipExists), errors.Is(err, personsvc.ErrTreeAccessEmailExists):
 		return status.Error(codes.AlreadyExists, err.Error())

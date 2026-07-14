@@ -13,7 +13,7 @@
 *.prof
 
 # Go workspace file
-go.work.sum
+# go.work.sum
 
 # Dependency directories
 vendor/

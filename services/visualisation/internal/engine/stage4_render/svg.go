@@ -2,19 +2,21 @@ package stage4_render
 
 import (
 	"fmt"
-	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine/stage1_input"
-	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine/stage3_ordering"
 	"html"
 	"os"
+	"strings"
+
+	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine/stage1_input"
+	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine/stage3_ordering"
 )
 
 const (
-	singleNodeWidth = 170
-	pairNodeWidth   = 280
+	singleNodeWidth = 340
+	pairNodeWidth   = 560
 	nodeHeight      = 80
 	nodeSpacingY    = 80
-	nodeSpacingX    = 30
-	padding         = 50
+	nodeSpacingX    = 60
+	padding         = 100
 
 	coordScale       = 85
 	maleColor        = "#a8d5ff"
@@ -29,16 +31,18 @@ const (
 type CoordSVGRenderer struct {
 	result      *CoordRenderResult
 	tree        *stage1_input.FamilyTree
+	personData  map[string]PersonRenderData
 	nodePixelX  map[int]int
 	nodeCenterX map[int]int
 	svgWidth    int
 	svgHeight   int
 }
 
-func NewCoordSVGRenderer(result *CoordRenderResult, tree *stage1_input.FamilyTree) *CoordSVGRenderer {
+func NewCoordSVGRenderer(result *CoordRenderResult, tree *stage1_input.FamilyTree, personData map[string]PersonRenderData) *CoordSVGRenderer {
 	r := &CoordSVGRenderer{
 		result:      result,
 		tree:        tree,
+		personData:  personData,
 		nodePixelX:  make(map[int]int),
 		nodeCenterX: make(map[int]int),
 	}
@@ -95,7 +99,8 @@ func (r *CoordSVGRenderer) Render() string {
 <svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d">
 <style>
   .node { stroke: %s; stroke-width: 2; }
-  .node-text { font-family: Arial, sans-serif; font-size: 12px; fill: %s; text-anchor: middle; }
+	.node-text { font-family: Arial, sans-serif; font-size: 12px; fill: %s; text-anchor: start; }
+	.node-placeholder { fill: #ffffff; opacity: 0.6; }
   .edge-partner { stroke: %s; stroke-width: 2; fill: none; }
   .edge-child { stroke: %s; stroke-width: 2; fill: none; }
 </style>
@@ -134,8 +139,16 @@ func (r *CoordSVGRenderer) renderEdges() string {
 				x2 := r.coordToPixelX(edge.ToX)
 				y := r.layerToPixelY(edge.FromY) + nodeHeight/2
 
-				result += fmt.Sprintf(`<line x1="%d" y1="%d" x2="%d" y2="%d" class="edge-partner"/>
+				if edge.RouteAbove && x2-x1 > coordScale {
+					leftTurnX := x1 + coordScale/2
+					rightTurnX := x2 - coordScale/2
+					routeY := r.layerToPixelY(edge.RouteAboveLayer) - nodeSpacingY/2
+					result += fmt.Sprintf(`<path d="M %d %d L %d %d L %d %d L %d %d L %d %d L %d %d" class="edge-partner"/>
+`, x1, y, leftTurnX, y, leftTurnX, routeY, rightTurnX, routeY, rightTurnX, y, x2, y)
+				} else {
+					result += fmt.Sprintf(`<line x1="%d" y1="%d" x2="%d" y2="%d" class="edge-partner"/>
 `, x1, y, x2, y)
+				}
 			}
 		} else {
 
@@ -185,70 +198,18 @@ func (r *CoordSVGRenderer) renderNodes() string {
 		y := r.layerToPixelY(node.Layer)
 
 		if len(node.People) == 1 {
-
 			person := node.People[0]
-			color := r.getNodeColor(person)
-
 			rectWidth := int(float64(singleNodeWidth) * 0.8)
 			rectX := x + int(float64(singleNodeWidth)*0.1)
-
-			result += fmt.Sprintf(`<rect x="%d" y="%d" width="%d" height="%d" rx="5" ry="5" fill="%s" class="node"/>
-`, rectX, y, rectWidth, nodeHeight, color)
-
-			line1, line2 := r.splitName(person.Name)
-			line1 = r.truncateName(line1, 22)
-			line2 = r.truncateName(line2, 22)
-
-			textX := x + singleNodeWidth/2
-
-			if line2 == "" {
-
-				textY := y + nodeHeight/2 + 4
-				result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
-`, textX, textY, html.EscapeString(line1))
-			} else {
-
-				textY1 := y + nodeHeight/2 - 8
-				textY2 := y + nodeHeight/2 + 10
-				result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
-`, textX, textY1, html.EscapeString(line1))
-				result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
-`, textX, textY2, html.EscapeString(line2))
-			}
+			result += r.renderPersonCard(rectX, y, rectWidth, nodeHeight, person)
 		} else if len(node.People) == 2 {
-
 			halfWidth := pairNodeWidth / 2
 
 			for j, person := range node.People {
 				personX := x + j*halfWidth
-				color := r.getNodeColor(person)
-
 				rectWidth := int(float64(halfWidth) * 0.6)
 				rectX := personX + int(float64(halfWidth)*0.2)
-
-				result += fmt.Sprintf(`<rect x="%d" y="%d" width="%d" height="%d" rx="5" ry="5" fill="%s" class="node"/>
-`, rectX, y, rectWidth, nodeHeight, color)
-
-				line1, line2 := r.splitName(person.Name)
-				line1 = r.truncateName(line1, 15)
-				line2 = r.truncateName(line2, 15)
-
-				textX := personX + halfWidth/2
-
-				if line2 == "" {
-
-					textY := y + nodeHeight/2 + 4
-					result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
-`, textX, textY, html.EscapeString(line1))
-				} else {
-
-					textY1 := y + nodeHeight/2 - 8
-					textY2 := y + nodeHeight/2 + 10
-					result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
-`, textX, textY1, html.EscapeString(line1))
-					result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
-`, textX, textY2, html.EscapeString(line2))
-				}
+				result += r.renderPersonCard(rectX, y, rectWidth, nodeHeight, person)
 			}
 		}
 	}
@@ -256,40 +217,171 @@ func (r *CoordSVGRenderer) renderNodes() string {
 	return result
 }
 
-func (r *CoordSVGRenderer) splitName(name string) (string, string) {
-	parts := []rune(name)
-	var words []string
-	currentWord := []rune{}
+func (r *CoordSVGRenderer) renderPersonCard(x, y, width, height int, person *stage1_input.Person) string {
+	if person == nil {
+		return ""
+	}
 
-	for _, ch := range parts {
-		if ch == ' ' {
-			if len(currentWord) > 0 {
-				words = append(words, string(currentWord))
-				currentWord = []rune{}
+	color := r.getNodeColor(person)
+	data := r.resolvePersonData(person)
+
+	result := fmt.Sprintf(`<rect x="%d" y="%d" width="%d" height="%d" rx="5" ry="5" fill="%s" class="node"/>
+`, x, y, width, height, color)
+
+	imageAreaWidth := width / 3
+	imagePadding := 4
+	imageX := x + imagePadding
+	imageY := y + imagePadding
+	imageW := imageAreaWidth - imagePadding*2
+	imageH := height - imagePadding*2
+	if imageW < 1 {
+		imageW = 1
+	}
+	if imageH < 1 {
+		imageH = 1
+	}
+
+	if data.AvatarData != "" && data.AvatarMime != "" {
+		result += fmt.Sprintf(`<image x="%d" y="%d" width="%d" height="%d" preserveAspectRatio="xMidYMid slice" href="data:%s;base64,%s"/>
+`, imageX, imageY, imageW, imageH, data.AvatarMime, data.AvatarData)
+	} else {
+		result += fmt.Sprintf(`<rect x="%d" y="%d" width="%d" height="%d" rx="3" ry="3" class="node-placeholder"/>
+`, imageX, imageY, imageW, imageH)
+	}
+
+	textPaddingX := 6
+	textAreaX := x + imageAreaWidth + textPaddingX
+	textAreaWidth := width - imageAreaWidth - textPaddingX*2
+	if textAreaWidth < 1 {
+		textAreaWidth = 1
+	}
+	maxChars := r.estimateMaxChars(textAreaWidth)
+	line1, line2 := r.wrapNameTwoLines(data.DisplayName, maxChars)
+	line3 := r.truncateText(data.DateLine, maxChars)
+
+	if line2 == "" {
+		line1Y := y + 32
+		line3Y := y + 58
+		result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
+`, textAreaX, line1Y, html.EscapeString(line1))
+		result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
+`, textAreaX, line3Y, html.EscapeString(line3))
+		return result
+	}
+
+	line1Y := y + 24
+	line2Y := y + 42
+	line3Y := y + 60
+	result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
+`, textAreaX, line1Y, html.EscapeString(line1))
+	result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
+`, textAreaX, line2Y, html.EscapeString(line2))
+	result += fmt.Sprintf(`<text x="%d" y="%d" class="node-text">%s</text>
+`, textAreaX, line3Y, html.EscapeString(line3))
+
+	return result
+}
+
+func (r *CoordSVGRenderer) resolvePersonData(person *stage1_input.Person) PersonRenderData {
+	if person == nil {
+		return PersonRenderData{DisplayName: "", DateLine: "неиз"}
+	}
+
+	if r.personData != nil && person.ExternalID != "" {
+		if data, ok := r.personData[person.ExternalID]; ok {
+			if data.DisplayName == "" {
+				data.DisplayName = r.fallbackPersonName(person)
 			}
-		} else {
-			currentWord = append(currentWord, ch)
+			if data.DateLine == "" {
+				data.DateLine = "неиз"
+			}
+			return data
 		}
 	}
-	if len(currentWord) > 0 {
-		words = append(words, string(currentWord))
-	}
 
+	return PersonRenderData{
+		DisplayName: r.fallbackPersonName(person),
+		DateLine:    "неиз",
+	}
+}
+
+func (r *CoordSVGRenderer) fallbackPersonName(person *stage1_input.Person) string {
+	if person == nil {
+		return ""
+	}
+	if person.Name != "" {
+		return person.Name
+	}
+	if person.ExternalID != "" {
+		return person.ExternalID
+	}
+	return fmt.Sprintf("%d", person.ID)
+}
+
+func (r *CoordSVGRenderer) wrapNameTwoLines(name string, maxChars int) (string, string) {
+	if maxChars <= 0 {
+		return "", ""
+	}
+	words := strings.Fields(name)
 	if len(words) == 0 {
 		return "", ""
 	}
-	if len(words) == 1 {
-		return words[0], ""
+
+	line1 := ""
+	line2 := ""
+	for _, word := range words {
+		if line1 == "" {
+			line1 = word
+			continue
+		}
+		if r.runeLen(line1)+1+r.runeLen(word) <= maxChars {
+			line1 = line1 + " " + word
+			continue
+		}
+
+		if line2 == "" {
+			line2 = word
+			continue
+		}
+		if r.runeLen(line2)+1+r.runeLen(word) <= maxChars {
+			line2 = line2 + " " + word
+			continue
+		}
+		break
 	}
-	return words[0], words[1]
+
+	line1 = r.truncateText(line1, maxChars)
+	line2 = r.truncateText(line2, maxChars)
+	return line1, line2
 }
 
-func (r *CoordSVGRenderer) truncateName(name string, maxLen int) string {
-	nameRunes := []rune(name)
-	if len(nameRunes) > maxLen {
-		return string(nameRunes[:maxLen-2]) + ".."
+func (r *CoordSVGRenderer) estimateMaxChars(width int) int {
+	if width <= 0 {
+		return 1
 	}
-	return name
+	chars := width / 7
+	if chars < 6 {
+		return 6
+	}
+	return chars
+}
+
+func (r *CoordSVGRenderer) runeLen(value string) int {
+	return len([]rune(value))
+}
+
+func (r *CoordSVGRenderer) truncateText(text string, maxLen int) string {
+	if maxLen <= 0 {
+		return ""
+	}
+	textRunes := []rune(text)
+	if len(textRunes) > maxLen {
+		if maxLen <= 2 {
+			return string(textRunes[:maxLen])
+		}
+		return string(textRunes[:maxLen-2]) + ".."
+	}
+	return text
 }
 
 func (r *CoordSVGRenderer) RenderToFile(filename string) error {
@@ -299,6 +391,6 @@ func (r *CoordSVGRenderer) RenderToFile(filename string) error {
 
 func GenerateCoordSVG(cm *stage3_ordering.CoordMatrix, tree *stage1_input.FamilyTree, filename string) error {
 	result := BuildCoordRenderResult(cm, tree)
-	renderer := NewCoordSVGRenderer(result, tree)
+	renderer := NewCoordSVGRenderer(result, tree, nil)
 	return renderer.RenderToFile(filename)
 }

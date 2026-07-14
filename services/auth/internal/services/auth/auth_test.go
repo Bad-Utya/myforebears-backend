@@ -18,8 +18,10 @@ type userStorageStub struct {
 	saveUserFn       func(ctx context.Context, email string, passHash []byte, nickname string) (int, error)
 	getUserFn        func(ctx context.Context, email string) (models.User, error)
 	getUserByIDFn    func(ctx context.Context, userID int) (models.User, error)
+	searchUsersFn    func(ctx context.Context, query string, limit int) ([]models.User, error)
 	updatePasswordFn func(ctx context.Context, email string, password []byte) error
 	updateNicknameFn func(ctx context.Context, userID int, nickname string) error
+	updatePrefsFn    func(ctx context.Context, userID int, language string, theme string) error
 }
 
 func (s *userStorageStub) SaveUser(ctx context.Context, email string, passHash []byte, nickname string) (int, error) {
@@ -43,6 +45,13 @@ func (s *userStorageStub) GetUserByID(ctx context.Context, userID int) (models.U
 	return s.getUserByIDFn(ctx, userID)
 }
 
+func (s *userStorageStub) SearchUsersByNickname(ctx context.Context, query string, limit int) ([]models.User, error) {
+	if s.searchUsersFn == nil {
+		s.t.Fatalf("unexpected SearchUsersByNickname call")
+	}
+	return s.searchUsersFn(ctx, query, limit)
+}
+
 func (s *userStorageStub) UpdatePassword(ctx context.Context, email string, password []byte) error {
 	if s.updatePasswordFn == nil {
 		s.t.Fatalf("unexpected UpdatePassword call")
@@ -55,6 +64,13 @@ func (s *userStorageStub) UpdateNickname(ctx context.Context, userID int, nickna
 		s.t.Fatalf("unexpected UpdateNickname call")
 	}
 	return s.updateNicknameFn(ctx, userID, nickname)
+}
+
+func (s *userStorageStub) UpdatePreferences(ctx context.Context, userID int, language string, theme string) error {
+	if s.updatePrefsFn == nil {
+		s.t.Fatalf("unexpected UpdatePreferences call")
+	}
+	return s.updatePrefsFn(ctx, userID, language, theme)
 }
 
 type verificationStorageStub struct {
@@ -110,9 +126,9 @@ func (s *verificationStorageStub) DeleteCode(ctx context.Context, email string) 
 }
 
 type accessBlacklistStub struct {
-	t               *testing.T
-	blacklistToken  func(ctx context.Context, token string, ttl time.Duration) error
-	blacklistEmail  func(ctx context.Context, email string, ttl time.Duration) error
+	t              *testing.T
+	blacklistToken func(ctx context.Context, token string, ttl time.Duration) error
+	blacklistEmail func(ctx context.Context, email string, ttl time.Duration) error
 }
 
 func (s *accessBlacklistStub) BlacklistToken(ctx context.Context, token string, ttl time.Duration) error {

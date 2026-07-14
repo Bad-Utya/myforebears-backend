@@ -4,6 +4,7 @@ use (
 	./gen/go
 	./services/apigateway
 	./services/auth
+	./services/customtree
 	./services/emailprovider
 	./services/events
 	./services/familytree

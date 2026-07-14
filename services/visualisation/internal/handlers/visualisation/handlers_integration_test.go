@@ -138,7 +138,7 @@ func newVisualisationTestClient(t *testing.T, content *familytreepb.GetTreeConte
 	objects := newFakeObjectStorage()
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 
-	svc := visservice.New(logger, meta, objects, familyClient)
+	svc := visservice.New(logger, meta, objects, familyClient, nil, nil)
 
 	lis := bufconn.Listen(1024 * 1024)
 	server := grpc.NewServer()
@@ -164,6 +164,7 @@ func newVisualisationTestClient(t *testing.T, content *familytreepb.GetTreeConte
 	cleanup := func() {
 		_ = conn.Close()
 		server.Stop()
+		svc.Close()
 		_ = lis.Close()
 	}
 

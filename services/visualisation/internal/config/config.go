@@ -16,6 +16,8 @@ type Config struct {
 	Postgres   PostgresConfig         `yaml:"postgres" env-required:"true"`
 	S3         S3Config               `yaml:"s3" env-required:"true"`
 	FamilyTree FamilyTreeClientConfig `yaml:"familytree" env-required:"true"`
+	Photos     PhotosClientConfig     `yaml:"photos" env-required:"true"`
+	Events     EventsClientConfig     `yaml:"events" env-required:"true"`
 }
 
 type GRPCConfig struct {
@@ -41,6 +43,18 @@ type S3Config struct {
 }
 
 type FamilyTreeClientConfig struct {
+	Address      string        `yaml:"address" env-required:"true"`
+	Timeout      time.Duration `yaml:"timeout" env-required:"true"`
+	RetriesCount int           `yaml:"retries_count" env-required:"true"`
+}
+
+type PhotosClientConfig struct {
+	Address      string        `yaml:"address" env-required:"true"`
+	Timeout      time.Duration `yaml:"timeout" env-required:"true"`
+	RetriesCount int           `yaml:"retries_count" env-required:"true"`
+}
+
+type EventsClientConfig struct {
 	Address      string        `yaml:"address" env-required:"true"`
 	Timeout      time.Duration `yaml:"timeout" env-required:"true"`
 	RetriesCount int           `yaml:"retries_count" env-required:"true"`

@@ -16,6 +16,8 @@ message Photo {
     int64 size_bytes = 9;
     int64 created_at_unix = 10;
     string tree_id = 11;
+    string public_person_id = 12;
+    string public_event_id = 13;
 }
 
 service PhotosService {
@@ -35,6 +37,14 @@ service PhotosService {
 
     rpc GetPhotoByID (GetPhotoByIDRequest) returns (GetPhotoContentResponse);
     rpc DeletePhotoByID (DeletePhotoByIDRequest) returns (DeletePhotoByIDResponse);
+
+    rpc CopyPersonMediaToPublic (CopyPersonMediaToPublicRequest) returns (CopyMediaResponse);
+    rpc CopyPublicPersonMediaToTree (CopyPublicPersonMediaToTreeRequest) returns (CopyMediaResponse);
+    rpc UploadPublicPersonPhoto (UploadPublicPersonPhotoRequest) returns (UploadPersonPhotoResponse);
+    rpc ListPublicPersonPhotos (ListPublicPersonPhotosRequest) returns (ListPersonPhotosResponse);
+    rpc GetPublicPersonPhoto (GetPublicPersonPhotoRequest) returns (GetPhotoContentResponse);
+    rpc DeletePublicPersonPhoto (DeletePublicPersonPhotoRequest) returns (DeletePhotoByIDResponse);
+    rpc DeletePublicPersonMedia (DeletePublicPersonMediaRequest) returns (DeletePhotoByIDResponse);
 }
 
 message UploadUserAvatarRequest {
@@ -142,3 +152,40 @@ message DeletePhotoByIDRequest {
 }
 
 message DeletePhotoByIDResponse {}
+
+message EventPhotoMapping {
+    string source_event_id = 1;
+    string target_event_id = 2;
+}
+
+message CopyPersonMediaToPublicRequest {
+    int32 request_user_id = 1;
+    string tree_id = 2;
+    string person_id = 3;
+    string public_person_id = 4;
+    repeated EventPhotoMapping event_mappings = 5;
+}
+
+message CopyPublicPersonMediaToTreeRequest {
+    int32 request_user_id = 1;
+    string public_person_id = 2;
+    string tree_id = 3;
+    string person_id = 4;
+    repeated EventPhotoMapping event_mappings = 5;
+}
+
+message CopyMediaResponse { repeated Photo photos = 1; }
+
+message UploadPublicPersonPhotoRequest {
+    int32 request_user_id = 1;
+    string public_person_id = 2;
+    string file_name = 3;
+    string mime_type = 4;
+    bytes content = 5;
+    bool is_avatar = 6;
+}
+
+message ListPublicPersonPhotosRequest { string public_person_id = 1; }
+message GetPublicPersonPhotoRequest { string public_person_id = 1; string photo_id = 2; }
+message DeletePublicPersonPhotoRequest { int32 request_user_id = 1; string public_person_id = 2; string photo_id = 3; }
+message DeletePublicPersonMediaRequest { int32 request_user_id = 1; string public_person_id = 2; }

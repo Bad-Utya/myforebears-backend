@@ -63,6 +63,13 @@ definitions:
       nickname:
         type: string
     type: object
+  auth.updatePreferencesRequest:
+    properties:
+      language:
+        type: string
+      theme:
+        type: string
+    type: object
   auth.userInfoResponse:
     properties:
       created_at_unix:
@@ -71,7 +78,11 @@ definitions:
         type: string
       id:
         type: integer
+      language:
+        type: string
       nickname:
+        type: string
+      theme:
         type: string
     type: object
   auth.usersInfoData:
@@ -539,6 +550,11 @@ definitions:
       last_name:
         type: string
       patronymic:
+        type: string
+    type: object
+  familytree.updateTreeRootPersonRequest:
+    properties:
+      root_person_id:
         type: string
     type: object
   familytree.updateTreeSettingsRequest:
@@ -2379,6 +2395,62 @@ paths:
       summary: Update person gender
       tags:
       - familytree
+  /api/familytree/{tree_id}/root-person:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/familytree.updateTreeRootPersonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.treeSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update tree root person
+      tags:
+      - familytree
   /api/familytree/import/gedcom:
     post:
       consumes:
@@ -2457,6 +2529,39 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: List random public trees
+      tags:
+      - familytree
+  /api/familytree/public/search:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Tree name substring
+        in: query
+        name: name
+        required: true
+        type: string
+      - description: Trees count
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/familytree.treesSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Search public trees
       tags:
       - familytree
   /api/familytree/public/users/{user_id}:
@@ -3298,6 +3403,47 @@ paths:
       summary: Update my nickname
       tags:
       - users
+  /api/users/me/preferences:
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.updatePreferencesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/auth.userInfoResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update user preferences
+      tags:
+      - users
   /api/users/public/random:
     get:
       consumes:
@@ -3340,6 +3486,39 @@ paths:
           schema:
             $ref: '#/definitions/response.ErrorResponse'
       summary: List random public users
+      tags:
+      - users
+  /api/users/search:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Username substring
+        in: query
+        name: username
+        required: true
+        type: string
+      - description: Users count
+        in: query
+        name: limit
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.usersInfoSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      summary: Search users
       tags:
       - users
   /api/visualisations/{tree_id}:

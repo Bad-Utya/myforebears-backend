@@ -59,9 +59,9 @@ func (s *Storage) GetUser(ctx context.Context, email string) (models.User, error
 
 	var user models.User
 	err := s.pool.QueryRow(ctx,
-		"SELECT id, email, pass_hash, nickname, created_at FROM users WHERE email = $1",
+		"SELECT id, email, pass_hash, nickname, created_at, language, theme FROM users WHERE email = $1",
 		email,
-	).Scan(&user.ID, &user.Email, &user.PassHash, &user.Nickname, &user.CreatedAt)
+	).Scan(&user.ID, &user.Email, &user.PassHash, &user.Nickname, &user.CreatedAt, &user.Language, &user.Theme)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
@@ -95,9 +95,9 @@ func (s *Storage) GetUserByID(ctx context.Context, userID int) (models.User, err
 
 	var user models.User
 	err := s.pool.QueryRow(ctx,
-		"SELECT id, email, pass_hash, nickname, created_at FROM users WHERE id = $1",
+		"SELECT id, email, pass_hash, nickname, created_at, language, theme FROM users WHERE id = $1",
 		userID,
-	).Scan(&user.ID, &user.Email, &user.PassHash, &user.Nickname, &user.CreatedAt)
+	).Scan(&user.ID, &user.Email, &user.PassHash, &user.Nickname, &user.CreatedAt, &user.Language, &user.Theme)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
@@ -114,6 +114,59 @@ func (s *Storage) UpdateNickname(ctx context.Context, userID int, nickname strin
 	cmdTag, err := s.pool.Exec(ctx,
 		"UPDATE users SET nickname = $1 WHERE id = $2",
 		nickname, userID,
+	)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("%s: %w", op, storage.ErrUserNotFound)
+	}
+
+	return nil
+}
+
+func (s *Storage) SearchUsersByNickname(ctx context.Context, query string, limit int) ([]models.User, error) {
+	const op = "storage.postgres.SearchUsersByNickname"
+
+	rows, err := s.pool.Query(ctx,
+		`SELECT id, email, pass_hash, nickname, created_at, language, theme
+		 FROM users
+		 WHERE LOWER(nickname) LIKE '%' || $1::text || '%'
+		 ORDER BY nickname ASC
+		 LIMIT $2`,
+		query,
+		limit,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	users := make([]models.User, 0)
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Email, &user.PassHash, &user.Nickname, &user.CreatedAt, &user.Language, &user.Theme); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return users, nil
+}
+
+func (s *Storage) UpdatePreferences(ctx context.Context, userID int, language string, theme string) error {
+	const op = "storage.postgres.UpdatePreferences"
+
+	cmdTag, err := s.pool.Exec(ctx,
+		"UPDATE users SET language = $1, theme = $2 WHERE id = $3",
+		language,
+		theme,
+		userID,
 	)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)

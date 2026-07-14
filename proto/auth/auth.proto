@@ -15,7 +15,10 @@ service Auth {
     rpc Logout (LogoutRequest) returns (LogoutResponse);
     rpc LogoutFromAllDevices (LogoutFromAllDevicesRequest) returns (LogoutFromAllDevicesResponse);
     rpc GetUserInfo (GetUserInfoRequest) returns (GetUserInfoResponse);
+    rpc GetMe (GetMeRequest) returns (GetMeResponse);
+    rpc SearchUsers (SearchUsersRequest) returns (SearchUsersResponse);
     rpc UpdateNickname (UpdateNicknameRequest) returns (UpdateNicknameResponse);
+    rpc UpdatePreferences (UpdatePreferencesRequest) returns (UpdatePreferencesResponse);
 }
 
 message User {
@@ -112,6 +115,26 @@ message GetUserInfoResponse {
     User user = 1;
 }
 
+message GetMeRequest {
+    int32 user_id = 1;
+}
+
+message GetMeResponse {
+    User user = 1;
+    string email = 2;
+    string language = 3;
+    string theme = 4;
+}
+
+message SearchUsersRequest {
+    string query = 1;
+    int32 limit = 2;
+}
+
+message SearchUsersResponse {
+    repeated User users = 1;
+}
+
 message UpdateNicknameRequest {
     int32 user_id = 1;
     string nickname = 2;
@@ -119,4 +142,16 @@ message UpdateNicknameRequest {
 
 message UpdateNicknameResponse {
     User user = 1;
+}
+
+message UpdatePreferencesRequest {
+    int32 user_id = 1;
+    string language = 2;
+    string theme = 3;
+}
+
+message UpdatePreferencesResponse {
+    User user = 1;
+    string language = 2;
+    string theme = 3;
 }

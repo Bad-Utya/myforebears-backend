@@ -46,7 +46,7 @@ func LoadFromJSON(data []byte) (*FamilyTree, int, error) {
 		if p.Gender == "female" {
 			gender = Female
 		}
-		person := NewPerson(p.ID, p.Name, gender)
+		person := NewPerson(p.ID, p.Name, gender, "", "")
 		tree.AddPerson(person)
 	}
 
@@ -69,11 +69,11 @@ func LoadFromJSON(data []byte) (*FamilyTree, int, error) {
 func CreateSampleData() (*FamilyTree, int) {
 	tree := NewFamilyTree()
 
-	ivan := NewPerson(1, "РРІР°РЅ", Male)
-	maria := NewPerson(2, "РњР°СЂРёСЏ", Female)
-	petr := NewPerson(3, "РџС‘С‚СЂ", Male)
-	anna := NewPerson(4, "РђРЅРЅР°", Female)
-	sergey := NewPerson(5, "РЎРµСЂРіРµР№", Male)
+	ivan := NewPerson(1, "РРІР°РЅ", Male, "", "")
+	maria := NewPerson(2, "РњР°СЂРёСЏ", Female, "", "")
+	petr := NewPerson(3, "РџС‘С‚СЂ", Male, "", "")
+	anna := NewPerson(4, "РђРЅРЅР°", Female, "", "")
+	sergey := NewPerson(5, "РЎРµСЂРіРµР№", Male, "", "")
 
 	tree.AddPerson(ivan)
 	tree.AddPerson(maria)

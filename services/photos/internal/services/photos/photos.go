@@ -36,6 +36,11 @@ type FamilyTreeClient interface {
 	GetTreeCreatorID(ctx context.Context, treeID string) (int, error)
 }
 
+type PublicFamilyTreeClient interface {
+	GetPublicPersonOwnerID(ctx context.Context, publicPersonID string) (int, error)
+	SetPublicPersonAvatarPhoto(ctx context.Context, requestUserID int, publicPersonID string, avatarPhotoID string) error
+}
+
 type EventsClient interface {
 	IsEventFromTree(ctx context.Context, treeID string, eventID string) error
 }
@@ -43,13 +48,17 @@ type EventsClient interface {
 type Service struct {
 	log        *slog.Logger
 	meta       storage.MetadataStorage
+	publicMeta storage.PublicMetadataStorage
 	objects    storage.ObjectStorage
 	familyTree FamilyTreeClient
+	publicTree PublicFamilyTreeClient
 	events     EventsClient
 }
 
 func New(log *slog.Logger, meta storage.MetadataStorage, objects storage.ObjectStorage, familyTree FamilyTreeClient, events EventsClient) *Service {
-	return &Service{log: log, meta: meta, objects: objects, familyTree: familyTree, events: events}
+	publicMeta, _ := meta.(storage.PublicMetadataStorage)
+	publicTree, _ := familyTree.(PublicFamilyTreeClient)
+	return &Service{log: log, meta: meta, publicMeta: publicMeta, objects: objects, familyTree: familyTree, publicTree: publicTree, events: events}
 }
 
 func (s *Service) UploadUserAvatar(ctx context.Context, requestUserID int, fileName string, mimeType string, content []byte) (models.Photo, error) {
@@ -508,22 +517,31 @@ func (s *Service) DeletePhotoByID(ctx context.Context, treeID string, photoID st
 		return fmt.Errorf("%s: %w", op, ErrForbidden)
 	}
 
+	avatarCleared := false
+	if photo.IsPersonAvatar && photo.PersonID != nil {
+		if err := s.familyTree.UpdatePersonAvatarPhoto(ctx, photo.PersonID.String(), ""); err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+		avatarCleared = true
+	}
+
 	deleted, err := s.meta.DeletePhotoByID(ctx, parsedPhotoID)
 	if err != nil {
+		if avatarCleared {
+			if rollbackErr := s.familyTree.UpdatePersonAvatarPhoto(ctx, photo.PersonID.String(), photo.ID.String()); rollbackErr != nil {
+				s.log.Error("failed to restore person avatar after metadata delete failure", slog.String("photo_id", photo.ID.String()), slog.String("error", rollbackErr.Error()))
+			}
+		}
 		if errors.Is(err, storage.ErrPhotoNotFound) {
 			return fmt.Errorf("%s: %w", op, ErrPhotoNotFound)
 		}
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	if deleted.IsPersonAvatar && deleted.PersonID != nil {
-		if err := s.familyTree.UpdatePersonAvatarPhoto(ctx, deleted.PersonID.String(), ""); err != nil {
-			return fmt.Errorf("%s: %w", op, err)
-		}
-	}
-
 	if err := s.objects.DeleteObject(ctx, deleted.ObjectKey); err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		// Metadata is already gone, so a failed object deletion is an orphaned
+		// blob rather than a broken user-facing reference. Log it for cleanup.
+		s.log.Error("failed to delete orphaned photo object", slog.String("photo_id", deleted.ID.String()), slog.String("object_key", deleted.ObjectKey), slog.String("error", err.Error()))
 	}
 
 	return nil

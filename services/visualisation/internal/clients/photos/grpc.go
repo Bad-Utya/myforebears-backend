@@ -1,4 +1,4 @@
-package events
+package photos
 
 import (
 	"context"
@@ -6,19 +6,19 @@ import (
 	"log/slog"
 	"time"
 
-	eventspb "github.com/Bad-Utya/myforebears-backend/gen/go/events"
+	photospb "github.com/Bad-Utya/myforebears-backend/gen/go/photos"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Client struct {
-	api  eventspb.EventsServiceClient
+	api  photospb.PhotosServiceClient
 	conn *grpc.ClientConn
 	log  *slog.Logger
 }
 
 func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int) (*Client, error) {
-	const op = "clients.events.New"
+	const op = "clients.photos.New"
 
 	conn, err := grpc.NewClient(
 		addr,
@@ -29,7 +29,7 @@ func New(log *slog.Logger, addr string, timeout time.Duration, retriesCount int)
 	}
 
 	return &Client{
-		api:  eventspb.NewEventsServiceClient(conn),
+		api:  photospb.NewPhotosServiceClient(conn),
 		conn: conn,
 		log:  log,
 	}, nil
@@ -39,10 +39,10 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) CreateEvent(ctx context.Context, req *eventspb.CreateEventRequest) (*eventspb.CreateEventResponse, error) {
-	const op = "clients.events.CreateEvent"
+func (c *Client) GetPersonAvatar(ctx context.Context, req *photospb.GetPersonAvatarRequest) (*photospb.GetPhotoContentResponse, error) {
+	const op = "clients.photos.GetPersonAvatar"
 
-	resp, err := c.api.CreateEvent(ctx, req)
+	resp, err := c.api.GetPersonAvatar(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

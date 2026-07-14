@@ -39,12 +39,13 @@ func (c *Client) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Client) CreateTree(ctx context.Context, requestUserID int, description *string) (*familytreepb.CreateTreeResponse, error) {
+func (c *Client) CreateTree(ctx context.Context, requestUserID int, description *string, name string) (*familytreepb.CreateTreeResponse, error) {
 	const op = "clients.familytree.CreateTree"
 
 	resp, err := c.api.CreateTree(ctx, &familytreepb.CreateTreeRequest{
 		RequestUserId: int32(requestUserID),
 		Description:   stringOrEmpty(description),
+		Name:          name,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -84,6 +85,24 @@ func (c *Client) ListRandomPublicTrees(ctx context.Context, limit int) (*familyt
 	}
 
 	return resp, nil
+}
+
+func (c *Client) SearchPublicTrees(ctx context.Context, query string, tagCodes []string, limit int) (*familytreepb.SearchPublicTreesResponse, error) {
+	const op = "clients.familytree.SearchPublicTrees"
+
+	resp, err := c.api.SearchPublicTrees(ctx, &familytreepb.SearchPublicTreesRequest{Query: query, TagCodes: tagCodes, Limit: int32(limit)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) ListTags(ctx context.Context) (*familytreepb.ListTagsResponse, error) {
+	return c.api.ListTags(ctx, &familytreepb.ListTagsRequest{})
+}
+func (c *Client) SetTreeTags(ctx context.Context, userID int, treeID string, tags []string) (*familytreepb.GetTreeResponse, error) {
+	return c.api.SetTreeTags(ctx, &familytreepb.SetTreeTagsRequest{RequestUserId: int32(userID), TreeId: treeID, TagCodes: tags})
 }
 
 func (c *Client) GetTree(ctx context.Context, treeID string) (*familytreepb.GetTreeResponse, error) {
@@ -180,6 +199,20 @@ func (c *Client) UpdateTreeSettings(ctx context.Context, treeID string, isViewRe
 		IsPublicOnMainPage: isPublicOnMainPage,
 		Name:               name,
 		Description:        stringOrEmpty(description),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return resp, nil
+}
+
+func (c *Client) UpdateTreeRootPerson(ctx context.Context, treeID string, rootPersonID string) (*familytreepb.UpdateTreeRootPersonResponse, error) {
+	const op = "clients.familytree.UpdateTreeRootPerson"
+
+	resp, err := c.api.UpdateTreeRootPerson(ctx, &familytreepb.UpdateTreeRootPersonRequest{
+		TreeId:       treeID,
+		RootPersonId: rootPersonID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
@@ -313,4 +346,39 @@ func (c *Client) ImportTreeGEDCOM(ctx context.Context, requestUserID int, gedcom
 	}
 
 	return resp, nil
+}
+
+func (c *Client) CreatePublicPerson(ctx context.Context, userID int) (*familytreepb.PublicPersonResponse, error) {
+	return c.api.CreatePublicPerson(ctx, &familytreepb.CreatePublicPersonRequest{RequestUserId: int32(userID)})
+}
+func (c *Client) CreatePublicPersonSnapshot(ctx context.Context, req *familytreepb.CreatePublicPersonSnapshotRequest) (*familytreepb.PublicPersonResponse, error) {
+	return c.api.CreatePublicPersonSnapshot(ctx, req)
+}
+func (c *Client) GetPublicPerson(ctx context.Context, id string) (*familytreepb.PublicPersonResponse, error) {
+	return c.api.GetPublicPerson(ctx, &familytreepb.GetPublicPersonRequest{PublicPersonId: id})
+}
+func (c *Client) ListRandomPublicPersons(ctx context.Context, limit int) (*familytreepb.PublicPersonsResponse, error) {
+	return c.api.ListRandomPublicPersons(ctx, &familytreepb.ListRandomPublicPersonsRequest{Limit: int32(limit)})
+}
+func (c *Client) ListPublicPersonsByOwner(ctx context.Context, ownerID, limit int) (*familytreepb.PublicPersonsResponse, error) {
+	return c.api.ListPublicPersonsByOwner(ctx, &familytreepb.ListPublicPersonsByOwnerRequest{OwnerUserId: int32(ownerID), Limit: int32(limit)})
+}
+func (c *Client) SearchPublicPersons(ctx context.Context, q string, tags []string, limit int) (*familytreepb.PublicPersonsResponse, error) {
+	return c.api.SearchPublicPersons(ctx, &familytreepb.SearchPublicPersonsRequest{Query: q, TagCodes: tags, Limit: int32(limit)})
+}
+func (c *Client) SetPublicPersonTags(ctx context.Context, userID int, id string, tags []string) (*familytreepb.PublicPersonResponse, error) {
+	return c.api.SetPublicPersonTags(ctx, &familytreepb.SetPublicPersonTagsRequest{RequestUserId: int32(userID), PublicPersonId: id, TagCodes: tags})
+}
+func (c *Client) UpdatePublicPerson(ctx context.Context, req *familytreepb.UpdatePublicPersonRequest) (*familytreepb.PublicPersonResponse, error) {
+	return c.api.UpdatePublicPerson(ctx, req)
+}
+func (c *Client) DeletePublicPerson(ctx context.Context, userID int, id string) error {
+	_, err := c.api.DeletePublicPerson(ctx, &familytreepb.DeletePublicPersonRequest{RequestUserId: int32(userID), PublicPersonId: id})
+	return err
+}
+func (c *Client) ImportPublicPersonIntoTree(ctx context.Context, req *familytreepb.ImportPublicPersonIntoTreeRequest) (*familytreepb.ImportPublicPersonIntoTreeResponse, error) {
+	return c.api.ImportPublicPersonIntoTree(ctx, req)
+}
+func (c *Client) CreateTreeFromPublicPerson(ctx context.Context, req *familytreepb.CreateTreeFromPublicPersonRequest) (*familytreepb.CreateTreeFromPublicPersonResponse, error) {
+	return c.api.CreateTreeFromPublicPerson(ctx, req)
 }

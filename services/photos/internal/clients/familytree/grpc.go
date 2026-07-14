@@ -79,6 +79,25 @@ func (c *Client) GetTreeCreatorID(ctx context.Context, treeID string) (int, erro
 	return int(tree.GetCreatorId()), nil
 }
 
+func (c *Client) GetPublicPersonOwnerID(ctx context.Context, publicPersonID string) (int, error) {
+	resp, err := c.api.GetPublicPerson(ctx, &familytreepb.GetPublicPersonRequest{PublicPersonId: publicPersonID})
+	if err != nil {
+		return 0, fmt.Errorf("clients.familytree.GetPublicPersonOwnerID: %w", err)
+	}
+	if resp.GetPerson().GetOwnerUserId() <= 0 {
+		return 0, fmt.Errorf("clients.familytree.GetPublicPersonOwnerID: invalid owner")
+	}
+	return int(resp.GetPerson().GetOwnerUserId()), nil
+}
+
+func (c *Client) SetPublicPersonAvatarPhoto(ctx context.Context, requestUserID int, publicPersonID string, avatarPhotoID string) error {
+	_, err := c.api.SetPublicPersonAvatarPhoto(ctx, &familytreepb.SetPublicPersonAvatarPhotoRequest{RequestUserId: int32(requestUserID), PublicPersonId: publicPersonID, AvatarPhotoId: avatarPhotoID})
+	if err != nil {
+		return fmt.Errorf("clients.familytree.SetPublicPersonAvatarPhoto: %w", err)
+	}
+	return nil
+}
+
 func (c *Client) Close() error {
 	return c.conn.Close()
 }

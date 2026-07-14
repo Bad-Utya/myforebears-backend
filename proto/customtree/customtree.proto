@@ -1,0 +1,76 @@
+syntax = "proto3";
+package customtree;
+option go_package = "github.com/Bad-Utya/myforebears-backend/gen/go/customtree;customtreepb";
+
+message Tag { string code=1; string name=2; string description=3; }
+message Tree { string id=1; int32 creator_id=2; string name=3; string description=4; string relation_down=5; string relation_up=6; string root_entity_id=7; bool is_view_restricted=8; bool is_public_on_main_page=9; int64 created_at_unix=10; repeated Tag tags=11; double similarity_score=12; }
+message Entity { string id=1; string tree_id=2; string name=3; string description=4; string avatar_photo_id=5; int64 created_at_unix=6; }
+message Edge { string parent_id=1; string child_id=2; }
+message Photo { string id=1; string entity_id=2; string file_name=3; string mime_type=4; int64 size_bytes=5; bool is_avatar=6; int64 created_at_unix=7; }
+message CoordinateNode { string entity_id=1; string name=2; string avatar_photo_id=3; int32 layer=4; double x=5; double y=6; }
+message CoordinateEdge { string parent_id=1; string child_id=2; string label_down=3; string label_up=4; }
+
+service CustomTreeService {
+  rpc CreateTree(CreateTreeRequest) returns (TreeResponse);
+  rpc GetTree(GetTreeRequest) returns (TreeResponse);
+  rpc ListTreesByOwner(ListTreesByOwnerRequest) returns (TreesResponse);
+  rpc ListPublicTreesByOwner(ListPublicTreesByOwnerRequest) returns (TreesResponse);
+  rpc ListRandomPublicTrees(ListRandomPublicTreesRequest) returns (TreesResponse);
+  rpc SearchPublicTrees(SearchPublicTreesRequest) returns (TreesResponse);
+  rpc SetTreeTags(SetTreeTagsRequest) returns (TreeResponse);
+  rpc UpdateTree(UpdateTreeRequest) returns (TreeResponse);
+  rpc DeleteTree(DeleteTreeRequest) returns (Empty);
+  rpc GetTreeAccess(GetTreeRequest) returns (TreeResponse);
+  rpc AddAccessEmail(AccessEmailRequest) returns (Empty);
+  rpc ListAccessEmails(GetTreeRequest) returns (AccessEmailsResponse);
+  rpc DeleteAccessEmail(AccessEmailRequest) returns (Empty);
+  rpc IsAccessEmailAllowed(AccessEmailRequest) returns (AccessAllowedResponse);
+  rpc CreateEntity(CreateEntityRequest) returns (EntityResponse);
+  rpc GetEntity(GetEntityRequest) returns (EntityResponse);
+  rpc ListEntities(GetTreeRequest) returns (EntitiesResponse);
+  rpc UpdateEntity(UpdateEntityRequest) returns (EntityResponse);
+  rpc DeleteEntity(DeleteEntityRequest) returns (Empty);
+  rpc AddEdge(AddEdgeRequest) returns (Empty);
+  rpc RemoveEdge(RemoveEdgeRequest) returns (Empty);
+  rpc GetContent(GetTreeRequest) returns (ContentResponse);
+  rpc UploadPhoto(UploadPhotoRequest) returns (PhotoResponse);
+  rpc ListPhotos(GetEntityRequest) returns (PhotosResponse);
+  rpc GetPhoto(GetPhotoRequest) returns (PhotoContentResponse);
+  rpc DeletePhoto(DeletePhotoRequest) returns (Empty);
+  rpc RenderCoordinates(RenderRequest) returns (CoordinatesResponse);
+  rpc RenderSVG(RenderRequest) returns (SVGResponse);
+}
+
+message Empty {}
+message CreateTreeRequest { int32 request_user_id=1; string name=2; string description=3; string relation_down=4; string relation_up=5; string root_entity_name=6; }
+message GetTreeRequest { string tree_id=1; }
+message ListTreesByOwnerRequest { int32 request_user_id=1; }
+message ListPublicTreesByOwnerRequest { int32 owner_user_id=1; }
+message ListRandomPublicTreesRequest { int32 limit=1; }
+message SearchPublicTreesRequest { string query=1; int32 limit=2; repeated string tag_codes=3; }
+message SetTreeTagsRequest { int32 request_user_id=1; string tree_id=2; repeated string tag_codes=3; }
+message UpdateTreeRequest { int32 request_user_id=1; string tree_id=2; string name=3; string description=4; string relation_down=5; string relation_up=6; bool is_view_restricted=7; bool is_public_on_main_page=8; string root_entity_id=9; }
+message DeleteTreeRequest { int32 request_user_id=1; string tree_id=2; }
+message TreeResponse { Tree tree=1; Entity root_entity=2; }
+message TreesResponse { repeated Tree trees=1; }
+message AccessEmailRequest { string tree_id=1; string email=2; }
+message AccessEmailsResponse { repeated string emails=1; }
+message AccessAllowedResponse { bool allowed=1; }
+message CreateEntityRequest { string tree_id=1; string parent_id=2; string name=3; string description=4; }
+message GetEntityRequest { string tree_id=1; string entity_id=2; }
+message UpdateEntityRequest { string tree_id=1; string entity_id=2; string name=3; string description=4; }
+message DeleteEntityRequest { string tree_id=1; string entity_id=2; }
+message EntityResponse { Entity entity=1; }
+message EntitiesResponse { repeated Entity entities=1; }
+message AddEdgeRequest { string tree_id=1; string parent_id=2; string child_id=3; }
+message RemoveEdgeRequest { string tree_id=1; string parent_id=2; string child_id=3; }
+message ContentResponse { Tree tree=1; repeated Entity entities=2; repeated Edge edges=3; }
+message UploadPhotoRequest { string tree_id=1; string entity_id=2; string file_name=3; string mime_type=4; bytes content=5; bool is_avatar=6; }
+message GetPhotoRequest { string tree_id=1; string entity_id=2; string photo_id=3; }
+message DeletePhotoRequest { string tree_id=1; string entity_id=2; string photo_id=3; }
+message PhotoResponse { Photo photo=1; }
+message PhotosResponse { repeated Photo photos=1; }
+message PhotoContentResponse { Photo photo=1; bytes content=2; }
+message RenderRequest { string tree_id=1; string root_entity_id=2; }
+message CoordinatesResponse { repeated CoordinateNode nodes=1; repeated CoordinateEdge edges=2; double width=3; double height=4; }
+message SVGResponse { bytes content=1; string mime_type=2; }

@@ -15,6 +15,8 @@ var (
 	ErrRelationshipMissing     = errors.New("relationship not found")
 	ErrTreeAccessEmailExists   = errors.New("tree access email already exists")
 	ErrTreeAccessEmailNotFound = errors.New("tree access email not found")
+	ErrPublicPersonNotFound    = errors.New("public person not found")
+	ErrUnknownTag              = errors.New("unknown tag")
 )
 
 type PersonStorage interface {
@@ -28,6 +30,7 @@ type PersonStorage interface {
 	DeleteTreeAccessEmail(ctx context.Context, treeID uuid.UUID, email string) error
 	GetTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error)
 	GetPublicTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error)
+	GetPublicTreesByName(ctx context.Context, nameQuery string, limit int) ([]models.Tree, error)
 	GetRandomPublicTrees(ctx context.Context, limit int) ([]models.Tree, error)
 	CreatePerson(ctx context.Context, person models.Person) error
 	GetPerson(ctx context.Context, personID uuid.UUID) (models.Person, error)
@@ -36,6 +39,25 @@ type PersonStorage interface {
 	DeletePerson(ctx context.Context, personID uuid.UUID) error
 	GetPersonsByTree(ctx context.Context, treeID uuid.UUID) ([]models.Person, error)
 	Close()
+}
+
+type PublicPersonStorage interface {
+	CreatePublicPerson(ctx context.Context, person models.PublicPerson) error
+	GetPublicPerson(ctx context.Context, personID uuid.UUID) (models.PublicPerson, error)
+	ListRandomPublicPersons(ctx context.Context, limit int) ([]models.PublicPerson, error)
+	ListPublicPersonsByOwner(ctx context.Context, ownerUserID int, limit int) ([]models.PublicPerson, error)
+	SearchPublicPersons(ctx context.Context, query string, limit int) ([]models.PublicPerson, error)
+	UpdatePublicPerson(ctx context.Context, person models.PublicPerson) error
+	SetPublicPersonAvatarPhoto(ctx context.Context, personID uuid.UUID, avatarPhotoID *uuid.UUID) error
+	DeletePublicPerson(ctx context.Context, personID uuid.UUID) error
+}
+
+type TagStorage interface {
+	ListTags(context.Context) ([]models.Tag, error)
+	SetTreeTags(context.Context, uuid.UUID, []string) error
+	SetPublicPersonTags(context.Context, uuid.UUID, []string) error
+	SearchPublicTrees(context.Context, string, []string, int) ([]models.Tree, error)
+	SearchPublicPersonsByTags(context.Context, string, []string, int) ([]models.PublicPerson, error)
 }
 
 type RelationshipStorage interface {

@@ -2,17 +2,22 @@ package visualisation
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"log/slog"
 
+	eventspb "github.com/Bad-Utya/myforebears-backend/gen/go/events"
 	familytreepb "github.com/Bad-Utya/myforebears-backend/gen/go/familytree"
+	photospb "github.com/Bad-Utya/myforebears-backend/gen/go/photos"
 	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/domain/models"
 	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine"
+	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine/stage4_render"
 	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/storage"
 	"github.com/google/uuid"
 )
@@ -36,15 +41,39 @@ type FamilyTreeClient interface {
 	GetTreeCreatorID(ctx context.Context, treeID string) (int, error)
 }
 
+type PhotosClient interface {
+	GetPersonAvatar(ctx context.Context, req *photospb.GetPersonAvatarRequest) (*photospb.GetPhotoContentResponse, error)
+}
+
+type EventsClient interface {
+	ListEventsByTree(ctx context.Context, req *eventspb.ListEventsByTreeRequest) (*eventspb.ListEventsByTreeResponse, error)
+}
+
 type Service struct {
 	log        *slog.Logger
 	meta       storage.MetadataStorage
 	objects    storage.ObjectStorage
 	familyTree FamilyTreeClient
+	photos     PhotosClient
+	events     EventsClient
+	workerCtx  context.Context
+	cancel     context.CancelFunc
+	workers    sync.WaitGroup
 }
 
-func New(log *slog.Logger, meta storage.MetadataStorage, objects storage.ObjectStorage, familyTree FamilyTreeClient) *Service {
-	return &Service{log: log, meta: meta, objects: objects, familyTree: familyTree}
+func New(log *slog.Logger, meta storage.MetadataStorage, objects storage.ObjectStorage, familyTree FamilyTreeClient, photos PhotosClient, events EventsClient) *Service {
+	workerCtx, cancel := context.WithCancel(context.Background())
+	return &Service{log: log, meta: meta, objects: objects, familyTree: familyTree, photos: photos, events: events, workerCtx: workerCtx, cancel: cancel}
+}
+
+const generationTimeout = 2 * time.Minute
+
+// Close cancels active generations and waits until their cleanup has finished.
+func (s *Service) Close() {
+	if s.cancel != nil {
+		s.cancel()
+	}
+	s.workers.Wait()
 }
 
 func (s *Service) CreateAncestorsVisualisation(ctx context.Context, treeID string, rootPersonID string) (models.Visualisation, error) {
@@ -207,7 +236,11 @@ func (s *Service) createVisualisation(ctx context.Context, visType models.Visual
 		return models.Visualisation{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	go s.runGeneration(vis)
+	s.workers.Add(1)
+	go func() {
+		defer s.workers.Done()
+		s.runGeneration(vis)
+	}()
 
 	return vis, nil
 }
@@ -246,48 +279,192 @@ func (s *Service) validateIncludedPersonIDs(ctx context.Context, visType models.
 }
 
 func (s *Service) runGeneration(vis models.Visualisation) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(s.workerCtx, generationTimeout)
+	defer cancel()
 
 	if err := s.meta.SetVisualisationProcessing(ctx, vis.ID); err != nil {
 		s.log.Error("failed to set visualisation processing", slog.String("visualisation_id", vis.ID.String()), slog.String("error", err.Error()))
 		return
 	}
 
-	svgContent, err := s.generateVisualisationFile(vis)
+	svgContent, err := s.generateVisualisationFile(ctx, vis)
 	if err != nil {
-		if updateErr := s.meta.SetVisualisationFailed(ctx, vis.ID, err.Error()); updateErr != nil {
-			s.log.Error("failed to set visualisation failed", slog.String("visualisation_id", vis.ID.String()), slog.String("error", updateErr.Error()))
-		}
+		s.markGenerationFailed(vis.ID, err)
 		return
 	}
 
 	if err := s.objects.PutObject(ctx, vis.ObjectKey, svgContent, vis.MIMEType); err != nil {
-		if updateErr := s.meta.SetVisualisationFailed(ctx, vis.ID, err.Error()); updateErr != nil {
-			s.log.Error("failed to set visualisation failed", slog.String("visualisation_id", vis.ID.String()), slog.String("error", updateErr.Error()))
-		}
+		s.markGenerationFailed(vis.ID, err)
 		return
 	}
 
 	if err := s.meta.SetVisualisationReady(ctx, vis.ID, int64(len(svgContent))); err != nil {
 		s.log.Error("failed to set visualisation ready", slog.String("visualisation_id", vis.ID.String()), slog.String("error", err.Error()))
+		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cleanupCancel()
+		if cleanupErr := s.objects.DeleteObject(cleanupCtx, vis.ObjectKey); cleanupErr != nil {
+			s.log.Error("failed to remove orphaned visualisation", slog.String("visualisation_id", vis.ID.String()), slog.String("error", cleanupErr.Error()))
+		}
+		s.markGenerationFailed(vis.ID, err)
 		return
 	}
 }
 
-func (s *Service) generateVisualisationFile(vis models.Visualisation) ([]byte, error) {
+func (s *Service) markGenerationFailed(visualisationID uuid.UUID, generationErr error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := s.meta.SetVisualisationFailed(ctx, visualisationID, generationErr.Error()); err != nil {
+		s.log.Error("failed to set visualisation failed", slog.String("visualisation_id", visualisationID.String()), slog.String("error", err.Error()))
+	}
+}
+
+func (s *Service) generateVisualisationFile(ctx context.Context, vis models.Visualisation) ([]byte, error) {
 	const op = "service.visualisation.generateVisualisationFile"
 
-	content, err := s.familyTree.GetTreeContent(context.Background(), vis.TreeID.String())
+	content, err := s.familyTree.GetTreeContent(ctx, vis.TreeID.String())
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	svgBytes, err := engine.RenderSVG(vis.Type, vis.RootPersonID, vis.IncludedPersonIDs, content)
+	personData, err := s.buildPersonRenderData(ctx, vis.TreeID.String(), content.GetPersons())
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	svgBytes, err := engine.RenderSVGWithPersonData(vis.Type, vis.RootPersonID, vis.IncludedPersonIDs, content, personData)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return svgBytes, nil
+}
+
+const (
+	birthEventTypeID = "4af8f935-180f-4be6-8f7a-f6ecf90af4b2"
+	deathEventTypeID = "7e92347c-b30d-474e-abdd-48f62cb0f6cf"
+)
+
+type personDates struct {
+	birth string
+	death string
+
+	hasDeath bool
+}
+
+func (s *Service) buildPersonRenderData(ctx context.Context, treeID string, persons []*familytreepb.Person) (map[string]stage4_render.PersonRenderData, error) {
+	personData := make(map[string]stage4_render.PersonRenderData, len(persons))
+	if len(persons) == 0 {
+		return personData, nil
+	}
+
+	dates := make(map[string]personDates)
+	if s.events != nil {
+		eventsResp, err := s.events.ListEventsByTree(ctx, &eventspb.ListEventsByTreeRequest{TreeId: treeID})
+		if err != nil {
+			s.log.Warn("events lookup failed", slog.String("tree_id", treeID), slog.String("error", err.Error()))
+		} else {
+			dates = collectPersonDates(eventsResp.GetEvents())
+		}
+	}
+
+	for _, person := range persons {
+		if person == nil {
+			continue
+		}
+
+		data := stage4_render.PersonRenderData{
+			DisplayName: engine.BuildPersonDisplayName(person.GetFirstName(), person.GetLastName(), person.GetPatronymic(), person.GetId()),
+			DateLine:    formatPersonDateLine(dates[person.GetId()]),
+		}
+
+		if s.photos != nil {
+			avatar, err := s.photos.GetPersonAvatar(ctx, &photospb.GetPersonAvatarRequest{
+				TreeId:   treeID,
+				PersonId: person.GetId(),
+			})
+			if err == nil {
+				mimeType := avatar.GetPhoto().GetMimeType()
+				if mimeType != "" && len(avatar.GetContent()) > 0 {
+					data.AvatarMime = mimeType
+					data.AvatarData = base64.StdEncoding.EncodeToString(avatar.GetContent())
+				}
+			}
+		}
+
+		personData[person.GetId()] = data
+	}
+
+	return personData, nil
+}
+
+func collectPersonDates(events []*eventspb.Event) map[string]personDates {
+	result := make(map[string]personDates)
+	for _, event := range events {
+		if event == nil {
+			continue
+		}
+
+		if event.GetEventTypeId() != birthEventTypeID && event.GetEventTypeId() != deathEventTypeID {
+			continue
+		}
+
+		formatted := formatEventDate(event)
+		for _, personID := range event.GetPrimaryPersonIds() {
+			dates := result[personID]
+			if event.GetEventTypeId() == birthEventTypeID {
+				if dates.birth == "" {
+					dates.birth = formatted
+				}
+			} else {
+				if dates.death == "" {
+					dates.death = formatted
+					dates.hasDeath = true
+				}
+			}
+			result[personID] = dates
+		}
+	}
+
+	return result
+}
+
+func formatPersonDateLine(dates personDates) string {
+	birth := dates.birth
+	death := dates.death
+	if birth == "" {
+		birth = "неиз"
+	}
+
+	if !dates.hasDeath {
+		return birth
+	}
+
+	if death == "" {
+		death = "неиз"
+	}
+
+	return fmt.Sprintf("%s-%s", birth, death)
+}
+
+func formatEventDate(event *eventspb.Event) string {
+	if event == nil {
+		return ""
+	}
+	if event.GetDateUnknown() {
+		return "неиз"
+	}
+	dateISO := strings.TrimSpace(event.GetDateIso())
+	if dateISO == "" {
+		return "неиз"
+	}
+	if t, err := time.Parse("2006-01-02", dateISO); err == nil {
+		return t.Format("02.01.2006")
+	}
+	if t, err := time.Parse(time.RFC3339, dateISO); err == nil {
+		return t.Format("02.01.2006")
+	}
+
+	return "неиз"
 }
 
 // RenderCoordinatesForClient renders tree visualization for client-side rendering

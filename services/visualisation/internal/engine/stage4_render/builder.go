@@ -2,9 +2,47 @@ package stage4_render
 
 import (
 	"fmt"
+
 	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine/stage1_input"
 	"github.com/Bad-Utya/myforebears-backend/services/visualisation/internal/engine/stage3_ordering"
 )
+
+// highestIntermediateUpLayer finds visible nodes located between two partners
+// on their layer, then walks their Up links breadth-first. The highest visible
+// node determines the horizontal corridor for a routed partner edge.
+func highestIntermediateUpLayer(cm *stage3_ordering.CoordMatrix, leftNode, rightNode *stage3_ordering.CoordNode) (int, bool) {
+	if cm == nil || leftNode == nil || rightNode == nil || leftNode.Layer != rightNode.Layer {
+		return 0, false
+	}
+
+	queue := make([]*stage3_ordering.CoordNode, 0)
+	visited := make(map[*stage3_ordering.CoordNode]bool)
+	for _, node := range cm.Layers[leftNode.Layer] {
+		if node == nil || node == leftNode || node == rightNode || node.IsPseudo {
+			continue
+		}
+		if node.Left >= leftNode.Right && node.Right <= rightNode.Left {
+			queue = append(queue, node)
+			visited[node] = true
+		}
+	}
+	highest := leftNode.Layer
+	for head := 0; head < len(queue); head++ {
+		node := queue[head]
+		if !node.IsPseudo && node.Layer > highest {
+			highest = node.Layer
+		}
+		for _, up := range node.Up {
+			if up == nil || visited[up] {
+				continue
+			}
+			visited[up] = true
+			queue = append(queue, up)
+		}
+	}
+
+	return highest, true
+}
 
 func BuildCoordRenderResult(cm *stage3_ordering.CoordMatrix, tree *stage1_input.FamilyTree) *CoordRenderResult {
 	result := &CoordRenderResult{
@@ -228,14 +266,17 @@ func BuildCoordRenderResult(cm *stage3_ordering.CoordMatrix, tree *stage1_input.
 					addedEdges[key] = true
 					fromCenter := (leftNode.Left + leftNode.Right) / 2
 					toCenter := (rightNode.Left + rightNode.Right) / 2
+					routeLayer, routeAbove := highestIntermediateUpLayer(cm, leftNode, rightNode)
 					result.Edges = append(result.Edges, EdgeInfo{
-						FromNodeIdx: leftIdx,
-						ToNodeIdx:   rightIdx,
-						FromX:       fromCenter,
-						FromY:       leftNode.Layer,
-						ToX:         toCenter,
-						ToY:         leftNode.Layer,
-						EdgeType:    "partner",
+						FromNodeIdx:     leftIdx,
+						ToNodeIdx:       rightIdx,
+						FromX:           fromCenter,
+						FromY:           leftNode.Layer,
+						ToX:             toCenter,
+						ToY:             leftNode.Layer,
+						EdgeType:        "partner",
+						RouteAbove:      routeAbove,
+						RouteAboveLayer: routeLayer,
 					})
 				}
 			}
@@ -291,14 +332,17 @@ func BuildCoordRenderResult(cm *stage3_ordering.CoordMatrix, tree *stage1_input.
 				addedEdges[key] = true
 				fromCenter := (leftNode.Left + leftNode.Right) / 2
 				toCenter := (rightNode.Left + rightNode.Right) / 2
+				routeLayer, routeAbove := highestIntermediateUpLayer(cm, leftNode, rightNode)
 				result.Edges = append(result.Edges, EdgeInfo{
-					FromNodeIdx: leftIdx,
-					ToNodeIdx:   rightIdx,
-					FromX:       fromCenter,
-					FromY:       leftNode.Layer,
-					ToX:         toCenter,
-					ToY:         leftNode.Layer,
-					EdgeType:    "partner",
+					FromNodeIdx:     leftIdx,
+					ToNodeIdx:       rightIdx,
+					FromX:           fromCenter,
+					FromY:           leftNode.Layer,
+					ToX:             toCenter,
+					ToY:             leftNode.Layer,
+					EdgeType:        "partner",
+					RouteAbove:      routeAbove,
+					RouteAboveLayer: routeLayer,
 				})
 			}
 		}

@@ -37,6 +37,9 @@ type EdgeInfo struct {
 	ParentsAdjacent bool
 	AdjacentCenterX int
 	ParentAddedLeft bool
+
+	RouteAbove      bool
+	RouteAboveLayer int
 }
 
 type RenderResult struct {
@@ -50,6 +53,15 @@ type CoordRenderResult struct {
 	MinLayer int
 	MaxLayer int
 	MaxRight int
+}
+
+type PersonRenderData struct {
+	DisplayName  string
+	DateLine     string
+	AvatarData   string
+	AvatarMime   string
+	AvatarWidth  int
+	AvatarHeight int
 }
 
 type PersonPosition struct {

@@ -1,0 +1,16 @@
+env: local
+grpc:
+  port: 50056
+postgres:
+  host: postgres
+  port: 5432
+  username: from-env
+  password: from-env
+  database: customtree_local_db
+s3:
+  endpoint: from-env
+  region: from-env
+  bucket: from-env
+  access_key_id: from-env
+  secret_access_key: from-env
+  force_path_style: true

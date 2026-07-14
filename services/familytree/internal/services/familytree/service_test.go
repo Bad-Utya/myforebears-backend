@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"testing"
 
-	eventspb "github.com/Bad-Utya/myforebears-backend/gen/go/events"
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/domain/models"
 	"github.com/Bad-Utya/myforebears-backend/services/familytree/internal/storage"
 	"github.com/google/uuid"
@@ -67,6 +66,11 @@ func (s *personStorageStub) GetTreesByCreator(ctx context.Context, creatorID int
 
 func (s *personStorageStub) GetPublicTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error) {
 	s.t.Fatalf("unexpected GetPublicTreesByCreator call")
+	return nil, nil
+}
+
+func (s *personStorageStub) GetPublicTreesByName(ctx context.Context, nameQuery string, limit int) ([]models.Tree, error) {
+	s.t.Fatalf("unexpected GetPublicTreesByName call")
 	return nil, nil
 }
 
@@ -158,15 +162,6 @@ func (s *relationStorageStub) Close(ctx context.Context) error {
 	return nil
 }
 
-type eventsClientStub struct {
-	t *testing.T
-}
-
-func (s *eventsClientStub) CreateEvent(ctx context.Context, req *eventspb.CreateEventRequest) (*eventspb.CreateEventResponse, error) {
-	s.t.Fatalf("unexpected CreateEvent call")
-	return nil, nil
-}
-
 func TestValidatePersonsInTreeInvalidID(t *testing.T) {
 	ctx := context.Background()
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
@@ -179,7 +174,7 @@ func TestValidatePersonsInTreeInvalidID(t *testing.T) {
 		},
 	}
 
-	svc := &Service{log: log, personStorage: personStore, relationStorage: &relationStorageStub{t: t}, eventsClient: &eventsClientStub{t: t}}
+	svc := &Service{log: log, personStorage: personStore, relationStorage: &relationStorageStub{t: t}}
 	if err := svc.ValidatePersonsInTree(ctx, treeID.String(), []string{"bad"}); !errors.Is(err, ErrInvalidPersonID) {
 		t.Fatalf("expected ErrInvalidPersonID, got %v", err)
 	}
@@ -204,7 +199,7 @@ func TestValidatePersonsInTreePersonNotFound(t *testing.T) {
 		},
 	}
 
-	svc := &Service{log: log, personStorage: personStore, relationStorage: &relationStorageStub{t: t}, eventsClient: &eventsClientStub{t: t}}
+	svc := &Service{log: log, personStorage: personStore, relationStorage: &relationStorageStub{t: t}}
 	if err := svc.ValidatePersonsInTree(ctx, treeID.String(), []string{personID.String()}); !errors.Is(err, ErrPersonNotFound) {
 		t.Fatalf("expected ErrPersonNotFound, got %v", err)
 	}
@@ -227,7 +222,7 @@ func TestValidatePersonsInTreeTreeMismatch(t *testing.T) {
 		},
 	}
 
-	svc := &Service{log: log, personStorage: personStore, relationStorage: &relationStorageStub{t: t}, eventsClient: &eventsClientStub{t: t}}
+	svc := &Service{log: log, personStorage: personStore, relationStorage: &relationStorageStub{t: t}}
 	if err := svc.ValidatePersonsInTree(ctx, treeID.String(), []string{personID.String()}); !errors.Is(err, ErrPersonNotInSameTree) {
 		t.Fatalf("expected ErrPersonNotInSameTree, got %v", err)
 	}
@@ -266,7 +261,7 @@ func TestValidatePersonsInTreeSuccessWithDuplicates(t *testing.T) {
 		},
 	}
 
-	svc := &Service{log: log, personStorage: personStore, relationStorage: &relationStorageStub{t: t}, eventsClient: &eventsClientStub{t: t}}
+	svc := &Service{log: log, personStorage: personStore, relationStorage: &relationStorageStub{t: t}}
 	if err := svc.ValidatePersonsInTree(ctx, treeID.String(), []string{personID1.String(), personID1.String(), personID2.String()}); err != nil {
 		t.Fatalf("expected success, got %v", err)
 	}

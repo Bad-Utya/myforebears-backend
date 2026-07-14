@@ -8,9 +8,11 @@ const (
 )
 
 type Person struct {
-	ID     int
-	Name   string
-	Gender Gender
+	ID         int
+	ExternalID string
+	TreeID     string
+	Name       string
+	Gender     Gender
 
 	Mother   *Person
 	Father   *Person
@@ -20,13 +22,15 @@ type Person struct {
 	Layout *PersonLayout
 }
 
-func NewPerson(id int, name string, gender Gender) *Person {
+func NewPerson(id int, name string, gender Gender, externalID string, treeID string) *Person {
 	return &Person{
-		ID:       id,
-		Name:     name,
-		Gender:   gender,
-		Partners: make([]*Person, 0),
-		Children: make([]*Person, 0),
+		ID:         id,
+		ExternalID: externalID,
+		TreeID:     treeID,
+		Name:       name,
+		Gender:     gender,
+		Partners:   make([]*Person, 0),
+		Children:   make([]*Person, 0),
 	}
 }
 

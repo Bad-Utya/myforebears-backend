@@ -120,6 +120,15 @@ func (h *Handler) UpdateTreeSettings(ctx context.Context, req *familytreepb.Upda
 	return &familytreepb.UpdateTreeSettingsResponse{Tree: toProtoTree(tree)}, nil
 }
 
+func (h *Handler) UpdateTreeRootPerson(ctx context.Context, req *familytreepb.UpdateTreeRootPersonRequest) (*familytreepb.UpdateTreeRootPersonResponse, error) {
+	tree, err := h.service.UpdateTreeRootPerson(ctx, req.GetTreeId(), req.GetRootPersonId())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	return &familytreepb.UpdateTreeRootPersonResponse{Tree: toProtoTree(tree)}, nil
+}
+
 func toModelRelationshipType(relType familytreepb.RelationshipType) models.RelationshipType {
 	switch relType {
 	case familytreepb.RelationshipType_RELATIONSHIP_PARENT_CHILD:

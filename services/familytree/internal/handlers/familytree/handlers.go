@@ -12,10 +12,13 @@ import (
 )
 
 type FamilyTreeService interface {
-	CreateTree(ctx context.Context, requestUserID int, description string) (models.Tree, models.Person, error)
+	CreateTree(ctx context.Context, requestUserID int, description string, name string) (models.Tree, models.Person, error)
 	ListTreesByCreator(ctx context.Context, requestUserID int) ([]models.Tree, error)
 	ListPublicTreesByCreator(ctx context.Context, creatorID int) ([]models.Tree, error)
 	ListRandomPublicTrees(ctx context.Context, limit int) ([]models.Tree, error)
+	SearchPublicTreesByName(ctx context.Context, nameQuery string, tagCodes []string, limit int) ([]models.Tree, error)
+	ListTags(context.Context) ([]models.Tag, error)
+	SetTreeTags(context.Context, int, string, []string) (models.Tree, error)
 	GetTree(ctx context.Context, treeID string) (models.Tree, error)
 	GetTreeContent(ctx context.Context, treeID string) ([]models.Person, []models.Relationship, error)
 	GetTreeContentWithinDepth(ctx context.Context, treeID string, rootPersonID string, maxDepth int) ([]models.Person, []models.Relationship, error)
@@ -25,6 +28,7 @@ type FamilyTreeService interface {
 	ListTreeAccessEmails(ctx context.Context, treeID string) ([]string, error)
 	DeleteTreeAccessEmail(ctx context.Context, treeID string, email string) error
 	UpdateTreeSettings(ctx context.Context, treeID string, isViewRestricted bool, isPublicOnMainPage bool, name string, description string) (models.Tree, error)
+	UpdateTreeRootPerson(ctx context.Context, treeID string, rootPersonID string) (models.Tree, error)
 	ListPersonsByTree(ctx context.Context, treeID string) ([]models.Person, error)
 	AddParent(ctx context.Context, treeID string, childID string, role personsvc.ParentRole, firstName string, lastName string, patronymic string) (models.Person, *models.Person, error)
 	AddChild(ctx context.Context, treeID string, parent1ID string, parent2ID string, firstName string, lastName string, patronymic string, gender models.Gender) (models.Person, *models.Person, error)
@@ -33,9 +37,9 @@ type FamilyTreeService interface {
 	UpdatePersonAvatarPhoto(ctx context.Context, personID string, avatarPhotoID string) (models.Person, error)
 	DeletePersonInTree(ctx context.Context, treeID string, personID string) error
 
-	CreatePerson(ctx context.Context, treeID string, firstName string, lastName string, patronymic string, gender models.Gender) (models.Person, error)
+	CreatePerson(ctx context.Context, treeID string, firstName string, lastName string, patronymic string, gender models.Gender, biography string) (models.Person, error)
 	GetPerson(ctx context.Context, treeID string, personID string) (models.Person, error)
-	UpdatePerson(ctx context.Context, treeID string, personID string, firstName string, lastName string, patronymic string, gender models.Gender) (models.Person, error)
+	UpdatePerson(ctx context.Context, treeID string, personID string, firstName string, lastName string, patronymic string, gender models.Gender, biography string) (models.Person, error)
 	DeletePerson(ctx context.Context, treeID string, personID string) error
 	AddRelationship(ctx context.Context, treeID string, personIDFrom string, personIDTo string, relType models.RelationshipType) error
 	RemoveRelationship(ctx context.Context, treeID string, personIDFrom string, personIDTo string, relType models.RelationshipType) error
@@ -44,6 +48,18 @@ type FamilyTreeService interface {
 	UpdatePartnerRelationshipStatus(ctx context.Context, treeID string, personID1 string, personID2 string, status models.PartnerRelationshipStatus) error
 	ExportTreeGEDCOM(ctx context.Context, requestUserID int, treeID string) (string, error)
 	ImportTreeGEDCOM(ctx context.Context, requestUserID int, gedcomContent string) (models.Tree, int, int, []string, error)
+	CreatePublicPerson(ctx context.Context, userID int) (models.PublicPerson, error)
+	CreatePublicPersonSnapshot(ctx context.Context, userID int, firstName, lastName, patronymic string, gender models.Gender, biography string, events []models.PublicPersonEvent) (models.PublicPerson, error)
+	GetPublicPerson(ctx context.Context, id string) (models.PublicPerson, error)
+	ListRandomPublicPersons(ctx context.Context, limit int) ([]models.PublicPerson, error)
+	ListPublicPersonsByOwner(ctx context.Context, ownerUserID, limit int) ([]models.PublicPerson, error)
+	SearchPublicPersons(ctx context.Context, query string, tagCodes []string, limit int) ([]models.PublicPerson, error)
+	SetPublicPersonTags(context.Context, int, string, []string) (models.PublicPerson, error)
+	UpdatePublicPerson(ctx context.Context, userID int, person models.PublicPerson) (models.PublicPerson, error)
+	SetPublicPersonAvatarPhoto(ctx context.Context, userID int, personID, photoID string) (models.PublicPerson, error)
+	DeletePublicPerson(ctx context.Context, userID int, personID string) error
+	ImportPublicPersonIntoTree(ctx context.Context, userID int, publicPersonID, treeID, attachToID string, attachment personsvc.PublicPersonAttachment) (models.Person, error)
+	CreateTreeFromPublicPerson(ctx context.Context, userID int, publicPersonID, treeName string) (models.Tree, models.Person, error)
 }
 
 type Handler struct {
@@ -67,6 +83,7 @@ func (h *Handler) CreatePerson(ctx context.Context, req *familytreepb.CreatePers
 		req.GetLastName(),
 		req.GetPatronymic(),
 		toModelGender(req.GetGender()),
+		req.GetBiography(),
 	)
 	if err != nil {
 		return nil, grpcerr.Map(err)
@@ -93,6 +110,7 @@ func (h *Handler) UpdatePerson(ctx context.Context, req *familytreepb.UpdatePers
 		req.GetLastName(),
 		req.GetPatronymic(),
 		toModelGender(req.GetGender()),
+		req.GetBiography(),
 	)
 	if err != nil {
 		return nil, grpcerr.Map(err)
@@ -119,6 +137,7 @@ func toProtoPerson(person models.Person) *familytreepb.Person {
 		Patronymic:    person.Patronymic,
 		Gender:        toProtoGender(person.Gender),
 		AvatarPhotoId: toProtoAvatarPhotoID(person.AvatarPhotoID),
+		Biography:     person.Biography,
 	}
 }
 

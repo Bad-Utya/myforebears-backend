@@ -10,7 +10,7 @@ import (
 )
 
 func (h *Handler) CreateTree(ctx context.Context, req *familytreepb.CreateTreeRequest) (*familytreepb.CreateTreeResponse, error) {
-	tree, root, err := h.service.CreateTree(ctx, int(req.GetRequestUserId()), req.GetDescription())
+	tree, root, err := h.service.CreateTree(ctx, int(req.GetRequestUserId()), req.GetDescription(), req.GetName())
 	if err != nil {
 		return nil, grpcerr.Map(err)
 	}
@@ -61,6 +61,40 @@ func (h *Handler) ListRandomPublicTrees(ctx context.Context, req *familytreepb.L
 	}
 
 	return &familytreepb.ListRandomPublicTreesResponse{Trees: out}, nil
+}
+
+func (h *Handler) SearchPublicTrees(ctx context.Context, req *familytreepb.SearchPublicTreesRequest) (*familytreepb.SearchPublicTreesResponse, error) {
+	trees, err := h.service.SearchPublicTreesByName(ctx, req.GetQuery(), req.GetTagCodes(), int(req.GetLimit()))
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+
+	out := make([]*familytreepb.Tree, 0, len(trees))
+	for _, tree := range trees {
+		out = append(out, toProtoTree(tree))
+	}
+
+	return &familytreepb.SearchPublicTreesResponse{Trees: out}, nil
+}
+
+func (h *Handler) ListTags(ctx context.Context, _ *familytreepb.ListTagsRequest) (*familytreepb.ListTagsResponse, error) {
+	tags, err := h.service.ListTags(ctx)
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+	out := make([]*familytreepb.Tag, 0, len(tags))
+	for _, tag := range tags {
+		out = append(out, toProtoTag(tag))
+	}
+	return &familytreepb.ListTagsResponse{Tags: out}, nil
+}
+
+func (h *Handler) SetTreeTags(ctx context.Context, req *familytreepb.SetTreeTagsRequest) (*familytreepb.GetTreeResponse, error) {
+	tree, err := h.service.SetTreeTags(ctx, int(req.GetRequestUserId()), req.GetTreeId(), req.GetTagCodes())
+	if err != nil {
+		return nil, grpcerr.Map(err)
+	}
+	return &familytreepb.GetTreeResponse{Tree: toProtoTree(tree)}, nil
 }
 
 func (h *Handler) ListPersonsByTree(ctx context.Context, req *familytreepb.ListPersonsByTreeRequest) (*familytreepb.ListPersonsByTreeResponse, error) {
@@ -218,6 +252,10 @@ func toModelParentRole(role familytreepb.ParentRole) personsvc.ParentRole {
 }
 
 func toProtoTree(tree models.Tree) *familytreepb.Tree {
+	tags := make([]*familytreepb.Tag, 0, len(tree.Tags))
+	for _, tag := range tree.Tags {
+		tags = append(tags, toProtoTag(tag))
+	}
 	return &familytreepb.Tree{
 		Id:                 tree.ID.String(),
 		CreatorId:          int32(tree.CreatorID),
@@ -227,7 +265,13 @@ func toProtoTree(tree models.Tree) *familytreepb.Tree {
 		Name:               tree.Name,
 		Description:        protoTreeDescription(tree.Description),
 		RootPersonId:       tree.RootPersonID.String(),
+		Tags:               tags,
+		SimilarityScore:    tree.SimilarityScore,
 	}
+}
+
+func toProtoTag(tag models.Tag) *familytreepb.Tag {
+	return &familytreepb.Tag{Code: tag.Code, Name: tag.Name, Description: tag.Description}
 }
 
 func protoTreeDescription(description *string) string {

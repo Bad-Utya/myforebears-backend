@@ -23,7 +23,10 @@ type Auth interface {
 	Logout(ctx context.Context, accessToken string) error
 	LogoutFromAllDevices(ctx context.Context, accessToken string) error
 	GetUserInfo(ctx context.Context, userID int) (models.User, error)
+	GetMe(ctx context.Context, userID int) (models.User, error)
+	SearchUsersByNickname(ctx context.Context, query string, limit int) ([]models.User, error)
 	UpdateNickname(ctx context.Context, userID int, nickname string) (models.User, error)
+	UpdatePreferences(ctx context.Context, userID int, language string, theme string) (models.User, error)
 }
 
 type ServerAPI struct {
@@ -181,6 +184,65 @@ func (s *ServerAPI) UpdateNickname(ctx context.Context, req *authpb.UpdateNickna
 	}
 
 	return &authpb.UpdateNicknameResponse{User: toProtoUser(user)}, nil
+}
+
+func (s *ServerAPI) GetMe(ctx context.Context, req *authpb.GetMeRequest) (*authpb.GetMeResponse, error) {
+	user, err := s.auth.GetMe(ctx, int(req.GetUserId()))
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidUserID) {
+			return nil, status.Error(codes.InvalidArgument, "invalid user id")
+		}
+		if errors.Is(err, auth.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	return &authpb.GetMeResponse{
+		User:     toProtoUser(user),
+		Email:    user.Email,
+		Language: user.Language,
+		Theme:    user.Theme,
+	}, nil
+}
+
+func (s *ServerAPI) SearchUsers(ctx context.Context, req *authpb.SearchUsersRequest) (*authpb.SearchUsersResponse, error) {
+	users, err := s.auth.SearchUsersByNickname(ctx, req.GetQuery(), int(req.GetLimit()))
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidQuery) || errors.Is(err, auth.ErrInvalidLimit) {
+			return nil, status.Error(codes.InvalidArgument, "invalid query")
+		}
+
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	out := make([]*authpb.User, 0, len(users))
+	for _, user := range users {
+		out = append(out, toProtoUser(user))
+	}
+
+	return &authpb.SearchUsersResponse{Users: out}, nil
+}
+
+func (s *ServerAPI) UpdatePreferences(ctx context.Context, req *authpb.UpdatePreferencesRequest) (*authpb.UpdatePreferencesResponse, error) {
+	user, err := s.auth.UpdatePreferences(ctx, int(req.GetUserId()), req.GetLanguage(), req.GetTheme())
+	if err != nil {
+		if errors.Is(err, auth.ErrInvalidUserID) || errors.Is(err, auth.ErrInvalidLanguage) || errors.Is(err, auth.ErrInvalidTheme) {
+			return nil, status.Error(codes.InvalidArgument, "invalid preferences")
+		}
+		if errors.Is(err, auth.ErrUserNotFound) {
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	return &authpb.UpdatePreferencesResponse{
+		User:     toProtoUser(user),
+		Language: user.Language,
+		Theme:    user.Theme,
+	}, nil
 }
 
 func toProtoUser(user models.User) *authpb.User {

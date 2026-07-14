@@ -69,6 +69,11 @@ type updateNicknameRequest struct {
 	Nickname string `json:"nickname"`
 }
 
+type updatePreferencesRequest struct {
+	Language string `json:"language"`
+	Theme    string `json:"theme"`
+}
+
 type tokensResponse struct {
 	AccessToken string `json:"access_token"`
 }
@@ -78,6 +83,8 @@ type userInfoResponse struct {
 	Nickname      string `json:"nickname"`
 	CreatedAtUnix int64  `json:"created_at_unix"`
 	Email         string `json:"email,omitempty"`
+	Language      string `json:"language,omitempty"`
+	Theme         string `json:"theme,omitempty"`
 }
 
 type authStatusData struct {
@@ -558,7 +565,7 @@ func (h *Handler) ListRandomPublicUsers(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 
-		users = append(users, toUserInfoResponse(userResp.GetUser(), ""))
+		users = append(users, toUserInfoResponse(userResp.GetUser(), "", "", ""))
 	}
 
 	response.OK(w, map[string]any{"users": users})
@@ -605,6 +612,52 @@ func (h *Handler) UpdateNickname(w http.ResponseWriter, r *http.Request) {
 	}})
 }
 
+// SearchUsers returns users by nickname substring.
+// @Summary Search users
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param username query string true "Username substring"
+// @Param limit query int true "Users count"
+// @Success 200 {object} usersInfoSuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/users/search [get]
+func (h *Handler) SearchUsers(w http.ResponseWriter, r *http.Request) {
+	query := strings.TrimSpace(r.URL.Query().Get("username"))
+	if query == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "username is required")
+		return
+	}
+
+	limitRaw := strings.TrimSpace(r.URL.Query().Get("limit"))
+	if limitRaw == "" {
+		response.Error(w, http.StatusBadRequest, "bad_request", "limit is required")
+		return
+	}
+
+	limit, err := strconv.Atoi(limitRaw)
+	if err != nil || limit <= 0 {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid limit")
+		return
+	}
+
+	resp, err := h.client.SearchUsers(r.Context(), query, limit)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("search users failed", slog.String("error", err.Error()))
+		response.Error(w, status, "auth_error", msg)
+		return
+	}
+
+	users := make([]userInfoResponse, 0, len(resp.GetUsers()))
+	for _, user := range resp.GetUsers() {
+		users = append(users, toUserInfoResponse(user, "", "", ""))
+	}
+
+	response.OK(w, map[string]any{"users": users})
+}
+
 // GetMe returns the authenticated user's info.
 // @Summary Get user info
 // @Tags users
@@ -623,13 +676,7 @@ func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email, err := middleware.EmailFromContext(r.Context())
-	if err != nil {
-		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
-		return
-	}
-
-	resp, err := h.client.GetUserInfo(r.Context(), userID)
+	resp, err := h.client.GetMe(r.Context(), userID)
 	if err != nil {
 		status, msg := grpcerr.HTTPStatus(err)
 		h.log.Error("get user info failed", slog.String("error", err.Error()))
@@ -641,7 +688,52 @@ func (h *Handler) GetMe(w http.ResponseWriter, r *http.Request) {
 		"id":              resp.GetUser().GetId(),
 		"nickname":        resp.GetUser().GetNickname(),
 		"created_at_unix": resp.GetUser().GetCreatedAtUnix(),
-		"email":           email,
+		"email":           resp.GetEmail(),
+		"language":        resp.GetLanguage(),
+		"theme":           resp.GetTheme(),
+	}})
+}
+
+// UpdatePreferences updates language and theme for authenticated user.
+// @Summary Update user preferences
+// @Tags users
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body updatePreferencesRequest true "Request body"
+// @Success 200 {object} map[string]userInfoResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/users/me/preferences [patch]
+func (h *Handler) UpdatePreferences(w http.ResponseWriter, r *http.Request) {
+	userID, err := middleware.UserIDFromContext(r.Context())
+	if err != nil {
+		response.Error(w, http.StatusUnauthorized, "unauthorized", "invalid token claims")
+		return
+	}
+
+	var req updatePreferencesRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "bad_request", "invalid request body")
+		return
+	}
+
+	resp, err := h.client.UpdatePreferences(r.Context(), userID, req.Language, req.Theme)
+	if err != nil {
+		status, msg := grpcerr.HTTPStatus(err)
+		h.log.Error("update preferences failed", slog.String("error", err.Error()))
+		response.Error(w, status, "auth_error", msg)
+		return
+	}
+
+	response.OK(w, map[string]any{"user": map[string]any{
+		"id":              resp.GetUser().GetId(),
+		"nickname":        resp.GetUser().GetNickname(),
+		"created_at_unix": resp.GetUser().GetCreatedAtUnix(),
+		"language":        resp.GetLanguage(),
+		"theme":           resp.GetTheme(),
 	}})
 }
 
@@ -649,12 +741,14 @@ func toUserInfoResponse(user interface {
 	GetId() int32
 	GetNickname() string
 	GetCreatedAtUnix() int64
-}, email string) userInfoResponse {
+}, email string, language string, theme string) userInfoResponse {
 	return userInfoResponse{
 		ID:            user.GetId(),
 		Nickname:      user.GetNickname(),
 		CreatedAtUnix: user.GetCreatedAtUnix(),
 		Email:         email,
+		Language:      language,
+		Theme:         theme,
 	}
 }
 
