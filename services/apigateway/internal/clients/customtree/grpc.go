@@ -73,6 +73,9 @@ func (c *Client) EmailAllowed(x context.Context, id, email string) (bool, error)
 func (c *Client) CreateEntity(x context.Context, r *customtreepb.CreateEntityRequest) (*customtreepb.EntityResponse, error) {
 	return c.api.CreateEntity(x, r)
 }
+func (c *Client) AddParent(x context.Context, r *customtreepb.AddParentRequest) (*customtreepb.EntityResponse, error) {
+	return c.api.AddParent(x, r)
+}
 func (c *Client) GetEntity(x context.Context, id, eid string) (*customtreepb.EntityResponse, error) {
 	return c.api.GetEntity(x, &customtreepb.GetEntityRequest{TreeId: id, EntityId: eid})
 }

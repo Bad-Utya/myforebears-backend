@@ -26,6 +26,7 @@ service CustomTreeService {
   rpc DeleteAccessEmail(AccessEmailRequest) returns (Empty);
   rpc IsAccessEmailAllowed(AccessEmailRequest) returns (AccessAllowedResponse);
   rpc CreateEntity(CreateEntityRequest) returns (EntityResponse);
+  rpc AddParent(AddParentRequest) returns (EntityResponse);
   rpc GetEntity(GetEntityRequest) returns (EntityResponse);
   rpc ListEntities(GetTreeRequest) returns (EntitiesResponse);
   rpc UpdateEntity(UpdateEntityRequest) returns (EntityResponse);
@@ -57,6 +58,7 @@ message AccessEmailRequest { string tree_id=1; string email=2; }
 message AccessEmailsResponse { repeated string emails=1; }
 message AccessAllowedResponse { bool allowed=1; }
 message CreateEntityRequest { string tree_id=1; string parent_id=2; string name=3; string description=4; }
+message AddParentRequest { string tree_id=1; string child_id=2; string name=3; string description=4; }
 message GetEntityRequest { string tree_id=1; string entity_id=2; }
 message UpdateEntityRequest { string tree_id=1; string entity_id=2; string name=3; string description=4; }
 message DeleteEntityRequest { string tree_id=1; string entity_id=2; }

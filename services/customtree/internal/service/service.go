@@ -229,6 +229,27 @@ func (s *Service) CreateEntity(ctx context.Context, treeID, parentID, name, desc
 	}
 	return e, nil
 }
+func (s *Service) AddParent(ctx context.Context, treeID, childID, name, description string) (domain.Entity, error) {
+	t, err := s.GetTree(ctx, treeID)
+	if err != nil {
+		return domain.Entity{}, err
+	}
+	if clean(name) == "" || clean(childID) == "" {
+		return domain.Entity{}, ErrInvalid
+	}
+	child, err := s.GetEntity(ctx, treeID, childID)
+	if err != nil {
+		return domain.Entity{}, err
+	}
+	e := domain.Entity{ID: uuid.New(), TreeID: t.ID, Name: clean(name), Description: clean(description), CreatedAt: time.Now()}
+	if err := s.db.CreateParent(ctx, t.ID, child.ID, e); err != nil {
+		if errors.Is(err, store.ErrConflict) {
+			return domain.Entity{}, ErrConflict
+		}
+		return domain.Entity{}, err
+	}
+	return e, nil
+}
 func (s *Service) GetEntity(ctx context.Context, treeID, entityID string) (domain.Entity, error) {
 	tid, err := parseID(treeID)
 	if err != nil {

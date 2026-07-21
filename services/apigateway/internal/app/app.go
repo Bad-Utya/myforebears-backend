@@ -339,6 +339,7 @@ func New(log *slog.Logger, cfg *config.Config) *App {
 			r.Put("/{tree_id}/tags", customTreeHandler.SetTags)
 			r.Delete("/{tree_id}", customTreeHandler.DeleteTree)
 			r.Post("/{tree_id}/entities", customTreeHandler.CreateEntity)
+			r.Post("/{tree_id}/parents", customTreeHandler.AddParent)
 			r.Put("/{tree_id}/entities/{entity_id}", customTreeHandler.UpdateEntity)
 			r.Delete("/{tree_id}/entities/{entity_id}", customTreeHandler.DeleteEntity)
 			r.Post("/{tree_id}/edges", customTreeHandler.AddEdge)

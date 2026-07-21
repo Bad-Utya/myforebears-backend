@@ -2429,6 +2429,74 @@ func (x *SVGResponse) GetMimeType() string {
 	return ""
 }
 
+type AddParentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TreeId        string                 `protobuf:"bytes,1,opt,name=tree_id,json=treeId,proto3" json:"tree_id,omitempty"`
+	ChildId       string                 `protobuf:"bytes,2,opt,name=child_id,json=childId,proto3" json:"child_id,omitempty"`
+	Name          string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddParentRequest) Reset() {
+	*x = AddParentRequest{}
+	mi := &file_customtree_customtree_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddParentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddParentRequest) ProtoMessage() {}
+
+func (x *AddParentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_customtree_customtree_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddParentRequest.ProtoReflect.Descriptor instead.
+func (*AddParentRequest) Descriptor() ([]byte, []int) {
+	return file_customtree_customtree_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *AddParentRequest) GetTreeId() string {
+	if x != nil {
+		return x.TreeId
+	}
+	return ""
+}
+
+func (x *AddParentRequest) GetChildId() string {
+	if x != nil {
+		return x.ChildId
+	}
+	return ""
+}
+
+func (x *AddParentRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *AddParentRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
 var File_customtree_customtree_proto protoreflect.FileDescriptor
 
 const file_customtree_customtree_proto_rawDesc = "" +
@@ -2603,7 +2671,12 @@ const file_customtree_customtree_proto_rawDesc = "" +
 	"\x06height\x18\x04 \x01(\x01R\x06height\"D\n" +
 	"\vSVGResponse\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\fR\acontent\x12\x1b\n" +
-	"\tmime_type\x18\x02 \x01(\tR\bmimeType2\xb5\x10\n" +
+	"\tmime_type\x18\x02 \x01(\tR\bmimeType\"|\n" +
+	"\x10AddParentRequest\x12\x17\n" +
+	"\atree_id\x18\x01 \x01(\tR\x06treeId\x12\x19\n" +
+	"\bchild_id\x18\x02 \x01(\tR\achildId\x12\x12\n" +
+	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x04 \x01(\tR\vdescription2\xfc\x10\n" +
 	"\x11CustomTreeService\x12E\n" +
 	"\n" +
 	"CreateTree\x12\x1d.customtree.CreateTreeRequest\x1a\x18.customtree.TreeResponse\x12?\n" +
@@ -2638,7 +2711,8 @@ const file_customtree_customtree_proto_rawDesc = "" +
 	"\bGetPhoto\x12\x1b.customtree.GetPhotoRequest\x1a .customtree.PhotoContentResponse\x12@\n" +
 	"\vDeletePhoto\x12\x1e.customtree.DeletePhotoRequest\x1a\x11.customtree.Empty\x12O\n" +
 	"\x11RenderCoordinates\x12\x19.customtree.RenderRequest\x1a\x1f.customtree.CoordinatesResponse\x12?\n" +
-	"\tRenderSVG\x12\x19.customtree.RenderRequest\x1a\x17.customtree.SVGResponseBHZFgithub.com/Bad-Utya/myforebears-backend/gen/go/customtree;customtreepbb\x06proto3"
+	"\tRenderSVG\x12\x19.customtree.RenderRequest\x1a\x17.customtree.SVGResponse\x12E\n" +
+	"\tAddParent\x12\x1c.customtree.AddParentRequest\x1a\x1a.customtree.EntityResponseBHZFgithub.com/Bad-Utya/myforebears-backend/gen/go/customtree;customtreepbb\x06proto3"
 
 var (
 	file_customtree_customtree_proto_rawDescOnce sync.Once
@@ -2652,7 +2726,7 @@ func file_customtree_customtree_proto_rawDescGZIP() []byte {
 	return file_customtree_customtree_proto_rawDescData
 }
 
-var file_customtree_customtree_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
+var file_customtree_customtree_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
 var file_customtree_customtree_proto_goTypes = []any{
 	(*Tag)(nil),                           // 0: customtree.Tag
 	(*Tree)(nil),                          // 1: customtree.Tree
@@ -2694,6 +2768,7 @@ var file_customtree_customtree_proto_goTypes = []any{
 	(*RenderRequest)(nil),                 // 37: customtree.RenderRequest
 	(*CoordinatesResponse)(nil),           // 38: customtree.CoordinatesResponse
 	(*SVGResponse)(nil),                   // 39: customtree.SVGResponse
+	(*AddParentRequest)(nil),              // 40: customtree.AddParentRequest
 }
 var file_customtree_customtree_proto_depIdxs = []int32{
 	0,  // 0: customtree.Tree.tags:type_name -> customtree.Tag
@@ -2738,36 +2813,38 @@ var file_customtree_customtree_proto_depIdxs = []int32{
 	33, // 39: customtree.CustomTreeService.DeletePhoto:input_type -> customtree.DeletePhotoRequest
 	37, // 40: customtree.CustomTreeService.RenderCoordinates:input_type -> customtree.RenderRequest
 	37, // 41: customtree.CustomTreeService.RenderSVG:input_type -> customtree.RenderRequest
-	17, // 42: customtree.CustomTreeService.CreateTree:output_type -> customtree.TreeResponse
-	17, // 43: customtree.CustomTreeService.GetTree:output_type -> customtree.TreeResponse
-	18, // 44: customtree.CustomTreeService.ListTreesByOwner:output_type -> customtree.TreesResponse
-	18, // 45: customtree.CustomTreeService.ListPublicTreesByOwner:output_type -> customtree.TreesResponse
-	18, // 46: customtree.CustomTreeService.ListRandomPublicTrees:output_type -> customtree.TreesResponse
-	18, // 47: customtree.CustomTreeService.SearchPublicTrees:output_type -> customtree.TreesResponse
-	17, // 48: customtree.CustomTreeService.SetTreeTags:output_type -> customtree.TreeResponse
-	17, // 49: customtree.CustomTreeService.UpdateTree:output_type -> customtree.TreeResponse
-	7,  // 50: customtree.CustomTreeService.DeleteTree:output_type -> customtree.Empty
-	17, // 51: customtree.CustomTreeService.GetTreeAccess:output_type -> customtree.TreeResponse
-	7,  // 52: customtree.CustomTreeService.AddAccessEmail:output_type -> customtree.Empty
-	20, // 53: customtree.CustomTreeService.ListAccessEmails:output_type -> customtree.AccessEmailsResponse
-	7,  // 54: customtree.CustomTreeService.DeleteAccessEmail:output_type -> customtree.Empty
-	21, // 55: customtree.CustomTreeService.IsAccessEmailAllowed:output_type -> customtree.AccessAllowedResponse
-	26, // 56: customtree.CustomTreeService.CreateEntity:output_type -> customtree.EntityResponse
-	26, // 57: customtree.CustomTreeService.GetEntity:output_type -> customtree.EntityResponse
-	27, // 58: customtree.CustomTreeService.ListEntities:output_type -> customtree.EntitiesResponse
-	26, // 59: customtree.CustomTreeService.UpdateEntity:output_type -> customtree.EntityResponse
-	7,  // 60: customtree.CustomTreeService.DeleteEntity:output_type -> customtree.Empty
-	7,  // 61: customtree.CustomTreeService.AddEdge:output_type -> customtree.Empty
-	7,  // 62: customtree.CustomTreeService.RemoveEdge:output_type -> customtree.Empty
-	30, // 63: customtree.CustomTreeService.GetContent:output_type -> customtree.ContentResponse
-	34, // 64: customtree.CustomTreeService.UploadPhoto:output_type -> customtree.PhotoResponse
-	35, // 65: customtree.CustomTreeService.ListPhotos:output_type -> customtree.PhotosResponse
-	36, // 66: customtree.CustomTreeService.GetPhoto:output_type -> customtree.PhotoContentResponse
-	7,  // 67: customtree.CustomTreeService.DeletePhoto:output_type -> customtree.Empty
-	38, // 68: customtree.CustomTreeService.RenderCoordinates:output_type -> customtree.CoordinatesResponse
-	39, // 69: customtree.CustomTreeService.RenderSVG:output_type -> customtree.SVGResponse
-	42, // [42:70] is the sub-list for method output_type
-	14, // [14:42] is the sub-list for method input_type
+	40, // 42: customtree.CustomTreeService.AddParent:input_type -> customtree.AddParentRequest
+	17, // 43: customtree.CustomTreeService.CreateTree:output_type -> customtree.TreeResponse
+	17, // 44: customtree.CustomTreeService.GetTree:output_type -> customtree.TreeResponse
+	18, // 45: customtree.CustomTreeService.ListTreesByOwner:output_type -> customtree.TreesResponse
+	18, // 46: customtree.CustomTreeService.ListPublicTreesByOwner:output_type -> customtree.TreesResponse
+	18, // 47: customtree.CustomTreeService.ListRandomPublicTrees:output_type -> customtree.TreesResponse
+	18, // 48: customtree.CustomTreeService.SearchPublicTrees:output_type -> customtree.TreesResponse
+	17, // 49: customtree.CustomTreeService.SetTreeTags:output_type -> customtree.TreeResponse
+	17, // 50: customtree.CustomTreeService.UpdateTree:output_type -> customtree.TreeResponse
+	7,  // 51: customtree.CustomTreeService.DeleteTree:output_type -> customtree.Empty
+	17, // 52: customtree.CustomTreeService.GetTreeAccess:output_type -> customtree.TreeResponse
+	7,  // 53: customtree.CustomTreeService.AddAccessEmail:output_type -> customtree.Empty
+	20, // 54: customtree.CustomTreeService.ListAccessEmails:output_type -> customtree.AccessEmailsResponse
+	7,  // 55: customtree.CustomTreeService.DeleteAccessEmail:output_type -> customtree.Empty
+	21, // 56: customtree.CustomTreeService.IsAccessEmailAllowed:output_type -> customtree.AccessAllowedResponse
+	26, // 57: customtree.CustomTreeService.CreateEntity:output_type -> customtree.EntityResponse
+	26, // 58: customtree.CustomTreeService.GetEntity:output_type -> customtree.EntityResponse
+	27, // 59: customtree.CustomTreeService.ListEntities:output_type -> customtree.EntitiesResponse
+	26, // 60: customtree.CustomTreeService.UpdateEntity:output_type -> customtree.EntityResponse
+	7,  // 61: customtree.CustomTreeService.DeleteEntity:output_type -> customtree.Empty
+	7,  // 62: customtree.CustomTreeService.AddEdge:output_type -> customtree.Empty
+	7,  // 63: customtree.CustomTreeService.RemoveEdge:output_type -> customtree.Empty
+	30, // 64: customtree.CustomTreeService.GetContent:output_type -> customtree.ContentResponse
+	34, // 65: customtree.CustomTreeService.UploadPhoto:output_type -> customtree.PhotoResponse
+	35, // 66: customtree.CustomTreeService.ListPhotos:output_type -> customtree.PhotosResponse
+	36, // 67: customtree.CustomTreeService.GetPhoto:output_type -> customtree.PhotoContentResponse
+	7,  // 68: customtree.CustomTreeService.DeletePhoto:output_type -> customtree.Empty
+	38, // 69: customtree.CustomTreeService.RenderCoordinates:output_type -> customtree.CoordinatesResponse
+	39, // 70: customtree.CustomTreeService.RenderSVG:output_type -> customtree.SVGResponse
+	26, // 71: customtree.CustomTreeService.AddParent:output_type -> customtree.EntityResponse
+	43, // [43:72] is the sub-list for method output_type
+	14, // [14:43] is the sub-list for method input_type
 	14, // [14:14] is the sub-list for extension type_name
 	14, // [14:14] is the sub-list for extension extendee
 	0,  // [0:14] is the sub-list for field type_name
@@ -2784,7 +2861,7 @@ func file_customtree_customtree_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_customtree_customtree_proto_rawDesc), len(file_customtree_customtree_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   40,
+			NumMessages:   41,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

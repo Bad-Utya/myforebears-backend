@@ -34,6 +34,7 @@ const (
 	CustomTreeService_DeleteAccessEmail_FullMethodName      = "/customtree.CustomTreeService/DeleteAccessEmail"
 	CustomTreeService_IsAccessEmailAllowed_FullMethodName   = "/customtree.CustomTreeService/IsAccessEmailAllowed"
 	CustomTreeService_CreateEntity_FullMethodName           = "/customtree.CustomTreeService/CreateEntity"
+	CustomTreeService_AddParent_FullMethodName              = "/customtree.CustomTreeService/AddParent"
 	CustomTreeService_GetEntity_FullMethodName              = "/customtree.CustomTreeService/GetEntity"
 	CustomTreeService_ListEntities_FullMethodName           = "/customtree.CustomTreeService/ListEntities"
 	CustomTreeService_UpdateEntity_FullMethodName           = "/customtree.CustomTreeService/UpdateEntity"
@@ -68,6 +69,7 @@ type CustomTreeServiceClient interface {
 	DeleteAccessEmail(ctx context.Context, in *AccessEmailRequest, opts ...grpc.CallOption) (*Empty, error)
 	IsAccessEmailAllowed(ctx context.Context, in *AccessEmailRequest, opts ...grpc.CallOption) (*AccessAllowedResponse, error)
 	CreateEntity(ctx context.Context, in *CreateEntityRequest, opts ...grpc.CallOption) (*EntityResponse, error)
+	AddParent(ctx context.Context, in *AddParentRequest, opts ...grpc.CallOption) (*EntityResponse, error)
 	GetEntity(ctx context.Context, in *GetEntityRequest, opts ...grpc.CallOption) (*EntityResponse, error)
 	ListEntities(ctx context.Context, in *GetTreeRequest, opts ...grpc.CallOption) (*EntitiesResponse, error)
 	UpdateEntity(ctx context.Context, in *UpdateEntityRequest, opts ...grpc.CallOption) (*EntityResponse, error)
@@ -241,6 +243,16 @@ func (c *customTreeServiceClient) CreateEntity(ctx context.Context, in *CreateEn
 	return out, nil
 }
 
+func (c *customTreeServiceClient) AddParent(ctx context.Context, in *AddParentRequest, opts ...grpc.CallOption) (*EntityResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(EntityResponse)
+	err := c.cc.Invoke(ctx, CustomTreeService_AddParent_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *customTreeServiceClient) GetEntity(ctx context.Context, in *GetEntityRequest, opts ...grpc.CallOption) (*EntityResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(EntityResponse)
@@ -390,6 +402,7 @@ type CustomTreeServiceServer interface {
 	DeleteAccessEmail(context.Context, *AccessEmailRequest) (*Empty, error)
 	IsAccessEmailAllowed(context.Context, *AccessEmailRequest) (*AccessAllowedResponse, error)
 	CreateEntity(context.Context, *CreateEntityRequest) (*EntityResponse, error)
+	AddParent(context.Context, *AddParentRequest) (*EntityResponse, error)
 	GetEntity(context.Context, *GetEntityRequest) (*EntityResponse, error)
 	ListEntities(context.Context, *GetTreeRequest) (*EntitiesResponse, error)
 	UpdateEntity(context.Context, *UpdateEntityRequest) (*EntityResponse, error)
@@ -457,6 +470,9 @@ func (UnimplementedCustomTreeServiceServer) IsAccessEmailAllowed(context.Context
 }
 func (UnimplementedCustomTreeServiceServer) CreateEntity(context.Context, *CreateEntityRequest) (*EntityResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateEntity not implemented")
+}
+func (UnimplementedCustomTreeServiceServer) AddParent(context.Context, *AddParentRequest) (*EntityResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AddParent not implemented")
 }
 func (UnimplementedCustomTreeServiceServer) GetEntity(context.Context, *GetEntityRequest) (*EntityResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetEntity not implemented")
@@ -788,6 +804,24 @@ func _CustomTreeService_CreateEntity_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CustomTreeService_AddParent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddParentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CustomTreeServiceServer).AddParent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CustomTreeService_AddParent_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CustomTreeServiceServer).AddParent(ctx, req.(*AddParentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CustomTreeService_GetEntity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetEntityRequest)
 	if err := dec(in); err != nil {
@@ -1088,6 +1122,10 @@ var CustomTreeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateEntity",
 			Handler:    _CustomTreeService_CreateEntity_Handler,
+		},
+		{
+			MethodName: "AddParent",
+			Handler:    _CustomTreeService_AddParent_Handler,
 		},
 		{
 			MethodName: "GetEntity",

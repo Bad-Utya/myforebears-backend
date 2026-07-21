@@ -142,6 +142,26 @@ func (s *Storage) CreateEntity(ctx context.Context, e domain.Entity) error {
 	_, err := s.pool.Exec(ctx, `INSERT INTO custom_entities(id,tree_id,name,description,created_at)VALUES($1,$2,$3,$4,$5)`, e.ID, e.TreeID, e.Name, e.Description, e.CreatedAt)
 	return err
 }
+func (s *Storage) CreateParent(ctx context.Context, treeID, childID uuid.UUID, e domain.Entity) error {
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if _, err = tx.Exec(ctx, `INSERT INTO custom_entities(id,tree_id,name,description,created_at)VALUES($1,$2,$3,$4,$5)`, e.ID, e.TreeID, e.Name, e.Description, e.CreatedAt); err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO custom_edges(tree_id,parent_id,child_id)VALUES($1,$2,$3)`, treeID, e.ID, childID); err != nil {
+		if isUnique(err) {
+			return store.ErrConflict
+		}
+		return err
+	}
+	if _, err = tx.Exec(ctx, `UPDATE custom_trees SET root_entity_id=$1,updated_at=NOW() WHERE id=$2 AND root_entity_id=$3`, e.ID, treeID, childID); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
 func scanEntity(row interface{ Scan(...any) error }) (domain.Entity, error) {
 	var e domain.Entity
 	err := row.Scan(&e.ID, &e.TreeID, &e.Name, &e.Description, &e.AvatarPhotoID, &e.CreatedAt)

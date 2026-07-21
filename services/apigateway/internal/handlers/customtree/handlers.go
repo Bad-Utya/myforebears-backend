@@ -58,6 +58,11 @@ type entityBody struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
+type parentBody struct {
+	ChildID     string `json:"child_id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
 type edgeBody struct {
 	ParentID string `json:"parent_id"`
 	ChildID  string `json:"child_id"`
@@ -492,6 +497,36 @@ func (h *Handler) CreateEntity(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	x, e := h.c.CreateEntity(r.Context(), &customtreepb.CreateEntityRequest{TreeId: chi.URLParam(r, "tree_id"), ParentId: b.ParentID, Name: b.Name, Description: b.Description})
+	if e != nil {
+		fail(w, e)
+		return
+	}
+	response.OK(w, x)
+}
+
+// AddParent creates a parent entity above an existing child.
+// @Summary Add custom tree parent entity
+// @Tags custom-trees
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param tree_id path string true "Custom tree ID"
+// @Param request body parentBody true "Parent entity data and child ID"
+// @Success 200 {object} customEntitySuccessResponse
+// @Failure 400 {object} response.ErrorResponse
+// @Failure 401 {object} response.ErrorResponse
+// @Failure 403 {object} response.ErrorResponse
+// @Failure 404 {object} response.ErrorResponse
+// @Failure 409 {object} response.ErrorResponse
+// @Failure 500 {object} response.ErrorResponse
+// @Router /api/custom-trees/{tree_id}/parents [post]
+func (h *Handler) AddParent(w http.ResponseWriter, r *http.Request) {
+	var b parentBody
+	if json.NewDecoder(r.Body).Decode(&b) != nil {
+		response.Error(w, 400, "bad_request", "invalid body")
+		return
+	}
+	x, e := h.c.AddParent(r.Context(), &customtreepb.AddParentRequest{TreeId: chi.URLParam(r, "tree_id"), ChildId: b.ChildID, Name: b.Name, Description: b.Description})
 	if e != nil {
 		fail(w, e)
 		return

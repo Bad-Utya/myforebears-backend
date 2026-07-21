@@ -26,6 +26,7 @@ type Store interface {
 	DeleteAccessEmail(context.Context, uuid.UUID, string) error
 	IsAccessEmailAllowed(context.Context, uuid.UUID, string) (bool, error)
 	CreateEntity(context.Context, domain.Entity) error
+	CreateParent(context.Context, uuid.UUID, uuid.UUID, domain.Entity) error
 	GetEntity(context.Context, uuid.UUID) (domain.Entity, error)
 	ListEntities(context.Context, uuid.UUID) ([]domain.Entity, error)
 	UpdateEntity(context.Context, domain.Entity) error

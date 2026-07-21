@@ -164,6 +164,13 @@ func (s *Server) CreateEntity(ctx context.Context, r *customtreepb.CreateEntityR
 	}
 	return &customtreepb.EntityResponse{Entity: entity(e)}, nil
 }
+func (s *Server) AddParent(ctx context.Context, r *customtreepb.AddParentRequest) (*customtreepb.EntityResponse, error) {
+	e, err := s.s.AddParent(ctx, r.GetTreeId(), r.GetChildId(), r.GetName(), r.GetDescription())
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return &customtreepb.EntityResponse{Entity: entity(e)}, nil
+}
 func (s *Server) GetEntity(ctx context.Context, r *customtreepb.GetEntityRequest) (*customtreepb.EntityResponse, error) {
 	e, err := s.s.GetEntity(ctx, r.GetTreeId(), r.GetEntityId())
 	if err != nil {

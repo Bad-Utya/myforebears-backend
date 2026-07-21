@@ -352,6 +352,15 @@ definitions:
       parent_id:
         type: string
     type: object
+  customtree.parentBody:
+    properties:
+      child_id:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+    type: object
   customtree.tagsBody:
     properties:
       tag_codes:
@@ -2477,6 +2486,58 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get custom entity photo
+      tags:
+      - custom-trees
+  /api/custom-trees/{tree_id}/parents:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Custom tree ID
+        in: path
+        name: tree_id
+        required: true
+        type: string
+      - description: Parent entity data and child ID
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/customtree.parentBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/customtree.customEntitySuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add custom tree parent entity
       tags:
       - custom-trees
   /api/custom-trees/{tree_id}/svg:
